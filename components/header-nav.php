@@ -14,7 +14,7 @@
       <div class="logo">
         <div class="site-logo">
           <a href="index.html" class="js-logo-clone d-flex align-items-center">
-            <img src="<?= $SERVER_NAME ?>/public/logo.png" class="logo mr-2" style="height: 18px">
+            <img src="<?= $SERVER_NAME ?>/public/logo.png" class="logo mr-2">
             Pharma
           </a>
         </div>

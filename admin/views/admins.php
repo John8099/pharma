@@ -14,8 +14,6 @@ if (!$isLogin) {
   <?php include("../components/side-nav.php"); ?>
   <?php include("../components/header-nav.php"); ?>
 
-  <!-- [ Main Content ] start -->
-  <!-- [ Main Content ] start -->
   <div class="pcoded-main-container">
     <div class="pcoded-wrapper">
       <div class="pcoded-content">
@@ -52,44 +50,49 @@ if (!$isLogin) {
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <div class="table-responsive">
-                        <table id="adminTable" class="table table-hover">
-                          <thead>
-                            <tr>
-                              <th>Avatar</th>
-                              <th>Name</th>
-                              <th>Email</th>
-                              <th>Created At</th>
-                              <th>Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php
-                            if ($user) :
-                              $query = mysqli_query(
-                                $conn,
-                                "SELECT * FROM users WHERE `role`='admin' "
-                              );
+                      <table id="adminTable" class="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>Avatar</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Created At</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <?php
+                          if ($user) :
+                            $query = mysqli_query(
+                              $conn,
+                              "SELECT * FROM users "
+                            );
 
-                              while ($admin = mysqli_fetch_object($query)) :
-                            ?>
-                                <tr>
-                                  <td>
-                                    <img src="<?= getAvatar($admin->id) ?>" class="img-radius" width="40px">
-                                  </td>
-                                  <td><?= getFullName($admin->id, "with_middle") ?></td>
-                                  <td><?= $admin->email ?></td>
-                                  <td><?= date("Y-m-d", strtotime($admin->createdAt)); ?></td>
-                                  <td>
-
-                                  </td>
-                                </tr>
-                            <?php endwhile;
-                            endif;
-                            ?>
-                          </tbody>
-                        </table>
-                      </div>
+                            while ($admin = mysqli_fetch_object($query)) :
+                          ?>
+                              <tr>
+                                <td>
+                                  <img src="<?= getAvatar($admin->id) ?>" class="img-radius" width="40px">
+                                </td>
+                                <td><?= getFullName($admin->id, "with_middle") ?></td>
+                                <td><?= $admin->email ?></td>
+                                <td><?= date("Y-m-d", strtotime($admin->createdAt)); ?></td>
+                                <td>
+                                  <button type="button" class="btn btn-warning btn-sm m-1">
+                                    <i class="fa fa-user-edit"></i>
+                                    Edit
+                                  </button>
+                                  <button type="button" class="btn btn-danger btn-sm m-1">
+                                    <i class="fa fa-user-times"></i>
+                                    Delete
+                                  </button>
+                                </td>
+                              </tr>
+                          <?php endwhile;
+                          endif;
+                          ?>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -103,15 +106,65 @@ if (!$isLogin) {
       </div>
     </div>
   </div>
-  <!-- [ Main Content ] end -->
+
 
 
   <?php include("../components/scripts.php") ?>
   <script>
     $(document).ready(function() {
       var table = $('#adminTable').DataTable({
+        paging: true,
         lengthChange: false,
-        buttons: ['searchBuilder'],
+        ordering: true,
+        info: true,
+        autoWidth: false,
+        responsive: true,
+        language: {
+          searchBuilder: {
+            button: 'Filter',
+          }
+        },
+        buttons: [
+          // {
+          //   extend: 'print',
+          //   messageTop: '<h3>Pharma Admins</h3>',
+          //   title: "",
+          //   exportOptions: {
+          //     columns: [1, 2, 3]
+          //   }
+          // },
+          // {
+          //   extend: 'pdf',
+          //   messageTop: '<h3>Pharma Admins</h3>',
+          //   title: "",
+          //   exportOptions: {
+          //     columns: [1, 2, 3]
+          //   }
+          // },
+          // {
+          //   extend: 'csv',
+          //   messageTop: '<h3>Pharma Admins</h3>',
+          //   title: "",
+          //   exportOptions: {
+          //     columns: [1, 2, 3]
+          //   }
+          // },
+          // {
+          //   extend: 'excel',
+          //   messageTop: '<h3>Pharma Admins</h3>',
+          //   title: "",
+          //   exportOptions: {
+          //     columns: [1, 2, 3]
+          //   }
+          // },
+          {
+            extend: 'searchBuilder',
+            config: {
+              depthLimit: 2,
+              columns: [1, 2, 3]
+            }
+          }
+        ],
         dom: 'Bfrtip',
       });
 
