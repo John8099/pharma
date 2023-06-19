@@ -2,6 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
+
 date_default_timezone_set("Asia/Manila");
 
 include("conn.php");
@@ -12,6 +13,12 @@ $response = array(
   "message" => ""
 );
 
+$user = null;
+$isLogin = isset($_SESSION["userId"]) ? true : false;
+if ($isLogin) {
+  $user = getUserById($_SESSION["userId"]);
+}
+
 if (isset($_GET['action'])) {
   try {
     switch ($_GET['action']) {
@@ -21,15 +28,14 @@ if (isset($_GET['action'])) {
       case "login":
         login();
         break;
-      case "register":
-        // register();
+      case "addUser":
+        addUser();
         break;
       case "update-user":
         updateUser();
         break;
-    
       case "check_email":
-        checkEmailIfExist();
+        checkEmailIfExistR();
         break;
       case "delete_item":
         deleteItem();
@@ -45,6 +51,52 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function addUser()
+{
+  global $conn, $_POST, $_SESSION;
+
+  $fname = mysqli_escape_string($conn, ucwords($_POST["fname"]));
+  $mname = mysqli_escape_string($conn, ucwords($_POST["mname"]));
+  $lname = mysqli_escape_string($conn, ucwords($_POST["lname"]));
+  $email = $_POST["email"];
+  $password = $_POST["password"];
+  $role = $_POST["role"];
+  $action = $_POST["action"];
+
+  $isEmailExist = checkEmailIfExistF($email);
+
+  if (!$isEmailExist) {
+    $userData = array(
+      "fname" => $fname,
+      "mname" => $mname,
+      "lname" => $lname,
+      "email" => $email,
+      "password" => password_hash($password, PASSWORD_ARGON2I),
+      "role" => $role
+    );
+
+    $user = insert("users", $userData);
+
+    if ($user) {
+      $response["success"] = true;
+      if ($action == "register") {
+        $_SESSION["userId"] = $user;
+        $response["message"] = "You are now registered";
+      } else {
+        $response["message"] = "User successfully added";
+      }
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Email already exist.";
+  }
+
+  returnResponse($response);
 }
 
 function changePassword()
@@ -96,7 +148,7 @@ function deleteItem()
   returnResponse($response);
 }
 
-function checkEmailIfExist()
+function checkEmailIfExistR()
 {
   global $conn, $_POST;
 
@@ -110,6 +162,18 @@ function checkEmailIfExist()
       )
     ) > 0 ? true : false]
   );
+}
+
+function checkEmailIfExistF($email, $id = null)
+{
+  global $conn;
+
+  return mysqli_num_rows(
+    mysqli_query(
+      $conn,
+      "SELECT * FROM users WHERE " . ($id ? "id != '$id' and " : "") . " email = '{$email}'"
+    )
+  ) > 0 ? true : false;
 }
 
 function updateUser()
@@ -329,25 +393,27 @@ function login()
 {
   global $conn;
 
-  $systemId = $_POST["systemId"];
+  $email = $_POST["email"];
   $password = $_POST["password"];
+  $role = $_POST["role"];
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM users WHERE system_id='$systemId'"
+    "SELECT * FROM users WHERE email='$email'"
   );
 
   if (mysqli_num_rows($query) > 0) {
     $user = mysqli_fetch_object($query);
-    if (md5($password) == $user->password) {
+    if (password_verify($password, $user->password)) {
       $response["success"] = true;
-      $response["isNew"] = $user->isNew;
-      $response["userId"] = $user->id;
       $_SESSION["userId"] = $user->id;
-      $_SESSION["systemId"] = $user->system_id;
+
+      if ($role == "admin") {
+        $response["isNew"] = $user->isNew;
+      }
     } else {
       $response["success"] = false;
-      $response["message"] = "Error password.";
+      $response["message"] = "Password not match.";
     }
   } else {
     $response["success"] = false;
@@ -359,7 +425,7 @@ function login()
 
 function logout()
 {
-  global $_SESSION;
+  global $_SESSION, $_GET;
   $_SESSION = array();
 
   if (ini_get("session.use_cookies")) {
@@ -376,5 +442,9 @@ function logout()
   }
 
   session_destroy();
-  header("location: ../admin/");
+  if ($_GET["location"] == "user") {
+    header("location: ../");
+  } else {
+    header("location: ../admin/");
+  }
 }

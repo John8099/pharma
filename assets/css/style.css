@@ -1506,3 +1506,10 @@ a:hover {
     display: none;
   }
 }
+
+.user-img {
+  border-radius: 50% !important;
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+}

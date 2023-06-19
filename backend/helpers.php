@@ -224,7 +224,8 @@ function getAvatar($userId)
   if ($user->avatar) {
     return "$SERVER_NAME/media/$user->avatar";
   }
-  return "$SERVER_NAME/media/default.png";
+  
+  return "$SERVER_NAME/public/default.png";
 }
 
 function getItemById($itemId)
