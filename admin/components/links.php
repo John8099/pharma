@@ -1,15 +1,46 @@
 <?php
 $links = array(
   array(
-    "title" => "Home",
-    "url" => "$SERVER_NAME/"
+    "title" => "Dashboard",
+    "config" => array(
+      "icon" => "fa fa-tachometer-alt",
+      "url" => "$SERVER_NAME/admin/views/dashboard"
+    )
   ),
   array(
-    "title" => "Store",
-    "url" => "$SERVER_NAME/store"
+    "title" => "Admins",
+    "config" => array(
+      "icon" => "fa fa-user-shield",
+      "url" => "$SERVER_NAME/admin/views/admins"
+    )
   ),
   array(
-    "title" => "About",
-    "url" => "$SERVER_NAME/about"
+    "title" => "Users",
+    "config" => array(
+      "icon" => "fa fa-users",
+      "url" => "$SERVER_NAME/admin/views/users"
+    )
   ),
+  array(
+    "title" => "Drugs",
+    "config" => array(
+      "icon" => "fa fa-pills",
+      "url" => "$SERVER_NAME/admin/views/drugs"
+    )
+  ),
+  array(
+    "title" => "Orders",
+    "config" => array(
+      "icon" => "fa fa-cart-arrow-down",
+      "url" => "$SERVER_NAME/admin/views/orders"
+    )
+  ),
+  array(
+    "title" => "Orders History",
+    "config" => array(
+      "icon" => "fa fa-receipt",
+      "url" => "$SERVER_NAME/admin/views/history"
+    )
+  ),
+
 );

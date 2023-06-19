@@ -28,7 +28,7 @@ function checkItemNameCount($itemId = null, $itemName)
   return $itemNameCount;
 }
 
-function getTableData($table, $column, $value)
+function getTableData($table, $column = null, $value = null)
 {
   global $conn;
 
@@ -36,7 +36,7 @@ function getTableData($table, $column, $value)
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM $table WHERE $column='$value'"
+    "SELECT * FROM $table " . ($column ? "WHERE $column='$value'" : "")
   );
 
   while ($row = mysqli_fetch_object($query)) {
@@ -202,14 +202,14 @@ function getFullName($userId, $format = "") // format = with_middle
   $user = getUserById($userId);
   $fullName = "";
 
-  if ($user->middle_name == "") {
-    $fullName = ucwords("$user->first_name $user->last_name");
+  if ($user->mname == "") {
+    $fullName = ucwords("$user->fname $user->lname");
   } else {
     if ($format) {
-      $fullName = ucwords("$user->first_name $user->middle_name $user->last_name");
+      $fullName = ucwords("$user->fname $user->mname $user->lname");
     } else {
-      $middle = $user->middle_name[0];
-      $fullName = ucwords("$user->first_name " . $middle . ". $user->last_name");
+      $middle = $user->mname[0];
+      $fullName = ucwords("$user->fname " . $middle . ". $user->lname");
     }
   }
 
@@ -224,7 +224,7 @@ function getAvatar($userId)
   if ($user->avatar) {
     return "$SERVER_NAME/media/$user->avatar";
   }
-  
+
   return "$SERVER_NAME/public/default.png";
 }
 

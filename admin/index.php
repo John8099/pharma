@@ -12,37 +12,35 @@
         <div class="row align-items-center">
           <div class="col-md-6">
             <div class="card-body">
-              <h4 class="mb-3 f-w-400">Sign in</h4>
-              <div class="input-group mb-2">
-                <div class="input-group-prepend">
-                  <span class="input-group-text"><i class="feather icon-mail"></i></span>
-                </div>
-                <input type="email" class="form-control" placeholder="Email address" />
-              </div>
-              <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text"><i class="feather icon-lock"></i></span>
-                </div>
-                <input type="password" class="form-control" placeholder="Password" />
-              </div>
+              <form method="POST" id="form-sign-in">
+                <h4 class="mb-3 f-w-400">Sign in</h4>
+                <input type="text" value="admin" name="role" hidden readonly>
 
-              <div class="form-group text-left mt-2">
-                <div class="checkbox checkbox-primary d-inline">
-                  <input type="checkbox" id="showPass" />
-                  <label for="checkbox-fill-a1" class="cr">
-                    Show Password
-                  </label>
+                <div class="input-group mb-2">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="feather icon-mail"></i></span>
+                  </div>
+                  <input type="email" name="email" class="form-control" placeholder="Email address" required />
                 </div>
-              </div>
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="feather icon-lock"></i></span>
+                  </div>
+                  <input type="password" name="password" id="inputPass" class="form-control" placeholder="Password" required />
+                </div>
 
-              <button class="btn btn-primary mb-4">Sign In</button>
+                <div class="form-group text-left mt-2">
+                  <div class="checkbox checkbox-primary d-inline">
+                    <input type="checkbox" id="showPass" />
+                    <label for="showPass" class="cr">
+                      Show Password
+                    </label>
+                  </div>
+                </div>
 
-              <p class="mb-0 text-muted">
-                Don't have an account?
-                <a href="#" class="f-w-400" onclick="changeUrl('sign-up')">
-                  Signup
-                </a>
-              </p>
+                <button type="submit" class="btn btn-primary mb-4">Sign In</button>
+
+              </form>
             </div>
           </div>
           <div class="col-md-6 d-none d-md-block">
@@ -55,6 +53,44 @@
 
   <?php include("./components/scripts.php") ?>
 
+  <script>
+    $("#form-sign-in").on("submit", function(e) {
+      swal.showLoading()
+      e.preventDefault()
+
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=login",
+        $(this).serialize(),
+        (data, status) => {
+          const resp = JSON.parse(data)
+          if (!resp.success) {
+            swal.fire({
+              title: 'Error!',
+              text: resp.message,
+              icon: 'error',
+            })
+          } else {
+            window.location.replace("<?= $SERVER_NAME ?>/admin/views/dashboard");
+          }
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
+
+    })
+
+    $("#showPass").on("click", function() {
+      if ($(this).prop("checked") == true) {
+        $("#inputPass").prop("type", "text")
+      } else {
+        $("#inputPass").prop("type", "password")
+      }
+    })
+  </script>
 </body>
 
 </html>

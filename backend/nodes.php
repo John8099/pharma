@@ -404,16 +404,21 @@ function login()
 
   if (mysqli_num_rows($query) > 0) {
     $user = mysqli_fetch_object($query);
-    if (password_verify($password, $user->password)) {
-      $response["success"] = true;
-      $_SESSION["userId"] = $user->id;
-
-      if ($role == "admin") {
-        $response["isNew"] = $user->isNew;
-      }
-    } else {
+    if ($role != $user->role) {
       $response["success"] = false;
-      $response["message"] = "Password not match.";
+      $response["message"] = "You are not allowed to login on this page.";
+    } else {
+      if (password_verify($password, $user->password)) {
+        $response["success"] = true;
+        $_SESSION["userId"] = $user->id;
+
+        if ($role == "admin") {
+          $response["isNew"] = $user->isNew;
+        }
+      } else {
+        $response["success"] = false;
+        $response["message"] = "Password not match.";
+      }
     }
   } else {
     $response["success"] = false;
