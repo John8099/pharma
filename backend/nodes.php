@@ -61,7 +61,7 @@ function addUser()
   $mname = mysqli_escape_string($conn, ucwords($_POST["mname"]));
   $lname = mysqli_escape_string($conn, ucwords($_POST["lname"]));
   $email = $_POST["email"];
-  $password = $_POST["password"];
+  $password = isset($_POST["password"]) ? $_POST["password"] : "password123";
   $role = $_POST["role"];
   $action = $_POST["action"];
 
@@ -85,7 +85,7 @@ function addUser()
         $_SESSION["userId"] = $user;
         $response["message"] = "You are now registered";
       } else {
-        $response["message"] = "User successfully added";
+        $response["message"] = "User successfully added<br>User's <strong>default</strong> password is \"<strong>$password</strong>\"";
       }
     } else {
       $response["success"] = false;

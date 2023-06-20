@@ -20,3 +20,5 @@
 
 <script src="https://cdn.datatables.net/searchbuilder/1.4.2/js/dataTables.searchBuilder.min.js"></script>
 <script src="https://cdn.datatables.net/datetime/1.4.1/js/dataTables.dateTime.min.js"></script>
+
+<script src="<?= $SERVER_NAME ?>/admin/assets/js/custom.js"></script>

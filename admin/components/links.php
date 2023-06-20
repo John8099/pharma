@@ -7,13 +7,13 @@ $links = array(
       "url" => "$SERVER_NAME/admin/views/dashboard"
     )
   ),
-  array(
-    "title" => "Admins",
-    "config" => array(
-      "icon" => "fa fa-user-shield",
-      "url" => "$SERVER_NAME/admin/views/admins"
-    )
-  ),
+  // array(
+  //   "title" => "Admins",
+  //   "config" => array(
+  //     "icon" => "fa fa-user-shield",
+  //     "url" => "$SERVER_NAME/admin/views/admins"
+  //   )
+  // ),
   array(
     "title" => "Users",
     "config" => array(
