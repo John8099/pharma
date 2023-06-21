@@ -21,18 +21,7 @@ if (!$isLogin) {
           <div class="main-body">
             <div class="page-wrapper">
               <!-- [ breadcrumb ] start -->
-
-              <div class="page-header mb-1">
-                <div class="page-block">
-                  <div class="row align-items-center">
-                    <div class="col-md-12">
-                      <div class="page-header-title">
-                        <h5>Users</h5>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <?php include("../components/page-header.php") ?>
               <!-- [ breadcrumb ] end -->
 
               <!-- [ Main Content ] start -->
@@ -121,13 +110,13 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addAdminModal" tabindex="-1" role="dialog" aria-labelledby="Add Admin" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal fade" id="addAdminModal" tabindex="-1" role="dialog" aria-labelledby="New Admin" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title text-secondary">
             <i class="fa fa-user-plus mr-1"></i>
-            Add Admin
+            New Admin
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -249,6 +238,7 @@ if (!$isLogin) {
           //     columns: [1, 2, 3]
           //   }
           // },
+
           {
             extend: 'searchBuilder',
             config: {

@@ -14,6 +14,30 @@ if ($_SERVER['HTTP_HOST'] == "localhost") {
   $SERVER_NAME = ($ORIGIN);
 }
 
+function isMedicineTypeExist($value, $id = null)
+{
+  global $conn;
+  $newVal = strtolower($value);
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM medicine_types WHERE LOWER(`name`)='$newVal'" . ($id ? " and type_id <> '$id'" : "")
+  );
+
+  return mysqli_num_rows($query) > 0 ? true : false;
+}
+
+function isManufacturerExist($value, $id = null)
+{
+  global $conn;
+  $newVal = strtolower($value);
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM manufacturers WHERE LOWER(`name`)='$newVal'" . ($id ? " and manufacturer_id <> '$id'" : "")
+  );
+
+  return mysqli_num_rows($query) > 0 ? true : false;
+}
+
 function checkItemNameCount($itemId = null, $itemName)
 {
   global $conn;;
@@ -43,7 +67,7 @@ function getTableData($table, $column = null, $value = null)
     array_push($data, $row);
   }
 
-  return count($data) > 0 ? $data : null;
+  return $data;
 }
 
 function getCourse($course_id)

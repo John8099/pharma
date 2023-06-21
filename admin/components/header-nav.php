@@ -14,16 +14,14 @@
    </a>
    <div class="navbar-collapse" style="background-color: rgb(255 255 255);">
      <ul class="navbar-nav ml-auto">
-       <li>
+       <li class="d-none">
          <div class="dropdown">
-           <a class="dropdown-toggle" href="#" data-toggle="dropdown"><i class="icon feather icon-bell"></i></a>
+           <a class="dropdown-toggle" href="#" data-toggle="dropdown">
+             <i class="icon feather icon-bell"></i>
+           </a>
            <div class="dropdown-menu dropdown-menu-right notification">
              <div class="noti-head">
                <h6 class="d-inline-block m-b-0">Notifications</h6>
-               <div class="float-right">
-                 <a href="#!" class="m-r-10">mark as read</a>
-                 <a href="#!">clear all</a>
-               </div>
              </div>
              <ul class="noti-body">
                <li class="n-title">

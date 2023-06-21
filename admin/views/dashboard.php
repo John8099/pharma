@@ -23,20 +23,10 @@ if (!$isLogin) {
           <div class="main-body">
             <div class="page-wrapper">
               <!-- [ breadcrumb ] start -->
-              <div class="page-header">
-                <div class="page-block">
-                  <div class="row align-items-center">
-                    <div class="col-md-12">
-                      <div class="page-header-title">
-                        <h5>Dashboard</h5>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <?php include("../components/page-header.php") ?>
               <!-- [ breadcrumb ] end -->
               <!-- [ Main Content ] start -->
-              <div class="row">
+              <div class="row d-none">
 
                 <!-- product profit start -->
                 <div class="col-xl-3 col-md-6">

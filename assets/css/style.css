@@ -28,6 +28,9 @@ a:hover {
 .text-black {
   color: #000;
 }
+.site-wrap {
+  margin-bottom: 80px;
+}
 
 .site-wrap:before {
   -webkit-transition: 0.3s all ease-in-out;

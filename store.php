@@ -7,10 +7,7 @@ include("./backend/nodes.php");
 <?php include("./components/header.php") ?>
 
 <body>
-
-
   <div class="site-wrap">
-
     <?php include("./components/header-nav.php") ?>
 
     <div class="bg-light py-3">
@@ -24,7 +21,7 @@ include("./backend/nodes.php");
     <div class="site-section">
       <div class="container">
 
-        <div class="row">
+        <div class="row d-none">
           <div class="col-lg-6">
             <h3 class="mb-3 h6 text-uppercase text-black d-block">Filter by Price</h3>
             <div id="slider-range" class="border-primary"></div>
@@ -46,7 +43,6 @@ include("./backend/nodes.php");
 
         <div class="row">
           <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <span class="tag">Sale</span>
             <a href="shop-single.html"> <img src="./assets/images/product_01.png" alt="Image"></a>
             <h3 class="text-dark"><a href="shop-single.html">Bioderma</a></h3>
             <p class="price">$55.00</p>
@@ -74,14 +70,12 @@ include("./backend/nodes.php");
             <p class="price">$38.00</p>
           </div>
           <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <span class="tag">Sale</span>
             <a href="shop-single.html"> <img src="./assets/images/product_06.png" alt="Image"></a>
             <h3 class="text-dark"><a href="shop-single.html">Poo Pourri</a></h3>
             <p class="price">$38.00</p>
           </div>
 
           <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <span class="tag">Sale</span>
             <a href="shop-single.html"> <img src="./assets/images/product_01.png" alt="Image"></a>
             <h3 class="text-dark"><a href="shop-single.html">Bioderma</a></h3>
             <p class="price">$55.00</p>
@@ -92,7 +86,7 @@ include("./backend/nodes.php");
             <p class="price">$70.00</p>
           </div>
           <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img ˀsrc="./assets/images/product_03.png" alt="Image"></a>
+            <a href="shop-single.html"> <img src="./assets/images/product_03.png" alt="Image"></a>
             <h3 class="text-dark"><a href="shop-single.html">Umcka Cold Care</a></h3>
             <p class="price">$120.00</p>
           </div>
@@ -109,7 +103,6 @@ include("./backend/nodes.php");
             <p class="price">$38.00</p>
           </div>
           <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <span class="tag">Sale</span>
             <a href="shop-single.html"> <img src="./assets/images/product_06.png" alt="Image"></a>
             <h3 class="text-dark"><a href="shop-single.html">Poo Pourri</a></h3>
             <p class="price">$38.00</p>

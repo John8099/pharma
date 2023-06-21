@@ -21,18 +21,7 @@ if (!$isLogin) {
           <div class="main-body">
             <div class="page-wrapper">
               <!-- [ breadcrumb ] start -->
-
-              <div class="page-header mb-1">
-                <div class="page-block">
-                  <div class="row align-items-center">
-                    <div class="col-md-12">
-                      <div class="page-header-title">
-                        <h5>Drugs</h5>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <?php include("../components/page-header.php") ?>
               <!-- [ breadcrumb ] end -->
 
               <!-- [ Main Content ] start -->
@@ -44,66 +33,31 @@ if (!$isLogin) {
                     <div class="card-header p-2">
                       <div class="w-100 d-flex justify-content-end">
 
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addAdminModal">
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addMeds">
                           <i class="fa fa-user-plus"></i>
-                          Add Admin
+                          New Medicine
                         </button>
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="adminTable" class="table table-hover">
+                      <table id="medsTable" class="table table-hover">
                         <thead>
                           <tr>
-                            <th>Drug image</th>
-                            <th>name</th>
+                            <th>Image</th>
+                            <th>Therapeutic <br> Classification</th>
+                            <th>Generic name</th>
+                            <th>Brand name</th>
+                            <th>Dose</th>
+                            <th>Type</th>
+                            <th>Manufacturer</th>
                             <th>Quantity</th>
-                            <th>Is Active</th>
+                            <th>Expiration</th>
+                            <th>Status</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <?php
-                          if ($user) :
-                            $query = mysqli_query(
-                              $conn,
-                              "SELECT * FROM users WHERE id <> $user->id"
-                            );
 
-                            while ($admin = mysqli_fetch_object($query)) :
-                          ?>
-                              <tr>
-                                <td>
-                                  <img src="<?= getAvatar($admin->id) ?>" class="img-radius" width="40px">
-                                </td>
-                                <td><?= getFullName($admin->id, "with_middle") ?></td>
-                                <td><?= $admin->email ?></td>
-
-                                <td>
-                                  <?php if ($admin->role == "user") : ?>
-                                    <span class="status text-info h6">
-                                      <i class="fa fa-user"></i>
-                                    </span>
-                                    User
-                                  <?php else : ?>
-                                    <span class="status text-danger h6">
-                                      <i class="fa fa-user-shield"></i>
-                                    </span>
-                                    Admin
-                                  <?php endif; ?>
-                                </td>
-                                <td><?= date("Y-m-d", strtotime($admin->createdAt)); ?></td>
-                                <!-- <td>
-                                  <a href="#" class="h5 text-info m-2" title="Edit" data-toggle="tooltip">
-                                    <i class="fa fa-cog"></i>
-                                  </a>
-                                  <a href="#" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
-                                    <i class="fa fa-times-circle"></i>
-                                  </a>
-                                </td> -->
-                              </tr>
-                          <?php endwhile;
-                          endif;
-                          ?>
                         </tbody>
                       </table>
                     </div>
@@ -120,13 +74,13 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addAdminModal" tabindex="-1" role="dialog" aria-labelledby="Add Admin" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal fade" id="addMeds" tabindex="-1" role="dialog" aria-labelledby="New Medicine" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title text-secondary">
             <i class="fa fa-user-plus mr-1"></i>
-            Add Admin
+            New Medicine
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
@@ -175,34 +129,32 @@ if (!$isLogin) {
 
   <?php include("../components/scripts.php") ?>
   <script>
-    $(document).ready(function() {
+    $("#addAdminForm").on("submit", function(e) {
+      swal.showLoading();
 
-      $("#addAdminForm").on("submit", function(e) {
-        swal.showLoading();
-
-        $.post(
-          "<?= $SERVER_NAME ?>/backend/nodes?action=addUser",
-          $(this).serialize(),
-          (data, status) => {
-            const resp = JSON.parse(data)
-            swal.fire({
-              title: resp.success ? "Success!" : 'Error!',
-              html: resp.message,
-              icon: resp.success ? "success" : 'error',
-            }).then(() => resp.success ? window.location.reload() : undefined)
-
-          }).fail(function(e) {
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=addUser",
+        $(this).serialize(),
+        (data, status) => {
+          const resp = JSON.parse(data)
           swal.fire({
-            title: 'Error!',
-            text: e.statusText,
-            icon: 'error',
-          })
-        });
+            title: resp.success ? "Success!" : 'Error!',
+            html: resp.message,
+            icon: resp.success ? "success" : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
 
-        e.preventDefault()
-      })
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
 
-      const tableId = "#adminTable";
+      e.preventDefault()
+    })
+    $(document).ready(function() {
+      const tableId = "#medsTable";
       var table = $(tableId).DataTable({
         paging: true,
         lengthChange: false,

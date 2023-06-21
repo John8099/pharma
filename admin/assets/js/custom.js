@@ -11,6 +11,7 @@ window.deleteData = function (table, col, val) {
     .then((d) => {
       if (d.isConfirmed) {
         const host = window.location.host === "localhost" ? "/pharma" : "";
+        swal.showLoading();
         $.post(
           `${window.location.origin}${host}/backend/nodes.php?action=delete_item`,
           {

@@ -22,10 +22,24 @@ $links = array(
     )
   ),
   array(
-    "title" => "Drugs",
+    "title" => "Manufacturers",
+    "config" => array(
+      "icon" => "fa fa-cogs",
+      "url" => "$SERVER_NAME/admin/views/manufacturers"
+    )
+  ),
+  array(
+    "title" => "Medicines",
     "config" => array(
       "icon" => "fa fa-pills",
-      "url" => "$SERVER_NAME/admin/views/drugs"
+      "url" => "$SERVER_NAME/admin/views/medicines"
+    )
+  ),
+  array(
+    "title" => "Medicine Types",
+    "config" => array(
+      "icon" => "fa fa-briefcase-medical",
+      "url" => "$SERVER_NAME/admin/views/medicine-types"
     )
   ),
   array(

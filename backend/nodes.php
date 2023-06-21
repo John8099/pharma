@@ -43,6 +43,12 @@ if (isset($_GET['action'])) {
       case "change_password":
         changePassword();
         break;
+      case "save_manufacturer":
+        saveManufacturer();
+        break;
+      case "save_medicine_type":
+        save_medicine_type();
+        break;
       default:
         null;
         break;
@@ -51,6 +57,82 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function save_medicine_type()
+{
+  global $conn, $_POST;
+
+  $typeId = isset($_POST["typeId"]) ? $_POST["typeId"] : null;
+  $name = ucwords($_POST["name"]);
+  $isActive = isset($_POST["isActive"]) ? "active" : "inactive";
+
+  $action = $_POST["action"];
+
+  if (!isMedicineTypeExist($name, $typeId)) {
+    $typeData = array(
+      "name" => $name,
+      "status" => $isActive
+    );
+
+    $procMedicineType = null;
+    if ($action == "add") {
+      $procMedicineType = insert("medicine_types", $typeData);
+    } else {
+      $procMedicineType = update("medicine_types", $typeData, "type_id", $typeId);
+    }
+
+    if ($procMedicineType) {
+      $response["success"] = true;
+      $response["message"] = "Medicine type successfully " . ($action == "add" ? "added." : "updated.");
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Medicine type name: <strong>\"$name\"</strong> already exist.";
+  }
+
+  returnResponse($response);
+}
+
+function saveManufacturer()
+{
+  global $conn, $_POST;
+
+  $manufactureId = isset($_POST["manufacturerId"]) ? $_POST["manufacturerId"] : null;
+  $name = ucwords($_POST["name"]);
+  $isActive = isset($_POST["isActive"]) ? "active" : "inactive";
+
+  $action = $_POST["action"];
+
+  if (!isManufacturerExist($name, $manufactureId)) {
+    $manufacturerData = array(
+      "name" => $name,
+      "status" => $isActive
+    );
+
+    $procManufacturer = null;
+    if ($action == "add") {
+      $procManufacturer = insert("manufacturers", $manufacturerData);
+    } else {
+      $procManufacturer = update("manufacturers", $manufacturerData, "manufacturer_id", $manufactureId);
+    }
+
+    if ($procManufacturer) {
+      $response["success"] = true;
+      $response["message"] = "Manufacturer successfully " . ($action == "add" ? "added." : "updated.");
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Manufacturer name: <strong>\"$name\"</strong> already exist.";
+  }
+
+  returnResponse($response);
 }
 
 function addUser()

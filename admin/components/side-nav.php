@@ -15,9 +15,15 @@
 
           $self = "$ORIGIN{$_SERVER['REQUEST_URI']}";
 
+          $pageConfigIndex = "";
+
           foreach ($links as $key => $link) :
             $config = $link["config"];
             $isPageActive = $config["url"] == str_replace(".php", "", $self);
+
+            if ($pageConfigIndex == "") {
+              $pageConfigIndex = $isPageActive ? $key : null;
+            }
           ?>
             <li class="nav-item">
               <a href="<?= $config["url"] ?>" class="nav-link">
