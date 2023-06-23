@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 21, 2023 at 09:50 AM
+-- Generation Time: Jun 23, 2023 at 08:53 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -41,6 +41,35 @@ INSERT INTO `manufacturers` (`manufacturer_id`, `name`, `status`) VALUES
 (1, 'Natrapharm', 'active'),
 (4, 'Getz Pharma', 'active'),
 (5, 'Takeda/ Zuellig', 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicines`
+--
+
+CREATE TABLE `medicines` (
+  `medicine_id` int(11) NOT NULL,
+  `manufacturer_id` int(11) DEFAULT NULL,
+  `type_id` int(11) DEFAULT NULL,
+  `classification` text NOT NULL,
+  `generic_name` text NOT NULL,
+  `brand_name` text NOT NULL,
+  `dose` varchar(32) NOT NULL,
+  `price` float NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `expiration` date NOT NULL,
+  `image` text NOT NULL,
+  `description` text DEFAULT NULL,
+  `created` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `medicines`
+--
+
+INSERT INTO `medicines` (`medicine_id`, `manufacturer_id`, `type_id`, `classification`, `generic_name`, `brand_name`, `dose`, `price`, `quantity`, `expiration`, `image`, `description`, `created`) VALUES
+(1, 1, 1, 'test', 'test', 'test', '12mg', 20, 100, '2023-06-30', 'bio.png', '', '2023-06-23 05:38:07');
 
 -- --------------------------------------------------------
 
@@ -103,6 +132,14 @@ ALTER TABLE `manufacturers`
   ADD PRIMARY KEY (`manufacturer_id`);
 
 --
+-- Indexes for table `medicines`
+--
+ALTER TABLE `medicines`
+  ADD PRIMARY KEY (`medicine_id`),
+  ADD KEY `manufacturer_id` (`manufacturer_id`),
+  ADD KEY `type_id` (`type_id`);
+
+--
 -- Indexes for table `medicine_types`
 --
 ALTER TABLE `medicine_types`
@@ -125,6 +162,12 @@ ALTER TABLE `manufacturers`
   MODIFY `manufacturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT for table `medicines`
+--
+ALTER TABLE `medicines`
+  MODIFY `medicine_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `medicine_types`
 --
 ALTER TABLE `medicine_types`
@@ -135,6 +178,17 @@ ALTER TABLE `medicine_types`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `medicines`
+--
+ALTER TABLE `medicines`
+  ADD CONSTRAINT `medicines_ibfk_1` FOREIGN KEY (`manufacturer_id`) REFERENCES `manufacturers` (`manufacturer_id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+  ADD CONSTRAINT `medicines_ibfk_2` FOREIGN KEY (`type_id`) REFERENCES `medicine_types` (`type_id`) ON DELETE SET NULL ON UPDATE NO ACTION;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

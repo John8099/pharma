@@ -34,7 +34,6 @@ if (!$isLogin) {
                       <div class="w-100 d-flex justify-content-end">
 
                         <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addMeds">
-                          <i class="fa fa-user-plus"></i>
                           New Medicine
                         </button>
                       </div>
@@ -43,7 +42,6 @@ if (!$isLogin) {
                       <table id="medsTable" class="table table-hover">
                         <thead>
                           <tr>
-                            <th>Image</th>
                             <th>Therapeutic <br> Classification</th>
                             <th>Generic name</th>
                             <th>Brand name</th>
@@ -51,12 +49,42 @@ if (!$isLogin) {
                             <th>Type</th>
                             <th>Manufacturer</th>
                             <th>Quantity</th>
-                            <th>Expiration</th>
-                            <th>Status</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
+                          <?php
+                          $medicineData = getTableData("medicines");
+                          foreach ($medicineData as $medicine) :
+                            $typeData = getTableData("medicine_types", "type_id", $medicine->type_id);
+                            $type = count($typeData) > 0 ? $typeData[0]->name : "";
+
+                            $manufacturerData = getTableData("manufacturers", "manufacturer_id ", $medicine->manufacturer_id);
+                            $manufacturer = count($manufacturerData) > 0 ? $manufacturerData[0]->name : "";
+                          ?>
+                            <tr>
+                              <td><?= $medicine->classification ?></td>
+                              <td><?= $medicine->generic_name ?></td>
+                              <td><?= $medicine->brand_name ?></td>
+                              <td><?= $medicine->dose ?></td>
+                              <td><?= $type ?></td>
+                              <td><?= $manufacturer ?></td>
+                              <td><?= $medicine->quantity ?></td>
+                              <td>
+                                <a href="#" onclick="" class="h5 text-info m-2" title="Preview Details" data-toggle="tooltip">
+                                  <i class="fa fa-eye"></i>
+                                </a>
+                                <a href="#" onclick="" class="h5 text-warning m-2" title="Edit Medicine" data-toggle="tooltip">
+                                  <i class="fa fa-edit"></i>
+                                </a>
+                                <?php if ($medicine->quantity == 0) : ?>
+                                  <a href="#" onclick="" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                    <i class="fa fa-times-circle"></i>
+                                  </a>
+                                <?php endif; ?>
+                              </td>
+                            </tr>
+                          <?php endforeach; ?>
 
                         </tbody>
                       </table>
@@ -86,11 +114,9 @@ if (!$isLogin) {
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form id="addAdminForm" method="POST">
+        <form id="addMedsForm" method="POST">
 
           <div class="modal-body">
-            <input type="text" value="admin" name="role" hidden readonly>
-            <input type="text" value="addUser" name="action" hidden readonly>
 
             <div class="input-group mb-2">
               <div class="input-group-prepend">
@@ -129,7 +155,7 @@ if (!$isLogin) {
 
   <?php include("../components/scripts.php") ?>
   <script>
-    $("#addAdminForm").on("submit", function(e) {
+    $("#addMedsForm").on("submit", function(e) {
       swal.showLoading();
 
       $.post(
@@ -168,38 +194,6 @@ if (!$isLogin) {
           }
         },
         buttons: [
-          // {
-          //   extend: 'print',
-          //   messageTop: '<h3>Pharma Admins</h3>',
-          //   title: "",
-          //   exportOptions: {
-          //     columns: [1, 2, 3]
-          //   }
-          // },
-          // {
-          //   extend: 'pdf',
-          //   messageTop: '<h3>Pharma Admins</h3>',
-          //   title: "",
-          //   exportOptions: {
-          //     columns: [1, 2, 3]
-          //   }
-          // },
-          // {
-          //   extend: 'csv',
-          //   messageTop: '<h3>Pharma Admins</h3>',
-          //   title: "",
-          //   exportOptions: {
-          //     columns: [1, 2, 3]
-          //   }
-          // },
-          // {
-          //   extend: 'excel',
-          //   messageTop: '<h3>Pharma Admins</h3>',
-          //   title: "",
-          //   exportOptions: {
-          //     columns: [1, 2, 3]
-          //   }
-          // },
           {
             extend: 'searchBuilder',
             config: {
