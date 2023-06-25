@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 23, 2023 at 08:53 AM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Generation Time: Jun 25, 2023 at 04:34 PM
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.0.25
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -52,6 +52,7 @@ CREATE TABLE `medicines` (
   `medicine_id` int(11) NOT NULL,
   `manufacturer_id` int(11) DEFAULT NULL,
   `type_id` int(11) DEFAULT NULL,
+  `code` varchar(32) NOT NULL,
   `classification` text NOT NULL,
   `generic_name` text NOT NULL,
   `brand_name` text NOT NULL,
@@ -68,8 +69,8 @@ CREATE TABLE `medicines` (
 -- Dumping data for table `medicines`
 --
 
-INSERT INTO `medicines` (`medicine_id`, `manufacturer_id`, `type_id`, `classification`, `generic_name`, `brand_name`, `dose`, `price`, `quantity`, `expiration`, `image`, `description`, `created`) VALUES
-(1, 1, 1, 'test', 'test', 'test', '12mg', 20, 100, '2023-06-30', 'bio.png', '', '2023-06-23 05:38:07');
+INSERT INTO `medicines` (`medicine_id`, `manufacturer_id`, `type_id`, `code`, `classification`, `generic_name`, `brand_name`, `dose`, `price`, `quantity`, `expiration`, `image`, `description`, `created`) VALUES
+(1, 1, 1, 'SYS2023A0002', 'test', 'test', 'test', '12mg', 20, 100, '2023-06-30', 'bio.png', '', '2023-06-23 05:38:07');
 
 -- --------------------------------------------------------
 

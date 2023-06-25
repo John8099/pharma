@@ -23,7 +23,9 @@
   <link rel="stylesheet" href="https://cdn.datatables.net/searchbuilder/1.4.2/css/searchBuilder.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/datetime/1.4.1/css/dataTables.dateTime.min.css">
 
-  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="<?= $SERVER_NAME ?>/admin/assets/plugins/choices.js/choices.min.css">
+
+  <link rel=" stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap4.min.css">
 
   <style>
     .dtb-popover-close {

@@ -14,6 +14,30 @@ if ($_SERVER['HTTP_HOST'] == "localhost") {
   $SERVER_NAME = ($ORIGIN);
 }
 
+$defaultMedicineImg = "$SERVER_NAME/public/medicine.png";
+
+function uploadImg($file, $path)
+{
+  $res = array(
+    "success" => false,
+    "file_name" => ""
+  );
+
+  if (intval($file["error"]) == 0) {
+    $uploadFile = date("mdY-his") . "_" . basename($file['name']);
+
+    if (!is_dir($path)) {
+      mkdir($path, 0777, true);
+    }
+
+    if (move_uploaded_file($file['tmp_name'], "$path/$uploadFile")) {
+      $res["success"] = true;
+      $res["file_name"] = $uploadFile;
+    }
+  }
+  return (object) $res;
+}
+
 function isMedicineTypeExist($value, $id = null)
 {
   global $conn;
@@ -180,21 +204,21 @@ function generateSystemId($preferredLetter = null)
   $AUTO_INCREMENT = mysqli_fetch_object(
     mysqli_query(
       $conn,
-      "SELECT AUTO_INCREMENT AS ID FROM information_schema.tables WHERE table_name = 'users' and table_schema = '$db'"
+      "SELECT AUTO_INCREMENT AS ID FROM information_schema.tables WHERE table_name = 'medicines' and table_schema = '$db'"
     )
   );
 
   $countUser = mysqli_num_rows(
     mysqli_query(
       $conn,
-      "SELECT COUNT(*) AS count FROM users"
+      "SELECT COUNT(*) AS count FROM medicines"
     )
   );
 
   $letterIndex = intval(intval($countUser) / 100);
   $letter = $preferredLetter == null ? $characters[$letterIndex] : $preferredLetter;
 
-  return date('Y') . $letter . str_pad($AUTO_INCREMENT->ID, 4, '0', STR_PAD_LEFT);
+  return "SYS" . date('Y') . $letter . str_pad($AUTO_INCREMENT->ID, 4, '0', STR_PAD_LEFT);
 }
 
 function isSelected($value, $toCheck)
@@ -264,22 +288,25 @@ function getItemById($itemId)
   return mysqli_num_rows($query) > 0 ? mysqli_fetch_object($query) : null;
 }
 
-function getItemImage($itemId)
+function getMedicineImage($itemId = null)
 {
-  global $SERVER_NAME, $conn;
-  $inventoryQuery = mysqli_query(
-    $conn,
-    "SELECT * FROM inventory WHERE item_id='$itemId'"
-  );
+  global $SERVER_NAME, $conn, $defaultMedicineImg;
 
-  if (mysqli_num_rows($inventoryQuery) > 0) {
-    $inventory = mysqli_fetch_object($inventoryQuery);
-    if ($inventory->image) {
-      return "$SERVER_NAME/items/$inventory->image";
+  if ($itemId) {
+    $medicineQuery = mysqli_query(
+      $conn,
+      "SELECT * FROM medicines WHERE item_id='$itemId'"
+    );
+
+    if (mysqli_num_rows($medicineQuery) > 0) {
+      $medicine = mysqli_fetch_object($medicineQuery);
+      if ($medicine->image) {
+        return "$SERVER_NAME/media/drugs/$medicine->image";
+      }
+      return $defaultMedicineImg;
     }
-    return "$SERVER_NAME/items/default-item.png";
   }
-  return "$SERVER_NAME/items/default-item.png";
+  return $defaultMedicineImg;
 }
 
 function returnResponse($params)

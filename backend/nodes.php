@@ -49,6 +49,9 @@ if (isset($_GET['action'])) {
       case "save_medicine_type":
         save_medicine_type();
         break;
+      case "add_medicine":
+        add_medicine();
+        break;
       default:
         null;
         break;
@@ -57,6 +60,65 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function add_medicine()
+{
+  global $conn, $_POST, $_FILES;
+
+  $action = $_POST["action"];
+
+  $medicine_img = $_FILES["medicine_img"];
+
+  $code = generateSystemId();
+  $type_id = $_POST["type_id"];
+  $manufacturer_id = $_POST["manufacturer_id"];
+
+  $classification = ucwords($_POST["classification"]);
+  $generic_name = ucwords($_POST["generic_name"]);
+  $brand_name = ucwords($_POST["brand_name"]);
+  $dose = ucwords($_POST["dose"]);
+  $price = $_POST["price"];
+  $quantity = $_POST["quantity"];
+  $expiration = $_POST["expiration"];
+  $med_desc = ucfirst($_POST["med_desc"]);
+
+  $medicineData = array(
+    "manufacturer_id" => $manufacturer_id,
+    "type_id" => $type_id,
+    "code" => $code,
+    "classification" => $classification,
+    "generic_name" => $generic_name,
+    "brand_name" => $brand_name,
+    "dose" => $dose,
+    "price" => $price,
+    "quantity" => $quantity,
+    "expiration" => $expiration,
+    "image" => "",
+    "description" => $med_desc
+  );
+
+  $uploadedImg = uploadImg($medicine_img, "../media/drugs");
+
+  if ($uploadedImg->success) {
+    $medicineData["image"] = $uploadedImg->file_name;
+
+    if ($action == "add") {
+      $comm = insert("medicine", $medicineData);
+    } else if ($action == "edit") {
+      $medicine_id = $_POST["medicine_id"];
+      // $comm = update;
+    } else {
+      $response["success"] = false;
+      $response["message"] = "An error occurred while uploading the image.<br>Please try again later.";
+    }
+
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Error while saving medicine.<br>Please try again later.";
+  }
+
+  returnResponse($response);
 }
 
 function save_medicine_type()
