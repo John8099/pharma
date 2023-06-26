@@ -119,11 +119,6 @@ function update($table, $data, $columnWHere, $columnVal)
         if ($value) {
           array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
         }
-        if ($table == "inventory") {
-          if ($value != "") {
-            array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
-          }
-        }
         if ($value == "set_null") {
           array_push($set, "$column = NULL");
         }
@@ -218,7 +213,7 @@ function generateSystemId($preferredLetter = null)
   $letterIndex = intval(intval($countUser) / 100);
   $letter = $preferredLetter == null ? $characters[$letterIndex] : $preferredLetter;
 
-  return "SYS" . date('Y') . $letter . str_pad($AUTO_INCREMENT->ID, 4, '0', STR_PAD_LEFT);
+  return "MED" . date('y') . $letter . str_pad($AUTO_INCREMENT->ID, 4, '0', STR_PAD_LEFT);
 }
 
 function isSelected($value, $toCheck)
@@ -295,7 +290,7 @@ function getMedicineImage($itemId = null)
   if ($itemId) {
     $medicineQuery = mysqli_query(
       $conn,
-      "SELECT * FROM medicines WHERE item_id='$itemId'"
+      "SELECT * FROM medicines WHERE medicine_id='$itemId'"
     );
 
     if (mysqli_num_rows($medicineQuery) > 0) {

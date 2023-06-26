@@ -41,3 +41,35 @@ window.deleteData = function (table, col, val) {
       }
     });
 };
+
+window.changeImage = function (inputId, medId) {
+  $(inputId).click();
+  $(`#isCleared${medId}`).val("No");
+};
+
+window.clearImg = function (imgDisplayId, divClearId, divBrowseId, medId) {
+  const host = window.location.host === "localhost" ? "/pharma" : "";
+  $("input[type=file]").val("");
+  $(imgDisplayId).attr("src", `${host}/public/medicine.png`);
+
+  $(divClearId).hide();
+  $(divBrowseId).show();
+  $(`#isCleared${medId}`).val("Yes");
+};
+
+window.previewFile = function (input, imgDisplayId, divClearId, divBrowseId) {
+  let file = $(input).get(0).files[0];
+
+  if (file) {
+    let reader = new FileReader();
+
+    reader.onload = function () {
+      $(imgDisplayId).attr("src", reader.result);
+    };
+
+    reader.readAsDataURL(file);
+
+    $(divBrowseId).hide();
+    $(divClearId).show();
+  }
+};

@@ -48,7 +48,6 @@ if (!$isLogin) {
                             <th>Brand name</th>
                             <th>Dose</th>
                             <th>Type</th>
-                            <th>Manufacturer</th>
                             <th>Quantity</th>
                             <th>Action</th>
                           </tr>
@@ -70,22 +69,22 @@ if (!$isLogin) {
                               <td><?= $medicine->brand_name ?></td>
                               <td><?= $medicine->dose ?></td>
                               <td><?= $type ?></td>
-                              <td><?= $manufacturer ?></td>
                               <td><?= $medicine->quantity ?></td>
                               <td>
                                 <a href="#" onclick="" class="h5 text-info m-2" title="Preview Details" data-toggle="tooltip">
                                   <i class="fa fa-eye"></i>
                                 </a>
-                                <a href="#" onclick="" class="h5 text-warning m-2" title="Edit Medicine" data-toggle="tooltip">
-                                  <i class="fa fa-edit"></i>
+                                <a href="#" onclick="handleOpenEditModal('<?= $medicine->medicine_id ?>')" class="h5 text-warning m-2">
+                                  <i class="fa fa-edit" title="Edit Medicine" data-toggle="tooltip"></i>
                                 </a>
                                 <?php if ($medicine->quantity == 0) : ?>
-                                  <a href="#" onclick="" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                  <a href="#" onclick="return deleteData('medicines', 'medicine_id', '<?= $medicine->medicine_id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
                                     <i class="fa fa-times-circle"></i>
                                   </a>
                                 <?php endif; ?>
                               </td>
                             </tr>
+                            <?php include("../components/modal-edit-medicine.php"); ?>
                           <?php endforeach; ?>
 
                         </tbody>
@@ -122,27 +121,27 @@ if (!$isLogin) {
 
               <div class="col-md-12 mb-1">
                 <div class="form-group">
-                  <img src="<?= getMedicineImage() ?>" class="rounded mx-auto d-block" style="width: 200px; height: 200px;" id="profileImgDisplay">
+                  <img src="<?= getMedicineImage() ?>" class="rounded mx-auto d-block" style="width: 200px; height: 200px;" id="modalAdd-display">
                 </div>
-                <div class="mt-3" style="display: flex; justify-content: center;" id="divChange">
-                  <button type="button" class="btn btn-primary btn-sm" onclick="changeImage()">
+                <div class="mt-3" style="display: flex; justify-content: center;" id="modalAdd-browse">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="return changeImage('#formInput-add')">
                     Browse
                   </button>
                 </div>
-                <div class="mt-3" style="display: flex; justify-content: center;" id="divClear">
-                  <button type="button" class="btn btn-danger btn-sm" onclick="clearImg()">
+                <div class="mt-3" style="display: flex; justify-content: center;" id="modalAdd-clear">
+                  <button type="button" class="btn btn-danger btn-sm" onclick="return clearImg('#modalAdd-display', '#modalAdd-clear', '#modalAdd-browse')">
                     Clear
                   </button>
                 </div>
                 <div class="mt-3" style="display: none;">
-                  <input class="form-control form-control-sm" type="file" accept="image/*" onchange="previewFile(this)" id="formFile" name="medicine_img">
+                  <input class="form-control form-control-sm" type="file" accept="image/*" onchange="return previewFile(this, '#modalAdd-display', '#modalAdd-clear', '#modalAdd-browse')" id="formInput-add" name="medicine_img">
                 </div>
               </div>
 
               <div class="col-md-6 mb-1">
                 <div class="form-group">
                   <label>Medicine Type <span class="text-danger">*</span></label>
-                  <select name="type_id" class="choices form-select" required>
+                  <select name="med_type_id" class="choices form-select" required>
                     <option value="" selected disabled>Select Medicine Type</option>
                     <?php
                     $medicineTypes = getTableData("medicine_types", "status", "active");
@@ -157,7 +156,7 @@ if (!$isLogin) {
               <div class="col-md-6 mb-1">
                 <div class="form-group">
                   <label>Manufacturers <span class="text-danger">*</span></label>
-                  <select name="manufacturer_id" class="choices form-select" required>
+                  <select name="med_manufacturer_id" class="choices form-select" required>
                     <option value="" selected disabled>Select Manufacturer</option>
                     <?php
                     $manufacturerTypes = getTableData("manufacturers", "status", "active");
@@ -211,7 +210,7 @@ if (!$isLogin) {
               <div class="col-md-6 mb-1">
                 <div class="form-group">
                   <label>Expiration <span class="text-danger">*</span></label>
-                  <input type="date" name="expiration" class="form-control" required>
+                  <input type="date" name="expiration" class="form-control" min="<?= date("Y-m-d") ?>" required>
                 </div>
               </div>
 
@@ -235,71 +234,60 @@ if (!$isLogin) {
 
   <?php include("../components/scripts.php") ?>
   <script>
-    $("#divClear").hide()
+    $("#modalAdd-clear").hide()
+
+    function handleOpenEditModal(medId) {
+      const modalId = `#editMed${medId}`
+      const modalEditBrowseBtn = `#modalEdit-browse${medId}`
+      const modalClearBrowseBtn = `#modalEdit-clear${medId}`
+      const modalDisplayImg = `#modalEdit-display${medId}`
+
+      $(modalId).modal("show")
+      const imgFile = $(modalDisplayImg)[0].src.split("/").pop()
+
+      if (imgFile === "medicine.png") {
+        $(modalClearBrowseBtn).hide()
+      } else {
+        $(modalEditBrowseBtn).hide()
+      }
+    }
 
     // $("#addMed").modal("show")
     const closeModal = (modalId) => $(modalId).modal("hide")
 
-    function changeImage() {
-      $("#formFile").click()
-    }
+    function handleSubmitEditMedicine(formId, medId) {
+      swal.showLoading();
+      const type = $(`#type${medId}`).val()
+      const man = $(`#man${medId}`).val()
 
-    function clearImg() {
-      $("input[type=file]").val("")
-      $("#profileImgDisplay").attr(
-        "src",
-        "<?= $defaultMedicineImg ?>"
-      );
-      // $("#formFile").html("Choose file")
-      $("#divClear").hide()
-      $("#divChange").show()
-    }
+      let formData = new FormData($(formId)[0]);
+      formData.append("med_type_id", type)
+      formData.append("med_manufacturer_id", man)
 
-    function previewFile(input) {
-      let file = $("input[type=file]").get(0).files[0];
-
-      if (file) {
-        let reader = new FileReader();
-
-        reader.onload = function() {
-          $("#profileImgDisplay").attr("src", reader.result);
-        }
-
-        reader.readAsDataURL(file);
-        // $("#formFile").html(file.name)
-
-        $("#divChange").hide()
-        $("#divClear").show()
-      }
+      handleSaveMedicine(formData)
     }
 
     $("#addMedForm").on("submit", function(e) {
       swal.showLoading();
+      handleSaveMedicine(new FormData(this))
+      e.preventDefault()
+    })
 
+    function handleSaveMedicine(formData) {
       $.ajax({
         url: '<?= $SERVER_NAME ?>/backend/nodes?action=medicine_save',
         type: "POST",
-        data: new FormData(this),
+        data: formData,
         contentType: false,
         cache: false,
         processData: false,
         success: function(data) {
           const resp = JSON.parse(data);
-          if (resp.success) {
-            swal.fire({
-              title: 'Success!',
-              text: resp.message,
-              icon: 'success',
-            }).then(() => {
-              window.location.href = 'properties.php'
-            })
-          } else {
-            swal.fire({
-              title: 'Error!',
-              text: resp.message,
-              icon: 'error',
-            })
-          }
+          swal.fire({
+            title: resp.success ? 'Success!' : "Error!",
+            text: resp.message,
+            icon: resp.success ? 'success' : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
         },
         error: function(data) {
           swal.fire({
@@ -309,9 +297,7 @@ if (!$isLogin) {
           })
         }
       });
-
-      e.preventDefault()
-    })
+    }
 
     $(document).ready(function() {
       const tableId = "#medsTable";

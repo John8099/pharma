@@ -49,8 +49,8 @@ if (isset($_GET['action'])) {
       case "save_medicine_type":
         save_medicine_type();
         break;
-      case "add_medicine":
-        add_medicine();
+      case "medicine_save":
+        medicine_save();
         break;
       default:
         null;
@@ -62,17 +62,18 @@ if (isset($_GET['action'])) {
   }
 }
 
-function add_medicine()
+function medicine_save()
 {
   global $conn, $_POST, $_FILES;
 
   $action = $_POST["action"];
+  $isCleared = isset($_POST["isCleared"]) ? $_POST["isCleared"] : "";
 
   $medicine_img = $_FILES["medicine_img"];
 
-  $code = generateSystemId();
-  $type_id = $_POST["type_id"];
-  $manufacturer_id = $_POST["manufacturer_id"];
+  $code = $action == "add" ? generateSystemId() : "";
+  $type_id = isset($_POST["med_type_id"]) ? $_POST["med_type_id"] : "";
+  $manufacturer_id = isset($_POST["med_manufacturer_id"]) ? $_POST["med_manufacturer_id"] : "";
 
   $classification = ucwords($_POST["classification"]);
   $generic_name = ucwords($_POST["generic_name"]);
@@ -81,7 +82,7 @@ function add_medicine()
   $price = $_POST["price"];
   $quantity = $_POST["quantity"];
   $expiration = $_POST["expiration"];
-  $med_desc = ucfirst($_POST["med_desc"]);
+  $med_desc = ucfirst(nl2br($_POST["med_desc"]));
 
   $medicineData = array(
     "manufacturer_id" => $manufacturer_id,
@@ -99,23 +100,31 @@ function add_medicine()
   );
 
   $uploadedImg = uploadImg($medicine_img, "../media/drugs");
+  $medicineData["image"] = $uploadedImg->success ? $uploadedImg->file_name : "";
 
-  if ($uploadedImg->success) {
-    $medicineData["image"] = $uploadedImg->file_name;
+  if ($action == "add") {
+    $comm = insert("medicines", $medicineData);
+  } else if ($action == "edit") {
 
-    if ($action == "add") {
-      $comm = insert("medicine", $medicineData);
-    } else if ($action == "edit") {
-      $medicine_id = $_POST["medicine_id"];
-      // $comm = update;
-    } else {
-      $response["success"] = false;
-      $response["message"] = "An error occurred while uploading the image.<br>Please try again later.";
-    }
+    $medicine_id = $_POST["medicine_id"];
+    $medicineData["image"] = $isCleared == "Yes" ? "set_null" : $uploadedImg->file_name;
 
+    $comm = update("medicines", $medicineData, "medicine_id", $medicine_id);
   } else {
     $response["success"] = false;
-    $response["message"] = "Error while saving medicine.<br>Please try again later.";
+    $response["message"] = "An error occurred while uploading the image.<br>Please try again later.";
+  }
+
+  if ($comm) {
+    $response["success"] = true;
+    if ($action == "edit") {
+      $response["message"] = "Medicine successfully updated.";
+    } else {
+      $response["message"] = "Successfully added new medicine.";
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
   }
 
   returnResponse($response);

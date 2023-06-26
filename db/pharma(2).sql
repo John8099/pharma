@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 25, 2023 at 04:34 PM
--- Server version: 10.4.27-MariaDB
--- PHP Version: 8.0.25
+-- Generation Time: Jun 26, 2023 at 09:50 AM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -70,7 +70,8 @@ CREATE TABLE `medicines` (
 --
 
 INSERT INTO `medicines` (`medicine_id`, `manufacturer_id`, `type_id`, `code`, `classification`, `generic_name`, `brand_name`, `dose`, `price`, `quantity`, `expiration`, `image`, `description`, `created`) VALUES
-(1, 1, 1, 'SYS2023A0002', 'test', 'test', 'test', '12mg', 20, 100, '2023-06-30', 'bio.png', '', '2023-06-23 05:38:07');
+(3, 5, 1, 'MED23A0003', 'Test', 'Test', 'Test', 'Test', 155, 15, '2023-06-28', '06262023-074035_IMG_1833.JPG', NULL, '2023-06-25 23:40:51'),
+(4, 5, 3, 'MED23A0004', 'Test1', 'Test1', 'Test1', 'Test1', 12, 111, '2023-06-27', '', 'Test', '2023-06-26 01:03:05');
 
 -- --------------------------------------------------------
 
@@ -166,7 +167,7 @@ ALTER TABLE `manufacturers`
 -- AUTO_INCREMENT for table `medicines`
 --
 ALTER TABLE `medicines`
-  MODIFY `medicine_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `medicine_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `medicine_types`
