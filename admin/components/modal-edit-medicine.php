@@ -113,7 +113,7 @@ $medId = $medicine->medicine_id;
             <div class="col-md-6 mb-1">
               <div class="form-group">
                 <label>Quantity <span class="text-danger">*</span></label>
-                <input type="number" name="quantity" class="form-control" value="<?= $medicine->quantity ?>" required>
+                <input type="number" name="quantity" class="form-control" value="<?= $medicine->quantity ?>" required readonly>
               </div>
             </div>
             <div class="col-md-6 mb-1">

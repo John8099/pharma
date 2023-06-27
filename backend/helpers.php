@@ -16,6 +16,18 @@ if ($_SERVER['HTTP_HOST'] == "localhost") {
 
 $defaultMedicineImg = "$SERVER_NAME/public/medicine.png";
 
+function isMedicineExist($class, $generic, $brand, $expiry, $id = null)
+{
+  global $conn;
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM medicines WHERE LOWER(classification)='$class' and LOWER(generic_name)='$generic' and LOWER(brand_name)='$brand' and expiration='$expiry' " . ($id ? "and medicine_id <> $id" : "")
+  );
+
+  return mysqli_num_rows($query) > 0 ? true : false;
+}
+
 function uploadImg($file, $path)
 {
   $res = array(

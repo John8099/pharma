@@ -71,8 +71,8 @@ if (!$isLogin) {
                               <td><?= $type ?></td>
                               <td><?= $medicine->quantity ?></td>
                               <td>
-                                <a href="#" onclick="" class="h5 text-info m-2" title="Preview Details" data-toggle="tooltip">
-                                  <i class="fa fa-eye"></i>
+                                <a href="#" onclick="handleAddQuantity('<?= $medicine->medicine_id ?>')" class="h5 text-success m-2">
+                                  <i class="fa fa-plus-circle" title="Add Quantity" data-toggle="tooltip"></i>
                                 </a>
                                 <a href="#" onclick="handleOpenEditModal('<?= $medicine->medicine_id ?>')" class="h5 text-warning m-2">
                                   <i class="fa fa-edit" title="Edit Medicine" data-toggle="tooltip"></i>
@@ -236,6 +236,40 @@ if (!$isLogin) {
   <script>
     $("#modalAdd-clear").hide()
 
+    function handleAddQuantity(medId) {
+      swal.fire({
+        title: 'Number of Quantity to be added',
+        input: 'number',
+        showLoaderOnConfirm: true,
+        confirmButtonText: 'Add',
+        confirmButtonColor: "#2ca961",
+        showCancelButton: true,
+      }).then((res) => {
+        if (res.isConfirmed) {
+          $.post(
+            "<?= $SERVER_NAME ?>/backend/nodes?action=add_medicine_quantity", {
+              quantity_to_add: res.value,
+              medicine_id: medId
+            },
+            (data, status) => {
+              const resp = JSON.parse(data)
+              swal.fire({
+                title: resp.success ? "Success!" : 'Error!',
+                html: resp.message,
+                icon: resp.success ? "success" : 'error',
+              }).then(() => resp.success ? window.location.reload() : undefined)
+
+            }).fail(function(e) {
+            swal.fire({
+              title: 'Error!',
+              text: e.statusText,
+              icon: 'error',
+            })
+          });
+        }
+      })
+    }
+
     function handleOpenEditModal(medId) {
       const modalId = `#editMed${medId}`
       const modalEditBrowseBtn = `#modalEdit-browse${medId}`
@@ -285,7 +319,7 @@ if (!$isLogin) {
           const resp = JSON.parse(data);
           swal.fire({
             title: resp.success ? 'Success!' : "Error!",
-            text: resp.message,
+            html: resp.message,
             icon: resp.success ? 'success' : 'error',
           }).then(() => resp.success ? window.location.reload() : undefined)
         },
