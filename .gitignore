@@ -1,1 +1,2 @@
-./backend/conn.php
+/backend/conn.php
+.gitignore

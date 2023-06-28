@@ -9721,7 +9721,14 @@ input:checked + .slider:before {
 
 .status {
   font-size: 30px;
-  margin-right: .1rem;
+  margin-right: 0.1rem;
   display: inline-block;
   vertical-align: middle;
+}
+
+.sup {
+  top: -1em !important;
+  position: relative !important;
+  vertical-align: baseline;
+  font-size: 12px;
 }

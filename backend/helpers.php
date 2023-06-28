@@ -16,13 +16,25 @@ if ($_SERVER['HTTP_HOST'] == "localhost") {
 
 $defaultMedicineImg = "$SERVER_NAME/public/medicine.png";
 
+function getCartCount($userId)
+{
+  global $conn;
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM carts WHERE user_id ='$userId'"
+  );
+
+  return mysqli_num_rows($query) > 0 ? mysqli_num_rows($query) : 0;
+}
+
 function getCartDataIdIfExist($medicineId, $userId)
 {
   global $conn;
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM carts WHERE user_id='$userId' and $medicineId='$medicineId'"
+    "SELECT * FROM carts WHERE user_id='$userId' and medicine_id='$medicineId'"
   );
 
   if (mysqli_num_rows($query) > 0) {

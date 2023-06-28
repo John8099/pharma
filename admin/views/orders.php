@@ -28,18 +28,18 @@ if (!$isLogin) {
 
               <div class="row">
                 <div class="col-sm-12">
-
-                  <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item">
-                      <a class="nav-link text-uppercase active" id="orders-tab" data-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="true">Orders</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link text-uppercase" id="cart-tab" data-toggle="tab" href="#cart" role="tab" aria-controls="cart" aria-selected="false">Cart</a>
-                    </li>
-
-                  </ul>
-                  <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade active show" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                  <div class="card">
+                    <div class="card-header p-2">
+                      <div class="w-100 d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary btn-sm pr-0" data-toggle="modal" data-target="#addMed">
+                          View Cart
+                          <span class="badge badge-pill badge-danger sup">
+                            <?= $user ? getCartCount($user->id) : 0 ?>
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="card-body">
                       <table id="orderTable" class="table table-hover table-border-style">
                         <thead>
                           <tr>
@@ -100,15 +100,11 @@ if (!$isLogin) {
                         </tbody>
                       </table>
                     </div>
-                    <div class="tab-pane fade" id="cart" role="tabpanel" aria-labelledby="cart-tab">
-
-                    </div>
-
                   </div>
                 </div>
 
-                <!-- [ Main Content ] end -->
               </div>
+              <!-- [ Main Content ] end -->
             </div>
           </div>
         </div>
@@ -126,6 +122,7 @@ if (!$isLogin) {
       // })
 
       function handleAddToCart(selectedMed) {
+        swal.showLoading()
         const html = `
                       <ul class="list-group text-dark">
                         <li class="list-group-item">
@@ -169,11 +166,12 @@ if (!$isLogin) {
             if (Number(inputVal) > Number(selectedMed.quantity)) {
               return Swal.showValidationMessage("Quantity should not be greater than the current quantity.")
             }
-            return true
+            return inputVal
           },
           allowOutsideClick: false
         }).then((res) => {
           if (res.isConfirmed) {
+            swal.showLoading()
             $.post(
               "<?= $SERVER_NAME ?>/backend/nodes?action=add_to_cart", {
                 quantity_to_add: res.value,
@@ -185,7 +183,7 @@ if (!$isLogin) {
                   title: resp.success ? "Success!" : 'Error!',
                   html: resp.message,
                   icon: resp.success ? "success" : 'error',
-                })
+                }).then(() => resp.success ? window.location.reload() : undefined)
               }).fail(function(e) {
               swal.fire({
                 title: 'Error!',
