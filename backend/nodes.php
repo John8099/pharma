@@ -55,6 +55,9 @@ if (isset($_GET['action'])) {
       case "add_medicine_quantity":
         add_medicine_quantity();
         break;
+      case "add_to_cart":
+        add_to_cart();
+        break;
       default:
         null;
         break;
@@ -63,6 +66,58 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function add_to_cart()
+{
+  global $conn, $_POST, $_SESSION;
+
+  $quantity_to_add = $_POST["quantity_to_add"];
+  $medicine_id = $_POST["medicine_id"];
+  $userId = $_SESSION["userId"];
+
+  if (isset($_SESSION["userId"])) {
+    $cartIdIfExist = getCartDataIdIfExist($medicine_id, $userId);
+
+    $cartData = array(
+      "user_id" => $userId,
+      "medicine_id" => $medicine_id,
+      "quantity" => $quantity_to_add
+    );
+
+    if ($cartIdIfExist) {
+      $dbCartData = getTableData("carts", "cart_id", $cartIdIfExist);
+      $newCartQuantity = intval($dbCartData[0]->quantity) + intval($quantity_to_add);
+
+      $comm = update("carts", array("quantity" => $newCartQuantity), "cart_id", $cartIdIfExist);
+    } else {
+      $comm = insert("carts", $cartData);
+    }
+
+    if ($comm) {
+      update_quantity($medicine_id, $quantity_to_add);
+      $response["success"] = true;
+      $response["message"] = "Successfully added to cart.";
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Internal server error!<br>Please contact administrator.";
+  }
+
+  returnResponse($response);
+}
+
+function update_quantity($medicine_id, $quantity)
+{
+  $medicineData = getTableData("medicines", "medicine_id", $medicine_id)[0];
+  $newQuantity = intval($medicineData->quantity) - intval($quantity);
+
+  $updateData = array("quantity" => $newQuantity);
+
+  $update = update("medicines", $updateData, "medicine_id", $medicine_id);
 }
 
 function add_medicine_quantity()

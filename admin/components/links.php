@@ -45,8 +45,15 @@ $links = array(
   array(
     "title" => "Orders",
     "config" => array(
-      "icon" => "fa fa-cart-arrow-down",
+      "icon" => "fa fa-cart-plus",
       "url" => "$SERVER_NAME/admin/views/orders"
+    )
+  ),
+  array(
+    "title" => "Online Orders",
+    "config" => array(
+      "icon" => "fa fa-cart-arrow-down",
+      "url" => "$SERVER_NAME/admin/views/online-orders"
     )
   ),
   array(

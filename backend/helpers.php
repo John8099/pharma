@@ -16,6 +16,23 @@ if ($_SERVER['HTTP_HOST'] == "localhost") {
 
 $defaultMedicineImg = "$SERVER_NAME/public/medicine.png";
 
+function getCartDataIdIfExist($medicineId, $userId)
+{
+  global $conn;
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM carts WHERE user_id='$userId' and $medicineId='$medicineId'"
+  );
+
+  if (mysqli_num_rows($query) > 0) {
+    $cartData = mysqli_fetch_object($query);
+    return $cartData->cart_id;
+  }
+
+  return null;
+}
+
 function isMedicineExist($class, $generic, $brand, $expiry, $id = null)
 {
   global $conn;

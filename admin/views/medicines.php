@@ -48,6 +48,7 @@ if (!$isLogin) {
                             <th>Brand name</th>
                             <th>Dose</th>
                             <th>Type</th>
+                            <th>Price</th>
                             <th>Quantity</th>
                             <th>Action</th>
                           </tr>
@@ -69,6 +70,7 @@ if (!$isLogin) {
                               <td><?= $medicine->brand_name ?></td>
                               <td><?= $medicine->dose ?></td>
                               <td><?= $type ?></td>
+                              <td><?= number_format($medicine->price, 2 , "." ) ?></td>
                               <td><?= $medicine->quantity ?></td>
                               <td>
                                 <a href="#" onclick="handleAddQuantity('<?= $medicine->medicine_id ?>')" class="h5 text-success m-2">

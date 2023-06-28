@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 26, 2023 at 09:50 AM
+-- Generation Time: Jun 28, 2023 at 09:59 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -20,6 +20,26 @@ SET time_zone = "+00:00";
 --
 -- Database: `pharma`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `carts`
+--
+
+CREATE TABLE `carts` (
+  `cart_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `medicine_id` int(11) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `carts`
+--
+
+INSERT INTO `carts` (`cart_id`, `user_id`, `medicine_id`, `quantity`) VALUES
+(5, 1, 3, 5);
 
 -- --------------------------------------------------------
 
@@ -57,7 +77,7 @@ CREATE TABLE `medicines` (
   `generic_name` text NOT NULL,
   `brand_name` text NOT NULL,
   `dose` varchar(32) NOT NULL,
-  `price` float NOT NULL,
+  `price` varchar(32) NOT NULL,
   `quantity` int(11) NOT NULL,
   `expiration` date NOT NULL,
   `image` text NOT NULL,
@@ -70,8 +90,8 @@ CREATE TABLE `medicines` (
 --
 
 INSERT INTO `medicines` (`medicine_id`, `manufacturer_id`, `type_id`, `code`, `classification`, `generic_name`, `brand_name`, `dose`, `price`, `quantity`, `expiration`, `image`, `description`, `created`) VALUES
-(3, 5, 1, 'MED23A0003', 'Test', 'Test', 'Test', 'Test', 155, 15, '2023-06-28', '06262023-074035_IMG_1833.JPG', NULL, '2023-06-25 23:40:51'),
-(4, 5, 3, 'MED23A0004', 'Test1', 'Test1', 'Test1', 'Test1', 12, 111, '2023-06-27', '', 'Test', '2023-06-26 01:03:05');
+(3, 5, 1, 'MED23A0003', 'Test1', 'Test1', 'Test1', 'Test', '1.80', 10, '2023-06-28', '06262023-074035_IMG_1833.JPG', NULL, '2023-06-25 23:40:51'),
+(4, 5, 3, 'MED23A0004', 'Test1', 'Test1', 'Test1', 'Test1', '12', 111, '2023-06-27', '', 'Test', '2023-06-26 01:03:05');
 
 -- --------------------------------------------------------
 
@@ -128,6 +148,14 @@ INSERT INTO `users` (`id`, `fname`, `mname`, `lname`, `email`, `password`, `avat
 --
 
 --
+-- Indexes for table `carts`
+--
+ALTER TABLE `carts`
+  ADD PRIMARY KEY (`cart_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `medicine_id` (`medicine_id`);
+
+--
 -- Indexes for table `manufacturers`
 --
 ALTER TABLE `manufacturers`
@@ -158,6 +186,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `carts`
+--
+ALTER TABLE `carts`
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `manufacturers`
 --
 ALTER TABLE `manufacturers`
@@ -167,7 +201,7 @@ ALTER TABLE `manufacturers`
 -- AUTO_INCREMENT for table `medicines`
 --
 ALTER TABLE `medicines`
-  MODIFY `medicine_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `medicine_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `medicine_types`
@@ -184,6 +218,13 @@ ALTER TABLE `users`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `carts`
+--
+ALTER TABLE `carts`
+  ADD CONSTRAINT `carts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION,
+  ADD CONSTRAINT `carts_ibfk_2` FOREIGN KEY (`medicine_id`) REFERENCES `medicines` (`medicine_id`) ON DELETE SET NULL ON UPDATE NO ACTION;
 
 --
 -- Constraints for table `medicines`
