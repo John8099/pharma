@@ -33,7 +33,16 @@
                 <span class="pcoded-mtext">
                   <?= $link["title"] ?>
                 </span>
+                <?php if ($link["title"] == "Order") :
+                  if ($user) :
+                    if (getCartCount($user->id) > 0) :
+                ?>
+                      <span class="badge badge-danger badge-pill sup"><?= getCartCount($user->id) ?></span>
+                <?php endif;
+                  endif;
+                endif; ?>
               </a>
+
             </li>
           <?php endforeach ?>
         </ul>

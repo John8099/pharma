@@ -58,6 +58,12 @@ if (isset($_GET['action'])) {
       case "add_to_cart":
         add_to_cart();
         break;
+      case "remove_to_cart":
+        remove_to_cart();
+        break;
+      case "change_qty":
+        change_qty();
+        break;
       default:
         null;
         break;
@@ -66,6 +72,68 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function change_qty()
+{
+  global $conn, $_POST, $_SESSION;
+
+  if (isset($_SESSION["userId"])) {
+    $action = $_POST["action"];
+    $cart_id = $_POST["cart_id"];
+
+    $cartData = getTableDataById("carts", "cart_id", $cart_id);
+
+    if ($cartData->medicine_id) {
+      try {
+        $medicineData = getTableDataById("medicines", "medicine_id", $cartData->medicine_id);
+        $newMedicineQty = $action == "add" ? intval($medicineData->quantity) - 1 : intval($medicineData->quantity) + 1;
+        $newCartQty = $action == "add" ? intval($cartData->quantity) + 1 : intval($cartData->quantity) - 1;
+
+        update("medicines", array("quantity" => $newMedicineQty), "medicine_id", $cartData->medicine_id);
+        update("carts", array("quantity" => $newCartQty), "cart_id", $cartData->cart_id);
+
+        $response["success"] = true;
+      } catch (Exception $e) {
+        $response["success"] = false;
+        $response["message"] = $e->getMessage();
+      }
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Internal server error.<br>Please contact administrator";
+  }
+
+  returnResponse($response);
+}
+
+function remove_to_cart()
+{
+  global $conn, $_POST;
+
+  $getCartData = getTableData("carts", "cart_id", $_POST["cart_id"]);
+  if (count($getCartData) > 0) {
+    $cartData = $getCartData[0];
+    $newQuantity = intval($_POST["medicine_qty"]) + intval($cartData->quantity);
+    $updateQty = update("medicines", array("quantity" => $newQuantity), "medicine_id", $cartData->medicine_id);
+
+    if ($updateQty) {
+      delete("carts", "cart_id", $cartData->cart_id);
+      $response["success"] = true;
+      $response["message"] = "Item in cart successfully remove";
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Internal server error.<br>Please contact Administrator.";
+  }
+
+  returnResponse($response);
 }
 
 function add_to_cart()
@@ -115,9 +183,7 @@ function update_quantity($medicine_id, $quantity)
   $medicineData = getTableData("medicines", "medicine_id", $medicine_id)[0];
   $newQuantity = intval($medicineData->quantity) - intval($quantity);
 
-  $updateData = array("quantity" => $newQuantity);
-
-  $update = update("medicines", $updateData, "medicine_id", $medicine_id);
+  update("medicines", array("quantity" => $newQuantity), "medicine_id", $medicine_id);
 }
 
 function add_medicine_quantity()

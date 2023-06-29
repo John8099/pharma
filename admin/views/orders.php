@@ -87,12 +87,14 @@ if (!$isLogin) {
                               <td><?= $medicine->brand_name ?></td>
                               <td><?= $medicine->dose ?></td>
                               <td><?= $type ?></td>
-                              <td><?= "₱".number_format($medicine->price, 2, ".") ?></td>
+                              <td><?= "₱" . number_format($medicine->price, 2, ".") ?></td>
                               <td><?= $medicine->quantity ?></td>
                               <td>
-                                <a href="#" onclick='handleAddToCart(<?= $medData ?>)' class="h5 text-success m-2">
-                                  <i class="fa fa-cart-plus" title="Add to Cart" data-toggle="tooltip"></i>
-                                </a>
+                                <?php if ($medicine->quantity > 0) : ?>
+                                  <a href="#" onclick='handleAddToCart(<?= $medData ?>)' class="h5 text-success m-2">
+                                    <i class="fa fa-cart-plus" title="Add to Cart" data-toggle="tooltip"></i>
+                                  </a>
+                                <?php endif; ?>
                               </td>
                             </tr>
                           <?php endforeach; ?>

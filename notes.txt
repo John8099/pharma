@@ -1,0 +1,15 @@
+order history data
+
+user id
+date created
+overall total
+items = array(
+array(
+classification
+generic name
+brand name
+price
+order qty
+total
+)
+)

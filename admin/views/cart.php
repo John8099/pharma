@@ -131,7 +131,7 @@ if (!$isLogin) {
                                 </td>
 
                                 <td style="vertical-align: middle;">
-                                  <a href="#" onclick="" class="h3 text-danger m-2">
+                                  <a href="#" onclick="handleRemoveToCart('<?= $cart->cart_id ?>', '<?= $medicine->quantity ?>')" class="h3 text-danger m-2">
                                     <i class="fa fa-times-circle" title="Remove" data-toggle="tooltip"></i>
                                   </a>
                                 </td>
@@ -197,7 +197,7 @@ if (!$isLogin) {
 
                       <div class="row">
                         <div class="col-md-12 d-lg-flex justify-content-end">
-                          <button class="btn btn-primary " onclick="window.location='checkout.html'">Checkout</button>
+                          <button class="btn btn-primary btn-block" id="btnCheckOut" onclick="window.location='checkout.html'">Checkout</button>
                         </div>
                       </div>
                     </div>
@@ -214,29 +214,106 @@ if (!$isLogin) {
 
     <?php include("../components/scripts.php") ?>
     <script>
+      function handleRemoveToCart(cartId, medQty) {
+        swal.showLoading()
+        swal
+          .fire({
+            title: "Are you sure you want to remove this item?",
+            text: "You can't undo this action after successful deletion.",
+            icon: "warning",
+            confirmButtonText: "Delete",
+            confirmButtonColor: "#dc3545",
+            showCancelButton: true,
+          })
+          .then((d) => {
+            if (d.isConfirmed) {
+              swal.showLoading();
+              $.post(
+                "<?= $SERVER_NAME ?>/backend/nodes?action=remove_to_cart", {
+                  cart_id: cartId,
+                  medicine_qty: medQty
+                },
+                (data, status) => {
+                  const resp = JSON.parse(data)
+                  swal.fire({
+                    title: resp.success ? "Success!" : 'Error!',
+                    html: resp.message,
+                    icon: resp.success ? "success" : 'error',
+                  }).then(() => resp.success ? window.location.reload() : undefined)
+                }).fail(function(e) {
+                swal.fire({
+                  title: 'Error!',
+                  text: e.statusText,
+                  icon: 'error',
+                })
+              });
+            }
+          });
+
+      }
+
       function handleChangeQty(action, cartId, price, max) {
         const inputVal = $(`#inputQuantity${cartId}`)
+        const min = 1;
 
         if (action === "add") {
           if (Number(inputVal.val()) < max) {
-            inputVal.val(Number(inputVal.val()) + 1)
+            changeQtyInDb(action, cartId, price)
           }
         } else {
-          if (Number(inputVal.val()) > 1) {
-            inputVal.val(Number(inputVal.val()) - 1)
+          if (Number(inputVal.val()) > min) {
+            changeQtyInDb(action, cartId, price)
           }
         }
-        $(`.medTotal${cartId}`).html(`₱${(Number(price) * Number(inputVal.val())).toFixed(2)}`)
-
-        let number = 0;
-        for (let i = 0; i < $(".toTotal").length; i++) {
-          const toSum = Number($(".toTotal")[i].innerText.trim().replace("₱", ""))
-          number += toSum
-        }
-
-        $("#overallTotal").html(`₱${(number).toFixed(2)}`)
       }
+
+      function changeQtyInDb(action, cartId, price) {
+        swal.showLoading()
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=change_qty", {
+            action: action,
+            cart_id: cartId
+          },
+          (data, status) => {
+            const resp = JSON.parse(data)
+            if (resp.success) {
+              swal.close()
+              const inputVal = $(`#inputQuantity${cartId}`)
+
+              if (action === "add") {
+                inputVal.val(Number(inputVal.val()) + 1)
+              } else {
+                inputVal.val(Number(inputVal.val()) - 1)
+              }
+              $(`.medTotal${cartId}`).html(`₱${(Number(price) * Number(inputVal.val())).toFixed(2)}`)
+
+              let number = 0;
+              for (let i = 0; i < $(".toTotal").length; i++) {
+                const toSum = Number($(".toTotal")[i].innerText.trim().replace("₱", ""))
+                number += toSum
+              }
+
+              $("#overallTotal").html(`₱${(number).toFixed(2)}`)
+            } else {
+              swal.fire({
+                title: 'Error!',
+                html: resp.message,
+                icon: 'error',
+              })
+            }
+
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
+        });
+      }
+
       $(document).ready(function() {
+        $("#btnCheckOut").prop("disabled", $("#overallTotal")[0].innerText.replace("₱", "") === "0.00" ? true : false);
+
         const tableId = "#cartTable";
         var table = $(tableId).DataTable({
           paging: false,

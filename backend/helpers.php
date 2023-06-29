@@ -16,6 +16,18 @@ if ($_SERVER['HTTP_HOST'] == "localhost") {
 
 $defaultMedicineImg = "$SERVER_NAME/public/medicine.png";
 
+function getCartCountByMedId($medId)
+{
+  global $conn;
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM carts WHERE medicine_id ='$medId'"
+  );
+
+  return mysqli_num_rows($query) > 0 ? mysqli_num_rows($query) : 0;
+}
+
 function getCartCount($userId)
 {
   global $conn;
@@ -135,13 +147,13 @@ function getTableData($table, $column = null, $value = null)
   return $data;
 }
 
-function getCourse($course_id)
+function getTableDataById($table, $columnId, $value)
 {
   global $conn;
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM course WHERE course_id='$course_id'"
+    "SELECT * FROM $table WHERE $columnId='$value' "
   );
 
   return mysqli_num_rows($query) > 0 ? mysqli_fetch_object($query) : null;
@@ -160,6 +172,10 @@ function update($table, $data, $columnWHere, $columnVal)
         if ($value) {
           array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
         }
+        else if ($column == "quantity" && $table == "medicines") {
+          array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
+        }
+
         if ($value == "set_null") {
           array_push($set, "$column = NULL");
         }
@@ -167,8 +183,10 @@ function update($table, $data, $columnWHere, $columnVal)
 
       if (count($set) > 0) {
         $queryStr = "UPDATE `$table` SET " . (implode(', ', $set)) . " WHERE $columnWHere='$columnVal'";
+        $query = mysqli_query($conn, $queryStr);
+        $err = mysqli_error($conn);
 
-        return mysqli_query($conn, $queryStr);
+        return $query;
       }
 
       return null;

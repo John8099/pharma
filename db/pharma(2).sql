@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 28, 2023 at 09:59 AM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Generation Time: Jun 29, 2023 at 11:30 PM
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.0.25
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -39,7 +39,7 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`cart_id`, `user_id`, `medicine_id`, `quantity`) VALUES
-(5, 1, 3, 5);
+(17, 1, 3, 30);
 
 -- --------------------------------------------------------
 
@@ -90,8 +90,8 @@ CREATE TABLE `medicines` (
 --
 
 INSERT INTO `medicines` (`medicine_id`, `manufacturer_id`, `type_id`, `code`, `classification`, `generic_name`, `brand_name`, `dose`, `price`, `quantity`, `expiration`, `image`, `description`, `created`) VALUES
-(3, 5, 1, 'MED23A0003', 'Test1', 'Test1', 'Test1', 'Test', '1.80', 10, '2023-06-28', '06262023-074035_IMG_1833.JPG', NULL, '2023-06-25 23:40:51'),
-(4, 5, 3, 'MED23A0004', 'Test1', 'Test1', 'Test1', 'Test1', '12', 111, '2023-06-27', '', 'Test', '2023-06-26 01:03:05');
+(3, 5, 1, 'MED23A0003', 'Test1', 'Test1', 'Test1', 'Test', '1.80', 0, '2023-06-28', '06262023-074035_IMG_1833.JPG', NULL, '2023-06-25 23:40:51'),
+(4, 5, 3, 'MED23A0004', 'Test1', 'Test1', 'Test1', 'Test1', '12', 108, '2023-06-27', '', 'Test', '2023-06-26 01:03:05');
 
 -- --------------------------------------------------------
 
@@ -189,7 +189,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `manufacturers`

@@ -70,7 +70,7 @@ if (!$isLogin) {
                               <td><?= $medicine->brand_name ?></td>
                               <td><?= $medicine->dose ?></td>
                               <td><?= $type ?></td>
-                              <td><?= "₱".number_format($medicine->price, 2, ".") ?></td>
+                              <td><?= "₱" . number_format($medicine->price, 2, ".") ?></td>
                               <td><?= $medicine->quantity ?></td>
                               <td>
                                 <a href="#" onclick="handleAddQuantity('<?= $medicine->medicine_id ?>')" class="h5 text-success m-2">
@@ -79,7 +79,7 @@ if (!$isLogin) {
                                 <a href="#" onclick="handleOpenEditModal('<?= $medicine->medicine_id ?>')" class="h5 text-warning m-2">
                                   <i class="fa fa-edit" title="Edit Medicine" data-toggle="tooltip"></i>
                                 </a>
-                                <?php if ($medicine->quantity == 0) : ?>
+                                <?php if ($medicine->quantity == 0 && getCartCountByMedId($medicine->medicine_id) == 0) : ?>
                                   <a href="#" onclick="return deleteData('medicines', 'medicine_id', '<?= $medicine->medicine_id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
                                     <i class="fa fa-times-circle"></i>
                                   </a>
