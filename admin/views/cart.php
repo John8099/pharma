@@ -55,8 +55,8 @@ if (!$isLogin) {
 
               <!-- [ Main Content ] start -->
 
-              <div class="row mt-3">
-                <div class="col-sm-12">
+              <div class="row mt-3 justify-content-end">
+                <div class="col-12">
                   <div class="card">
                     <div class="card-header p-2">
                       <div class="w-100 d-flex justify-content-end">
@@ -109,15 +109,15 @@ if (!$isLogin) {
                                   <div class="input-group mb-3" style="max-width: 200px;">
 
                                     <div class="input-group-prepend">
-                                      <button class="btn btn-outline-primary" type="button" onclick="handleChangeQty('minus', '<?= $cart->cart_id ?>')">
+                                      <button class="btn btn-outline-primary" type="button" onclick="handleChangeQty('minus', '<?= $cart->cart_id ?>', <?= $medicine->price ?>, '<?= intval($medicine->quantity) + intval($cart->quantity) ?>')">
                                         <i class="fa fa-minus m-0 p-0"></i>
                                       </button>
                                     </div>
 
-                                    <input type="text" class="form-control text-center bg-light text-dark font-weight-bold" value="<?= $cart->quantity ?>" id="inputQuantity<?= $cart->cart_id ?>">
+                                    <input type="text" class="form-control text-center bg-light text-dark font-weight-bold" value="<?= $cart->quantity ?>" id="inputQuantity<?= $cart->cart_id ?>" oninput="return console.log($(this))" readonly>
 
                                     <div class="input-group-append">
-                                      <button class="btn btn-outline-primary" type="button" onclick="handleChangeQty('add', '<?= $cart->cart_id ?>')">
+                                      <button class="btn btn-outline-primary" type="button" onclick="handleChangeQty('add', '<?= $cart->cart_id ?>', <?= $medicine->price ?>, '<?= intval($medicine->quantity) + intval($cart->quantity) ?>')">
                                         <i class="fa fa-plus m-0 p-0"></i>
                                       </button>
                                     </div>
@@ -125,13 +125,13 @@ if (!$isLogin) {
                                 </td>
 
                                 <td class="h6 align-middle">
-                                  <label id="tableTotal<?= $cart->cart_id ?>">
+                                  <label class="medTotal<?= $cart->cart_id ?> toTotal">
                                     <?= "₱" . number_format(floatval($medicine->price *  $cart->quantity), 2, ".") ?>
                                   </label>
                                 </td>
 
                                 <td style="vertical-align: middle;">
-                                  <a href="#" onclick="return deleteData('carts', 'cart_id', '<?= $cart->cart_id ?>')" class="h3 text-danger m-2">
+                                  <a href="#" onclick="" class="h3 text-danger m-2">
                                     <i class="fa fa-times-circle" title="Remove" data-toggle="tooltip"></i>
                                   </a>
                                 </td>
@@ -147,6 +147,63 @@ if (!$isLogin) {
                   </div>
                 </div>
 
+                <div class="col-md-5">
+                  <div class="card">
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-md-12 text-center border-bottom mb-5">
+                          <h3 class="text-black h4 text-uppercase">Order Total</h3>
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <?php
+                        if ($user) :
+                          $cartData = mysqli_query(
+                            $conn,
+                            "SELECT * FROM carts WHERE user_id='$user->id'"
+                          );
+                          $total = 0;
+                          while ($cart = mysqli_fetch_object($cartData)) :
+                            $getMedicine = getTableData("medicines", "medicine_id", $cart->medicine_id);
+                            $medicine = $getMedicine[0];
+                        ?>
+                            <div class="col-md-6">
+                              <span class="text-black">
+                                <?= $medicine->generic_name ?>
+                                <strong class="mx-2">x</strong>
+                                <?= $cart->quantity ?>
+                              </span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                              <strong class="text-black medTotal<?= $cart->cart_id ?>">
+                                <?= "₱" . number_format(floatval($medicine->price *  $cart->quantity), 2, ".") ?>
+                              </strong>
+                            </div>
+                        <?php
+                            $total += floatval($medicine->price *  $cart->quantity);
+                          endwhile;
+                        endif;
+                        ?>
+                      </div>
+                      <hr>
+                      <div class="row mb-5">
+                        <div class="col-md-6">
+                          <span class="text-black">Total</span>
+                        </div>
+                        <div class="col-md-6 text-right">
+                          <strong class="text-black" id="overallTotal"><?= "₱" . number_format(floatval($total), 2, ".") ?></strong>
+                        </div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-md-12 d-lg-flex justify-content-end">
+                          <button class="btn btn-primary " onclick="window.location='checkout.html'">Checkout</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
               <!-- [ Main Content ] end -->
             </div>
@@ -157,6 +214,28 @@ if (!$isLogin) {
 
     <?php include("../components/scripts.php") ?>
     <script>
+      function handleChangeQty(action, cartId, price, max) {
+        const inputVal = $(`#inputQuantity${cartId}`)
+
+        if (action === "add") {
+          if (Number(inputVal.val()) < max) {
+            inputVal.val(Number(inputVal.val()) + 1)
+          }
+        } else {
+          if (Number(inputVal.val()) > 1) {
+            inputVal.val(Number(inputVal.val()) - 1)
+          }
+        }
+        $(`.medTotal${cartId}`).html(`₱${(Number(price) * Number(inputVal.val())).toFixed(2)}`)
+
+        let number = 0;
+        for (let i = 0; i < $(".toTotal").length; i++) {
+          const toSum = Number($(".toTotal")[i].innerText.trim().replace("₱", ""))
+          number += toSum
+        }
+
+        $("#overallTotal").html(`₱${(number).toFixed(2)}`)
+      }
       $(document).ready(function() {
         const tableId = "#cartTable";
         var table = $(tableId).DataTable({
