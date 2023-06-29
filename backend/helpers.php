@@ -312,18 +312,6 @@ function getAvatar($userId)
   return "$SERVER_NAME/public/default.png";
 }
 
-function getItemById($itemId)
-{
-  global $conn;
-
-  $query = mysqli_query(
-    $conn,
-    "SELECT * FROM inventory WHERE item_id='$itemId'"
-  );
-
-  return mysqli_num_rows($query) > 0 ? mysqli_fetch_object($query) : null;
-}
-
 function getMedicineImage($itemId = null)
 {
   global $SERVER_NAME, $conn, $defaultMedicineImg;

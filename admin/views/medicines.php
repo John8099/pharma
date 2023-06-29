@@ -70,7 +70,7 @@ if (!$isLogin) {
                               <td><?= $medicine->brand_name ?></td>
                               <td><?= $medicine->dose ?></td>
                               <td><?= $type ?></td>
-                              <td><?= number_format($medicine->price, 2 , "." ) ?></td>
+                              <td><?= "₱".number_format($medicine->price, 2, ".") ?></td>
                               <td><?= $medicine->quantity ?></td>
                               <td>
                                 <a href="#" onclick="handleAddQuantity('<?= $medicine->medicine_id ?>')" class="h5 text-success m-2">

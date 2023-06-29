@@ -31,7 +31,7 @@ if (!$isLogin) {
                   <div class="card">
                     <div class="card-header p-2">
                       <div class="w-100 d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary btn-sm pr-0" data-toggle="modal" data-target="#addMed">
+                        <button type="button" class="btn btn-primary btn-sm pr-0" onclick="return window.location.replace('<?= $SERVER_NAME ?>/admin/views/cart')">
                           View Cart
                           <span class="badge badge-pill badge-danger sup">
                             <?= $user ? getCartCount($user->id) : 0 ?>
@@ -87,7 +87,7 @@ if (!$isLogin) {
                               <td><?= $medicine->brand_name ?></td>
                               <td><?= $medicine->dose ?></td>
                               <td><?= $type ?></td>
-                              <td><?= number_format($medicine->price, 2, ".") ?></td>
+                              <td><?= "₱".number_format($medicine->price, 2, ".") ?></td>
                               <td><?= $medicine->quantity ?></td>
                               <td>
                                 <a href="#" onclick='handleAddToCart(<?= $medData ?>)' class="h5 text-success m-2">
@@ -113,14 +113,6 @@ if (!$isLogin) {
 
     <?php include("../components/scripts.php") ?>
     <script>
-      // $("#orders-tab").on("click", function() {
-      //   changeUrl("orders")
-      // })
-
-      // $("#cart-tab").on("click", function() {
-      //   changeUrl("cart")
-      // })
-
       function handleAddToCart(selectedMed) {
         swal.showLoading()
         const html = `
@@ -196,7 +188,7 @@ if (!$isLogin) {
       }
 
       $(document).ready(function() {
-        const tableId = "#medsTable";
+        const tableId = "#orderTable";
         var table = $(tableId).DataTable({
           paging: true,
           lengthChange: false,

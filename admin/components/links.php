@@ -29,13 +29,6 @@ $links = array(
     )
   ),
   array(
-    "title" => "Medicines",
-    "config" => array(
-      "icon" => "fa fa-pills",
-      "url" => "$SERVER_NAME/admin/views/medicines"
-    )
-  ),
-  array(
     "title" => "Medicine Types",
     "config" => array(
       "icon" => "fa fa-briefcase-medical",
@@ -43,7 +36,14 @@ $links = array(
     )
   ),
   array(
-    "title" => "Orders",
+    "title" => "Medicines",
+    "config" => array(
+      "icon" => "fa fa-pills",
+      "url" => "$SERVER_NAME/admin/views/medicines"
+    )
+  ),
+  array(
+    "title" => "Order",
     "config" => array(
       "icon" => "fa fa-cart-plus",
       "url" => "$SERVER_NAME/admin/views/orders"
