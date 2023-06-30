@@ -171,8 +171,7 @@ function update($table, $data, $columnWHere, $columnVal)
       foreach ($data as $column => $value) {
         if ($value) {
           array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
-        }
-        else if ($column == "quantity" && $table == "medicines") {
+        } else if ($column == "quantity" && $table == "medicines") {
           array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
         }
 
@@ -273,6 +272,31 @@ function generateSystemId($preferredLetter = null)
   $letter = $preferredLetter == null ? $characters[$letterIndex] : $preferredLetter;
 
   return "MED" . date('y') . $letter . str_pad($AUTO_INCREMENT->ID, 4, '0', STR_PAD_LEFT);
+}
+
+function generateOrderCode($preferredLetter = null)
+{
+  global $conn, $db;
+  $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  $AUTO_INCREMENT = mysqli_fetch_object(
+    mysqli_query(
+      $conn,
+      "SELECT AUTO_INCREMENT AS ID FROM information_schema.tables WHERE table_name = 'medicines' and table_schema = '$db'"
+    )
+  );
+
+  $countUser = mysqli_num_rows(
+    mysqli_query(
+      $conn,
+      "SELECT COUNT(*) AS count FROM orders"
+    )
+  );
+
+  $letterIndex = intval(intval($countUser) / 100);
+  $letter = $preferredLetter == null ? $characters[$letterIndex] : $preferredLetter;
+
+  return "ODR" . date('y') . $letter . str_pad($AUTO_INCREMENT->ID, 3, '0', STR_PAD_LEFT);
 }
 
 function isSelected($value, $toCheck)

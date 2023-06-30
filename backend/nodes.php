@@ -64,6 +64,9 @@ if (isset($_GET['action'])) {
       case "change_qty":
         change_qty();
         break;
+      case "admin_checkout":
+        admin_checkout();
+        break;
       default:
         null;
         break;
@@ -72,6 +75,63 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function admin_checkout()
+{
+  global $conn, $_SESSION;
+
+  if (isset($_SESSION["userId"])) {
+    $cartData = getTableData("carts", "user_id", $_SESSION["userId"]);
+
+    if (count($cartData) > 0) {
+      $cartDetails = array(
+        "order_code" => generateOrderCode(),
+        "user_id" => $_SESSION["userId"],
+        "overall_total" => "",
+        "order_from" => "system",
+        "items" => array()
+      );
+      $overallTotal = 0;
+      foreach ($cartData as $cart) {
+        $medicine = getTableDataById("medicines", "medicine_id", $cart->medicine_id);
+
+        $overallTotal += floatval($medicine->price *  $cart->quantity);
+
+        $itemData = array(
+          "classification" => $medicine->classification,
+          "generic_name" => $medicine->generic_name,
+          "brand_name" => $medicine->brand_name,
+          "price" => $medicine->price,
+          "order_quantity" => $cart->quantity,
+          "total" => number_format(floatval($medicine->price *  $cart->quantity), 2, ".")
+        );
+
+        array_push($cartDetails["items"], $itemData);
+      }
+      $cartDetails["items"] = mysqli_escape_string($conn, json_encode($cartDetails["items"]));
+      $cartDetails["overall_total"] = $overallTotal;
+
+      $insertOrder = insert("orders", $cartDetails);
+
+      if ($insertOrder) {
+        delete("carts", "user_id", $_SESSION["userId"]);
+        $response["success"] = true;
+        $response["message"] = "Cart successfully checked out.";
+      } else {
+        $response["success"] = false;
+        $response["message"] = mysqli_error($conn);
+      }
+    } else {
+      $response["success"] = false;
+      $response["message"] = "Internal server error.<br>Please contact administrator";
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Internal server error.<br>Please contact administrator";
+  }
+
+  returnResponse($response);
 }
 
 function change_qty()

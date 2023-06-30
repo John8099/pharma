@@ -59,7 +59,8 @@ if (!$isLogin) {
                 <div class="col-12">
                   <div class="card">
                     <div class="card-header p-2">
-                      <div class="w-100 d-flex justify-content-end">
+                      <div class="w-100 d-flex justify-content-between align-items-center">
+                        <h5>Manage Cart</h5>
                         <button type="button" class="btn btn-secondary btn-sm" onclick="return window.location.replace('<?= $SERVER_NAME ?>/admin/views/orders')">
                           Go back
                         </button>
@@ -152,7 +153,7 @@ if (!$isLogin) {
                     <div class="card-body">
                       <div class="row">
                         <div class="col-md-12 text-center border-bottom mb-5">
-                          <h3 class="text-black h4 text-uppercase">Order Total</h3>
+                          <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
                         </div>
                       </div>
                       <div class="row mb-3">
@@ -197,7 +198,7 @@ if (!$isLogin) {
 
                       <div class="row">
                         <div class="col-md-12 d-lg-flex justify-content-end">
-                          <button class="btn btn-primary btn-block" id="btnCheckOut" onclick="window.location='checkout.html'">Checkout</button>
+                          <button class="btn btn-primary btn-block" id="btnCheckOut">Checkout</button>
                         </div>
                       </div>
                     </div>
@@ -214,6 +215,21 @@ if (!$isLogin) {
 
     <?php include("../components/scripts.php") ?>
     <script>
+      $("#btnCheckOut").on("click", () => {
+        swal.showLoading();
+        $.get(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=admin_checkout",
+          (data, status) => {
+            const resp = JSON.parse(data)
+
+            swal.fire({
+              title: resp.success ? "Success!" : "Error!",
+              html: resp.message,
+              icon: resp.success ? "success" : "error"
+            }).then(() => resp.success ? window.location.replace("<?= $SERVER_NAME ?>/admin/views/orders") : undefined)
+          })
+      })
+
       function handleRemoveToCart(cartId, medQty) {
         swal.showLoading()
         swal

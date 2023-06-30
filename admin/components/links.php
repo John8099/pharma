@@ -60,7 +60,7 @@ $links = array(
     "title" => "Orders History",
     "config" => array(
       "icon" => "fa fa-receipt",
-      "url" => "$SERVER_NAME/admin/views/history"
+      "url" => "$SERVER_NAME/admin/views/order-history"
     )
   ),
 

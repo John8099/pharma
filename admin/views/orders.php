@@ -31,11 +31,16 @@ if (!$isLogin) {
                   <div class="card">
                     <div class="card-header p-2">
                       <div class="w-100 d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary btn-sm pr-0" onclick="return window.location.replace('<?= $SERVER_NAME ?>/admin/views/cart')">
+                        <?php
+                        $cartCount = $user ? getCartCount($user->id) : 0;
+                        ?>
+                        <button type="button" class="btn btn-primary btn-sm <?= $cartCount > 0 ? "pr-0" : "" ?>" onclick="return window.location.replace('<?= $SERVER_NAME ?>/admin/views/cart')" <?= $cartCount == 0 ? "disabled" : "" ?>>
                           View Cart
-                          <span class="badge badge-pill badge-danger sup">
-                            <?= $user ? getCartCount($user->id) : 0 ?>
-                          </span>
+                          <?php if ($cartCount > 0) : ?>
+                            <span class="badge badge-pill badge-danger sup">
+                              <?= $cartCount ?>
+                            </span>
+                          <?php endif; ?>
                         </button>
                       </div>
                     </div>
@@ -206,7 +211,7 @@ if (!$isLogin) {
           buttons: [{
             extend: 'searchBuilder',
             config: {
-              columns: [1, 2, 3, 4]
+              columns: [0, 1, 2, 3, 4, 5, 6]
             }
           }],
           dom: 'Bfrtip',

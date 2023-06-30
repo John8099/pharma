@@ -3,6 +3,7 @@ order history data
 user id
 date created
 overall total
+using = enum('system', 'mobile')
 items = array(
 array(
 classification

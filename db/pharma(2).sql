@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 29, 2023 at 11:30 PM
--- Server version: 10.4.27-MariaDB
--- PHP Version: 8.0.25
+-- Generation Time: Jun 30, 2023 at 09:44 AM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,13 +33,6 @@ CREATE TABLE `carts` (
   `medicine_id` int(11) DEFAULT NULL,
   `quantity` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `carts`
---
-
-INSERT INTO `carts` (`cart_id`, `user_id`, `medicine_id`, `quantity`) VALUES
-(17, 1, 3, 30);
 
 -- --------------------------------------------------------
 
@@ -90,8 +83,8 @@ CREATE TABLE `medicines` (
 --
 
 INSERT INTO `medicines` (`medicine_id`, `manufacturer_id`, `type_id`, `code`, `classification`, `generic_name`, `brand_name`, `dose`, `price`, `quantity`, `expiration`, `image`, `description`, `created`) VALUES
-(3, 5, 1, 'MED23A0003', 'Test1', 'Test1', 'Test1', 'Test', '1.80', 0, '2023-06-28', '06262023-074035_IMG_1833.JPG', NULL, '2023-06-25 23:40:51'),
-(4, 5, 3, 'MED23A0004', 'Test1', 'Test1', 'Test1', 'Test1', '12', 108, '2023-06-27', '', 'Test', '2023-06-26 01:03:05');
+(3, 5, 1, 'MED23A0003', 'Test1', 'Test1', 'Test1', 'Test', '1.80', 1, '2023-06-28', '06262023-074035_IMG_1833.JPG', NULL, '2023-06-25 23:40:51'),
+(4, 5, 3, 'MED23A0004', 'Test1', 'Test1', 'Test1', 'Test1', '12', 93, '2023-06-27', '', 'Test', '2023-06-26 01:03:05');
 
 -- --------------------------------------------------------
 
@@ -113,6 +106,30 @@ INSERT INTO `medicine_types` (`type_id`, `name`, `status`) VALUES
 (1, 'Tabs', 'active'),
 (3, 'Syrup', 'active'),
 (4, 'Nebule', 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `orders`
+--
+
+CREATE TABLE `orders` (
+  `order_id` int(11) NOT NULL,
+  `order_code` varchar(32) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `date_created` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `overall_total` varchar(32) NOT NULL,
+  `order_from` enum('system','mobile') NOT NULL,
+  `items` varchar(500) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`order_id`, `order_code`, `user_id`, `date_created`, `overall_total`, `order_from`, `items`) VALUES
+(2, 'ODR23A008', 1, '2023-06-30 02:08:10', '39.6', 'system', '[{\\\"classification\\\":\\\"Test1\\\",\\\"generic_name\\\":\\\"Test1\\\",\\\"brand_name\\\":\\\"Test1\\\",\\\"price\\\":\\\"1.80\\\",\\\"order_quantity\\\":\\\"2\\\",\\\"total\\\":\\\"3.60\\\"},{\\\"classification\\\":\\\"Test1\\\",\\\"generic_name\\\":\\\"Test1\\\",\\\"brand_name\\\":\\\"Test1\\\",\\\"price\\\":\\\"12\\\",\\\"order_quantity\\\":\\\"3\\\",\\\"total\\\":\\\"36.00\\\"}]'),
+(3, 'ODR23A008', 1, '2023-06-30 02:38:04', '21.6', 'system', '[{\\\"classification\\\":\\\"Test1\\\",\\\"generic_name\\\":\\\"Test1\\\",\\\"brand_name\\\":\\\"Test1\\\",\\\"price\\\":\\\"1.80\\\",\\\"order_quantity\\\":\\\"12\\\",\\\"total\\\":\\\"21.60\\\"}]');
 
 -- --------------------------------------------------------
 
@@ -176,6 +193,13 @@ ALTER TABLE `medicine_types`
   ADD PRIMARY KEY (`type_id`);
 
 --
+-- Indexes for table `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`order_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -189,7 +213,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `manufacturers`
@@ -208,6 +232,12 @@ ALTER TABLE `medicines`
 --
 ALTER TABLE `medicine_types`
   MODIFY `type_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -232,6 +262,12 @@ ALTER TABLE `carts`
 ALTER TABLE `medicines`
   ADD CONSTRAINT `medicines_ibfk_1` FOREIGN KEY (`manufacturer_id`) REFERENCES `manufacturers` (`manufacturer_id`) ON DELETE SET NULL ON UPDATE NO ACTION,
   ADD CONSTRAINT `medicines_ibfk_2` FOREIGN KEY (`type_id`) REFERENCES `medicine_types` (`type_id`) ON DELETE SET NULL ON UPDATE NO ACTION;
+
+--
+-- Constraints for table `orders`
+--
+ALTER TABLE `orders`
+  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

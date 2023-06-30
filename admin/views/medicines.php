@@ -50,6 +50,7 @@ if (!$isLogin) {
                             <th>Type</th>
                             <th>Price</th>
                             <th>Quantity</th>
+                            <th>Expiration</th>
                             <th>Action</th>
                           </tr>
                         </thead>
@@ -72,6 +73,7 @@ if (!$isLogin) {
                               <td><?= $type ?></td>
                               <td><?= "₱" . number_format($medicine->price, 2, ".") ?></td>
                               <td><?= $medicine->quantity ?></td>
+                              <td><?= date("Y-m-d", strtotime($medicine->expiration)) ?></td>
                               <td>
                                 <a href="#" onclick="handleAddQuantity('<?= $medicine->medicine_id ?>')" class="h5 text-success m-2">
                                   <i class="fa fa-plus-circle" title="Add Quantity" data-toggle="tooltip"></i>
@@ -336,6 +338,7 @@ if (!$isLogin) {
     }
 
     $(document).ready(function() {
+
       const tableId = "#medsTable";
       var table = $(tableId).DataTable({
         paging: true,
@@ -352,7 +355,7 @@ if (!$isLogin) {
         buttons: [{
           extend: 'searchBuilder',
           config: {
-            columns: [1, 2, 3, 4]
+            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
           }
         }],
         dom: 'Bfrtip',
