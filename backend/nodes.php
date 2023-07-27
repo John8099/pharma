@@ -67,6 +67,9 @@ if (isset($_GET['action'])) {
       case "admin_checkout":
         admin_checkout();
         break;
+      case "get_order_details":
+        get_order_details();
+        break;
       default:
         null;
         break;
@@ -75,6 +78,18 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function get_order_details()
+{
+  global $_POST;
+
+  $orderItems = array();
+  $orderDetails = getTableDataById("orders", "order_id", $_POST['order_id']);
+
+  array_push($orderItems, stripcslashes($orderDetails->items));
+
+  returnResponse($orderItems);
 }
 
 function admin_checkout()

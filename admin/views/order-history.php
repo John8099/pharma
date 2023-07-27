@@ -52,7 +52,7 @@ if (!$isLogin) {
                               <td><?= $history->order_from ?></td>
                               <td><?= date("Y-m-d", strtotime($history->date_created)) ?></td>
                               <td>
-                                <button type="button" class="btn btn-link" onclick='handleOpenPreview(<?= stripslashes($history->items) ?>)'>
+                                <button type="button" class="btn btn-link" onclick="handleOpenPreview('<?= $history->order_id ?>')">
                                   View Details
                                 </button>
                               </td>
@@ -71,6 +71,7 @@ if (!$isLogin) {
         </div>
       </div>
     </div>
+
     <div class="modal fade" id="preview" tabindex="-1" role="dialog" aria-labelledby="Order Details" aria-hidden="true" data-backdrop="static" data-keyboard="false">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
@@ -85,7 +86,22 @@ if (!$isLogin) {
           <div class="modal-body">
             <div class="row">
               <div class="col-12">
-                <table id="orderHistory" class="table table-hover table-border-style"></table>
+                <div id="orderHistoryModalTable">
+                  <table class="table table-hover table-border-style">
+                    <thead>
+                      <tr>
+                        <th>Classification</th>
+                        <th>Generic name</th>
+                        <th>Brand name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="orderHistoryTableBody">
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -98,47 +114,47 @@ if (!$isLogin) {
 
     <?php include("../components/scripts.php") ?>
     <script>
-      function handleOpenPreview(data) {
+      function handleOpenPreview(orderId) {
+        swal.showLoading()
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=get_order_details", {
+            order_id: orderId,
+          },
+          (data, status) => {
+            const resp = JSON.parse(data)
+            if (resp.length === 0) {
+              swal.fire({
+                title: "Error!",
+                html: "Error while retrieving data.<br>Please try again later.",
+                icon: "error"
+              })
+            } else {
+              const items = JSON.parse(resp[0])
+              if (items.length > 0) {
+                let bodyData = "";
+                items.forEach((d) => {
+                  bodyData += `<tr>
+                                <td>${d.classification}</td>
+                                <td>${d.generic_name}</td>
+                                <td>${d.brand_name}</td>
+                                <td>${d.price}</td>
+                                <td>${d.order_quantity}</td>
+                                <td>${d.total}</td>
+                              </tr>`
+                })
+                $("#orderHistoryTableBody").html(bodyData)
+                $("#preview").modal("show")
+              }
+              swal.close()
+            }
 
-        let newData = []
-        data.forEach((d) => {
-          newData.push([
-            d.classification,
-            d.generic_name,
-            d.brand_name,
-            d.price,
-            d.order_quantity,
-            d.total
-          ])
-        })
-
-        console.log(newData)
-        $('#orderHistory').DataTable({
-          retrieve: true,
-          dom: 'lrt',
-          data: newData,
-          columns: [{
-              title: 'Classification'
-            },
-            {
-              title: 'Generic name'
-            },
-            {
-              title: 'Brand name'
-            },
-            {
-              title: 'Price'
-            },
-            {
-              title: 'Quantity'
-            },
-            {
-              title: 'Total'
-            },
-          ],
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
         });
-        $("#preview").modal("show")
-
       }
 
       $(document).ready(function() {

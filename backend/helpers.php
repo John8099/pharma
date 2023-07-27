@@ -8,7 +8,12 @@ $ORIGIN = "http://$_SERVER[SERVER_NAME]";
 $PATH = "/pharma";
 
 $SERVER_NAME = "";
-if ($_SERVER['HTTP_HOST'] == "localhost") {
+$whitelist = array(
+  '127.0.0.1',
+  '::1'
+);
+
+if (in_array($_SERVER['REMOTE_ADDR'], $whitelist) || str_contains($_SERVER['REMOTE_ADDR'], '192.168')) {
   $SERVER_NAME = ($ORIGIN . $PATH);
 } else {
   $SERVER_NAME = ($ORIGIN);
