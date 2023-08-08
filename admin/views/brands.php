@@ -33,51 +33,46 @@ if (!$isLogin) {
                     <div class="card-header p-2">
                       <div class="w-100 d-flex justify-content-end">
 
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addManufacturer">
-                          New Manufacturer
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addBrand">
+                          New Brand
                         </button>
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="manufacturerTable" class="table table-hover">
+                      <table id="brandTable" class="table table-hover">
                         <thead>
                           <tr>
                             <th>Name</th>
-                            <th>Status</th>
+                            <th>Description</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
                           <?php
-                          $manufacturerData = getTableData("manufacturers");
+                          $brandData = getTableData("brands");
 
-                          foreach ($manufacturerData as $manufacturer) :
-                            $isStatusActive = $manufacturer->status == "active" ? true : false;
+                          foreach ($brandData as $brand) :
                           ?>
                             <tr>
-                              <td class=" align-middle"><?= $manufacturer->name ?></td>
+                              <td class=" align-middle"><?= $brand->brand_name ?></td>
+                              <td class=" align-middle"><?= $brand->brand_description ?></td>
                               <td class=" align-middle">
-                                <span class="status text-<?= $isStatusActive ? "success" : "danger" ?>">•</span>
-                                <?= ucfirst($manufacturer->status) ?>
-                              </td>
-                              <td class=" align-middle">
-                                <a href="#editMan<?= $manufacturer->manufacturer_id ?>" class="h5 text-info m-2" data-toggle="modal">
+                                <a href="#editBrand<?= $brand->id ?>" class="h5 text-info m-2" data-toggle="modal">
                                   <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
                                 </a>
-                                <?php if (!$isStatusActive) : ?>
-                                  <a href="#" onclick="return deleteData('manufacturers', 'manufacturer_id', '<?= $manufacturer->manufacturer_id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
-                                    <i class="fa fa-times-circle"></i>
-                                  </a>
-                                <?php endif; ?>
+
+                                <a href="#" onclick="return deleteData('brands', 'id', '<?= $brand->id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                  <i class="fa fa-times-circle"></i>
+                                </a>
                               </td>
                             </tr>
 
-                            <div class="modal fade" id="editMan<?= $manufacturer->manufacturer_id ?>" tabindex="-1" role="dialog" aria-labelledby="New Manufacturer" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                            <div class="modal fade" id="editBrand<?= $brand->id ?>" tabindex="-1" role="dialog" aria-labelledby="Edit Brand" aria-hidden="true" data-backdrop="static" data-keyboard="false">
                               <div class="modal-dialog modal-dialog-centered" role="document">
                                 <div class="modal-content">
                                   <div class="modal-header">
                                     <h5 class="modal-title text-secondary">
-                                      Edit Manufacturer
+                                      Edit Brand
                                     </h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                       <span aria-hidden="true">&times;</span>
@@ -85,29 +80,26 @@ if (!$isLogin) {
                                   </div>
                                   <form method="POST">
                                     <input type="text" name="action" value="edit" hidden readonly>
-                                    <input type="text" name="manufacturerId" value="<?= $manufacturer->manufacturer_id ?>" hidden readonly>
+                                    <input type="text" name="brandId" value="<?= $brand->id  ?>" hidden readonly>
                                     <div class="modal-body">
 
                                       <div class="form-group row">
                                         <label class="col-sm-2 col-form-label">Name</label>
                                         <div class="col-sm-10">
-                                          <input type="text" name="name" class="form-control" value="<?= $manufacturer->name ?>" required>
+                                          <input type="text" name="name" class="form-control" value="<?= $brand->brand_name ?>" required>
                                         </div>
                                       </div>
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">is Active</label>
+                                        <label class="col-sm-2 col-form-label">Description</label>
                                         <div class="col-sm-10">
-                                          <label class="switch">
-                                            <input type="checkbox" id="activeSwitch" <?= $isStatusActive ? "checked" : "" ?> name="isActive">
-                                            <span class="slider round"></span>
-                                          </label>
+                                          <textarea name="description" class="form-control" cols="30" rows="10"><?= nl2br($brand->brand_description) ?></textarea>
                                         </div>
                                       </div>
 
                                     </div>
                                     <div class="modal-footer">
-                                      <button type="button" onclick="handleEditManufacturer($(this))" class="btn btn-primary">Save</button>
+                                      <button type="button" onclick="handleEditBrand($(this))" class="btn btn-primary">Save</button>
                                     </div>
                                   </form>
 
@@ -132,18 +124,18 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addManufacturer" tabindex="-1" role="dialog" aria-labelledby="New Manufacturer" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal fade" id="addBrand" tabindex="-1" role="dialog" aria-labelledby="New Brand" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title text-secondary">
-            New Manufacturer
+            New Brand
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form id="addManufacturerForm" method="POST">
+        <form id="addBrandForm" method="POST">
           <input type="text" name="action" value="add" hidden readonly>
           <div class="modal-body">
 
@@ -155,12 +147,9 @@ if (!$isLogin) {
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">is Active</label>
+              <label class="col-sm-2 col-form-label">Description</label>
               <div class="col-sm-10">
-                <label class="switch">
-                  <input type="checkbox" id="activeSwitch" checked name="isActive">
-                  <span class="slider round"></span>
-                </label>
+                <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
               </div>
             </div>
 
@@ -176,20 +165,20 @@ if (!$isLogin) {
 
   <?php include("../components/scripts.php") ?>
   <script>
-    function handleEditManufacturer(e) {
+    function handleEditBrand(e) {
       swal.showLoading();
-      handleSaveManufacturer($(e[0].form).serialize())
+      handleSaveBrand($(e[0].form).serialize())
     }
 
-    $("#addManufacturerForm").on("submit", function(e) {
+    $("#addBrandForm").on("submit", function(e) {
       swal.showLoading();
-      handleSaveManufacturer($(this).serialize())
+      handleSaveBrand($(this).serialize())
       e.preventDefault()
     })
 
-    function handleSaveManufacturer(serializeData) {
+    function handleSaveBrand(serializeData) {
       $.post(
-        "<?= $SERVER_NAME ?>/backend/nodes?action=save_manufacturer",
+        "<?= $SERVER_NAME ?>/backend/nodes?action=save_brand",
         serializeData,
         (data, status) => {
           const resp = JSON.parse(data)
@@ -209,7 +198,7 @@ if (!$isLogin) {
     }
 
     $(document).ready(function() {
-      const tableId = "#manufacturerTable";
+      const tableId = "#brandTable";
       var table = $(tableId).DataTable({
         paging: true,
         lengthChange: false,
@@ -223,10 +212,14 @@ if (!$isLogin) {
           }
         },
         "columns": [{
-            "width": "80%"
+            "width": "20%"
           },
-          null,
-          null
+          {
+            "width": "40%"
+          },
+          {
+            "width": "5%"
+          },
         ],
         buttons: [{
           extend: 'searchBuilder',

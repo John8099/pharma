@@ -43,11 +43,14 @@ if (isset($_GET['action'])) {
       case "change_password":
         changePassword();
         break;
-      case "save_manufacturer":
-        saveManufacturer();
+      case "save_supplier":
+        save_supplier();
         break;
-      case "save_medicine_type":
-        save_medicine_type();
+      case "save_category":
+        save_category();
+        break;
+      case "save_brand":
+        save_brand();
         break;
       case "medicine_save":
         medicine_save();
@@ -70,6 +73,12 @@ if (isset($_GET['action'])) {
       case "get_order_details":
         get_order_details();
         break;
+      case "get_category":
+        get_select_data("category");
+        break;
+      case "get_brand":
+        get_select_data("brands");
+        break;
       default:
         null;
         break;
@@ -78,6 +87,12 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function get_select_data($table)
+{
+  $data = getTableData($table);
+  returnResponse($data);
 }
 
 function get_order_details()
@@ -299,49 +314,37 @@ function medicine_save()
   $action = $_POST["action"];
   $isCleared = isset($_POST["isCleared"]) ? $_POST["isCleared"] : "";
 
-  $medicine_img = $_FILES["medicine_img"];
-
-  $code = $action == "add" ? generateSystemId() : "";
-  $type_id = isset($_POST["med_type_id"]) ? $_POST["med_type_id"] : "";
-  $manufacturer_id = isset($_POST["med_manufacturer_id"]) ? $_POST["med_manufacturer_id"] : "";
   $medicine_id = isset($_POST["medicine_id"]) ? $_POST["medicine_id"] : null;
 
-  $classification = ucwords($_POST["classification"]);
+  $medicine_img = $_FILES["medicine_img"];
+  $name = ucwords($_POST["name"]);
+  $category_id = $_POST["category_id"];
+  $dose = $_POST["dose"];
   $generic_name = ucwords($_POST["generic_name"]);
-  $brand_name = ucwords($_POST["brand_name"]);
-
-  $dose = ucwords($_POST["dose"]);
-  $price = $_POST["price"];
-  $quantity = $_POST["quantity"];
-  $expiration = $_POST["expiration"];
+  $brand_id = $_POST["brand_id"];
   $med_desc = ucfirst(nl2br($_POST["med_desc"]));
 
-  if (!isMedicineExist(strtolower($classification), strtolower($generic_name), strtolower($brand_name), $expiration, $medicine_id)) {
+  if (!isMedicineExist(strtolower($name), strtolower($generic_name), $brand_id, strtolower($dose), $category_id, $medicine_id)) {
 
     $medicineData = array(
-      "manufacturer_id" => $manufacturer_id,
-      "type_id" => $type_id,
-      "code" => $code,
-      "classification" => $classification,
-      "generic_name" => $generic_name,
-      "brand_name" => $brand_name,
-      "dose" => $dose,
-      "price" => $price,
-      "quantity" => $quantity,
-      "expiration" => $expiration,
+      "medicine_name" => $name,
+      "category_id" => $category_id,
       "image" => "",
-      "description" => $med_desc
+      "brand_id" => $brand_id,
+      "generic_name" => $generic_name,
+      "description" => $med_desc,
+      "dosage" => $dose
     );
 
     $uploadedImg = uploadImg($medicine_img, "../media/drugs");
     $medicineData["image"] = $uploadedImg->success ? $uploadedImg->file_name : "";
 
     if ($action == "add") {
-      $comm = insert("medicines", $medicineData);
+      $comm = insert("medicine_profile", $medicineData);
     } else if ($action == "edit") {
       $medicineData["image"] = $isCleared == "Yes" ? "set_null" : $uploadedImg->file_name;
 
-      $comm = update("medicines", $medicineData, "medicine_id", $medicine_id);
+      $comm = update("medicine_profile", $medicineData, "id", $medicine_id);
     } else {
       $response["success"] = false;
       $response["message"] = "An error occurred while uploading the image.<br>Please try again later.";
@@ -361,88 +364,122 @@ function medicine_save()
   } else {
     $response["success"] = false;
     $response["message"] = "Medicine is already exist.";
-    if ($action == "edit") {
-      $medData = getTableData("medicines", "medicine_id", $medicine_id);
-      if ($medData[0]->code) {
-        $response["message"] .= "<br>Please check the medicine code: \"<strong>" . ($medData[0]->code) . "</strong>\"";
-      }
-    }
   }
 
   returnResponse($response);
 }
 
-function save_medicine_type()
+function save_brand()
 {
   global $conn, $_POST;
 
-  $typeId = isset($_POST["typeId"]) ? $_POST["typeId"] : null;
+  $brandId = isset($_POST["brandId"]) ? $_POST["brandId"] : null;
   $name = ucwords($_POST["name"]);
-  $isActive = isset($_POST["isActive"]) ? "active" : "inactive";
+  $description = ucwords(nl2br($_POST["description"]));
 
   $action = $_POST["action"];
 
-  if (!isMedicineTypeExist($name, $typeId)) {
-    $typeData = array(
-      "name" => $name,
-      "status" => $isActive
+  if (!isBrandExist($name, $brandId)) {
+    $brandData = array(
+      "brand_name" => $name,
+      "brand_description" => $description
     );
 
-    $procMedicineType = null;
+    $procBrand = null;
     if ($action == "add") {
-      $procMedicineType = insert("medicine_types", $typeData);
+      $procBrand = insert("brands", $brandData);
     } else {
-      $procMedicineType = update("medicine_types", $typeData, "type_id", $typeId);
+      $procBrand = update("brands", $brandData, "id", $brandId);
     }
 
-    if ($procMedicineType) {
+    if ($procBrand) {
       $response["success"] = true;
-      $response["message"] = "Medicine type successfully " . ($action == "add" ? "added." : "updated.");
+      $response["message"] = "Brand successfully " . ($action == "add" ? "added." : "updated.");
     } else {
       $response["success"] = false;
       $response["message"] = mysqli_error($conn);
     }
   } else {
     $response["success"] = false;
-    $response["message"] = "Medicine type name: <strong>\"$name\"</strong> already exist.";
+    $response["message"] = "Brand name: <strong>\"$name\"</strong> already exist.";
   }
 
   returnResponse($response);
 }
 
-function saveManufacturer()
+function save_category()
 {
   global $conn, $_POST;
 
-  $manufactureId = isset($_POST["manufacturerId"]) ? $_POST["manufacturerId"] : null;
+  $categoryId = isset($_POST["categoryId"]) ? $_POST["categoryId"] : null;
   $name = ucwords($_POST["name"]);
-  $isActive = isset($_POST["isActive"]) ? "active" : "inactive";
+  $description = ucwords(nl2br($_POST["description"]));
 
   $action = $_POST["action"];
 
-  if (!isManufacturerExist($name, $manufactureId)) {
-    $manufacturerData = array(
-      "name" => $name,
-      "status" => $isActive
+  if (!isCategoryExist($name, $categoryId)) {
+    $categoryData = array(
+      "category_name" => $name,
+      "description" => $description
     );
 
-    $procManufacturer = null;
+    $procCategory = null;
     if ($action == "add") {
-      $procManufacturer = insert("manufacturers", $manufacturerData);
+      $procCategory = insert("category", $categoryData);
     } else {
-      $procManufacturer = update("manufacturers", $manufacturerData, "manufacturer_id", $manufactureId);
+      $procCategory = update("category", $categoryData, "id", $categoryId);
     }
 
-    if ($procManufacturer) {
+    if ($procCategory) {
       $response["success"] = true;
-      $response["message"] = "Manufacturer successfully " . ($action == "add" ? "added." : "updated.");
+      $response["message"] = "Category successfully " . ($action == "add" ? "added." : "updated.");
     } else {
       $response["success"] = false;
       $response["message"] = mysqli_error($conn);
     }
   } else {
     $response["success"] = false;
-    $response["message"] = "Manufacturer name: <strong>\"$name\"</strong> already exist.";
+    $response["message"] = "Category name: <strong>\"$name\"</strong> already exist.";
+  }
+
+  returnResponse($response);
+}
+
+function save_supplier()
+{
+  global $conn, $_POST;
+
+  $supplierId = isset($_POST["supplierId"]) ? $_POST["supplierId"] : null;
+  $name = ucwords($_POST["name"]);
+  $address = ucwords($_POST["address"]);
+  $contact = ucwords($_POST["contact"]);
+
+  $action = $_POST["action"];
+
+  if (!isSupplierExist($name, $address, $supplierId)) {
+    $supplierData = array(
+      "supplier_name" => $name,
+      "address" => $address,
+      "contact" => $contact
+    );
+
+    $procSupplier = null;
+    if ($action == "add") {
+      $procSupplier = insert("supplier", $supplierData);
+    } else {
+      $procSupplier = update("supplier", $supplierData, "id", $supplierId);
+    }
+
+    if ($procSupplier) {
+      $response["success"] = true;
+      $response["message"] = "Supplier successfully " . ($action == "add" ? "added." : "updated.");
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Supplier name: <strong>\"$name\"</strong> already exist.";
   }
 
   returnResponse($response);
@@ -455,6 +492,8 @@ function addUser()
   $fname = mysqli_escape_string($conn, ucwords($_POST["fname"]));
   $mname = mysqli_escape_string($conn, ucwords($_POST["mname"]));
   $lname = mysqli_escape_string($conn, ucwords($_POST["lname"]));
+  $uname = mysqli_escape_string($conn, ucwords($_POST["uname"]));
+
   $email = $_POST["email"];
   $password = isset($_POST["password"]) ? $_POST["password"] : "password123";
   $role = $_POST["role"];
@@ -467,9 +506,11 @@ function addUser()
       "fname" => $fname,
       "mname" => $mname,
       "lname" => $lname,
+      "uname" => $uname,
       "email" => $email,
       "password" => password_hash($password, PASSWORD_ARGON2I),
-      "role" => $role
+      "role" => $role,
+      "isNew" => "1"
     );
 
     $user = insert("users", $userData);

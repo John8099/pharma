@@ -33,51 +33,46 @@ if (!$isLogin) {
                     <div class="card-header p-2">
                       <div class="w-100 d-flex justify-content-end">
 
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addType">
-                          New Type
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addCategory">
+                          New Category
                         </button>
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="medicineTypeTable" class="table table-hover">
+                      <table id="categoryTable" class="table table-hover">
                         <thead>
                           <tr>
-                            <th>Name Type</th>
-                            <th>Status</th>
+                            <th>Name</th>
+                            <th>Description</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
                           <?php
-                          $typeData = getTableData("medicine_types");
+                          $categoryData = getTableData("category");
 
-                          foreach ($typeData as $medType) :
-                            $isStatusActive = $medType->status == "active" ? true : false;
+                          foreach ($categoryData as $category) :
                           ?>
                             <tr>
-                              <td class=" align-middle"><?= $medType->name ?></td>
+                              <td class=" align-middle"><?= $category->category_name ?></td>
+                              <td class=" align-middle"><?= $category->description ?></td>
                               <td class=" align-middle">
-                                <span class="status text-<?= $isStatusActive ? "success" : "danger" ?>">•</span>
-                                <?= ucfirst($medType->status) ?>
-                              </td>
-                              <td class=" align-middle">
-                                <a href="#editMed<?= $medType->type_id ?>" class="h5 text-info m-2" data-toggle="modal">
+                                <a href="#editCategory<?= $category->id ?>" class="h5 text-info m-2" data-toggle="modal">
                                   <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
                                 </a>
-                                <?php if (!$isStatusActive) : ?>
-                                  <a href="#" onclick="return deleteData('medicine_types', 'type_id', '<?= $medType->type_id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
-                                    <i class="fa fa-times-circle"></i>
-                                  </a>
-                                <?php endif; ?>
+
+                                <a href="#" onclick="return deleteData('category', 'id', '<?= $category->id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                  <i class="fa fa-times-circle"></i>
+                                </a>
                               </td>
                             </tr>
 
-                            <div class="modal fade" id="editMed<?= $medType->type_id ?>" tabindex="-1" role="dialog" aria-labelledby="New Manufacturer" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                            <div class="modal fade" id="editCategory<?= $category->id ?>" tabindex="-1" role="dialog" aria-labelledby="New Category" aria-hidden="true" data-backdrop="static" data-keyboard="false">
                               <div class="modal-dialog modal-dialog-centered" role="document">
                                 <div class="modal-content">
                                   <div class="modal-header">
                                     <h5 class="modal-title text-secondary">
-                                      Edit Medicine Type
+                                      Edit Category
                                     </h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                       <span aria-hidden="true">&times;</span>
@@ -85,29 +80,26 @@ if (!$isLogin) {
                                   </div>
                                   <form method="POST">
                                     <input type="text" name="action" value="edit" hidden readonly>
-                                    <input type="text" name="typeId" value="<?= $medType->type_id ?>" hidden readonly>
+                                    <input type="text" name="categoryId" value="<?= $category->id  ?>" hidden readonly>
                                     <div class="modal-body">
 
                                       <div class="form-group row">
                                         <label class="col-sm-2 col-form-label">Name</label>
                                         <div class="col-sm-10">
-                                          <input type="text" name="name" class="form-control" value="<?= $medType->name ?>" required>
+                                          <input type="text" name="name" class="form-control" value="<?= $category->category_name ?>" required>
                                         </div>
                                       </div>
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">is Active</label>
+                                        <label class="col-sm-2 col-form-label">Description</label>
                                         <div class="col-sm-10">
-                                          <label class="switch">
-                                            <input type="checkbox" id="activeSwitch" <?= $isStatusActive ? "checked" : "" ?> name="isActive">
-                                            <span class="slider round"></span>
-                                          </label>
+                                          <textarea name="description" class="form-control" cols="30" rows="10"><?= nl2br($category->description) ?></textarea>
                                         </div>
                                       </div>
 
                                     </div>
                                     <div class="modal-footer">
-                                      <button type="button" onclick="handleEditMedicineType($(this))" class="btn btn-primary">Save</button>
+                                      <button type="button" onclick="handleEditCategory($(this))" class="btn btn-primary">Save</button>
                                     </div>
                                   </form>
 
@@ -132,18 +124,18 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addType" tabindex="-1" role="dialog" aria-labelledby="New Medicine Type" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal fade" id="addCategory" tabindex="-1" role="dialog" aria-labelledby="New Category" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title text-secondary">
-            New Medicine Type
+            New Category
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form id="addTypeForm" method="POST">
+        <form id="addCategoryForm" method="POST">
           <input type="text" name="action" value="add" hidden readonly>
           <div class="modal-body">
 
@@ -155,12 +147,9 @@ if (!$isLogin) {
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">is Active</label>
+              <label class="col-sm-2 col-form-label">Description</label>
               <div class="col-sm-10">
-                <label class="switch">
-                  <input type="checkbox" id="activeSwitch" checked name="isActive">
-                  <span class="slider round"></span>
-                </label>
+                <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
               </div>
             </div>
 
@@ -176,20 +165,20 @@ if (!$isLogin) {
 
   <?php include("../components/scripts.php") ?>
   <script>
-    function handleEditMedicineType(e) {
+    function handleEditCategory(e) {
       swal.showLoading();
-      handleSaveMedicineType($(e[0].form).serialize())
+      handleSaveCategory($(e[0].form).serialize())
     }
 
-    $("#addTypeForm").on("submit", function(e) {
+    $("#addCategoryForm").on("submit", function(e) {
       swal.showLoading();
-      handleSaveMedicineType($(this).serialize())
+      handleSaveCategory($(this).serialize())
       e.preventDefault()
     })
 
-    function handleSaveMedicineType(serializeData) {
+    function handleSaveCategory(serializeData) {
       $.post(
-        "<?= $SERVER_NAME ?>/backend/nodes?action=save_medicine_type",
+        "<?= $SERVER_NAME ?>/backend/nodes?action=save_category",
         serializeData,
         (data, status) => {
           const resp = JSON.parse(data)
@@ -209,7 +198,7 @@ if (!$isLogin) {
     }
 
     $(document).ready(function() {
-      const tableId = "#medicineTypeTable";
+      const tableId = "#categoryTable";
       var table = $(tableId).DataTable({
         paging: true,
         lengthChange: false,
@@ -223,10 +212,14 @@ if (!$isLogin) {
           }
         },
         "columns": [{
-            "width": "50%"
+            "width": "20%"
           },
-          null,
-          null
+          {
+            "width": "40%"
+          },
+          {
+            "width": "5%"
+          },
         ],
         buttons: [{
           extend: 'searchBuilder',

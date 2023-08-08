@@ -62,13 +62,13 @@ function getCartDataIdIfExist($medicineId, $userId)
   return null;
 }
 
-function isMedicineExist($class, $generic, $brand, $expiry, $id = null)
+function isMedicineExist($name, $generic, $brand_id, $dosage, $category_id, $id = null)
 {
   global $conn;
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM medicines WHERE LOWER(classification)='$class' and LOWER(generic_name)='$generic' and LOWER(brand_name)='$brand' and expiration='$expiry' " . ($id ? "and medicine_id <> $id" : "")
+    "SELECT * FROM medicine_profile WHERE LOWER(medicine_name)='$name' and LOWER(generic_name)='$generic' and LOWER(dosage)='$dosage' and brand_id='$brand_id' and category_id='$category_id' " . ($id ? "and id <> $id" : "")
   );
 
   return mysqli_num_rows($query) > 0 ? true : false;
@@ -96,25 +96,39 @@ function uploadImg($file, $path)
   return (object) $res;
 }
 
-function isMedicineTypeExist($value, $id = null)
+function isBrandExist($name, $id = null)
 {
   global $conn;
-  $newVal = strtolower($value);
+  $newName = strtolower($name);
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM medicine_types WHERE LOWER(`name`)='$newVal'" . ($id ? " and type_id <> '$id'" : "")
+    "SELECT * FROM brands WHERE LOWER(`brand_name`)='$newName'" . ($id ? " and id <> '$id'" : "")
   );
 
   return mysqli_num_rows($query) > 0 ? true : false;
 }
 
-function isManufacturerExist($value, $id = null)
+function isCategoryExist($name, $id = null)
 {
   global $conn;
-  $newVal = strtolower($value);
+  $newName = strtolower($name);
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM manufacturers WHERE LOWER(`name`)='$newVal'" . ($id ? " and manufacturer_id <> '$id'" : "")
+    "SELECT * FROM category WHERE LOWER(`category_name`)='$newName'" . ($id ? " and id <> '$id'" : "")
+  );
+
+  return mysqli_num_rows($query) > 0 ? true : false;
+}
+
+function isSupplierExist($name, $address, $id = null)
+{
+  global $conn;
+  $newName = strtolower($name);
+  $newAddress = strtolower($address);
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM supplier WHERE  LOWER(`address`)='$newAddress' and LOWER(`supplier_name`)='$newName'" . ($id ? " and id <> '$id'" : "")
   );
 
   return mysqli_num_rows($query) > 0 ? true : false;
@@ -366,7 +380,7 @@ function getMedicineImage($itemId = null)
   if ($itemId) {
     $medicineQuery = mysqli_query(
       $conn,
-      "SELECT * FROM medicines WHERE medicine_id='$itemId'"
+      "SELECT * FROM medicine_profile WHERE id='$itemId'"
     );
 
     if (mysqli_num_rows($medicineQuery) > 0) {

@@ -42,53 +42,41 @@ if (!$isLogin) {
                       <table id="medsTable" class="table table-hover">
                         <thead>
                           <tr>
-                            <th>Code</th>
-                            <th>Therapeutic <br> Classification</th>
-                            <th>Generic name</th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Category</th>
                             <th>Brand name</th>
+                            <th>Generic name</th>
+                            <th>Description</th>
                             <th>Dose</th>
-                            <th>Type</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Expiration</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
                           <?php
-                          $medicineData = getTableData("medicines");
+                          $medicineData = getTableData("medicine_profile");
                           foreach ($medicineData as $medicine) :
-                            $typeData = getTableData("medicine_types", "type_id", $medicine->type_id);
-                            $type = count($typeData) > 0 ? $typeData[0]->name : "";
-
-                            $manufacturerData = getTableData("manufacturers", "manufacturer_id ", $medicine->manufacturer_id);
-                            $manufacturer = count($manufacturerData) > 0 ? $manufacturerData[0]->name : "";
+                            $category = getTableData("category", "id", $medicine->category_id);
+                            $brand = getTableData("brands", "id", $medicine->brand_id);
                           ?>
                             <tr>
-                              <td><?= $medicine->code ?></td>
-                              <td><?= $medicine->classification ?></td>
-                              <td><?= $medicine->generic_name ?></td>
-                              <td><?= $medicine->brand_name ?></td>
-                              <td><?= $medicine->dose ?></td>
-                              <td><?= $type ?></td>
-                              <td><?= "₱" . number_format($medicine->price, 2, ".") ?></td>
-                              <td><?= $medicine->quantity ?></td>
-                              <td><?= date("Y-m-d", strtotime($medicine->expiration)) ?></td>
-                              <td>
-                                <a href="#" onclick="handleAddQuantity('<?= $medicine->medicine_id ?>')" class="h5 text-success m-2">
-                                  <i class="fa fa-plus-circle" title="Add Quantity" data-toggle="tooltip"></i>
+                              <td class="align-middle">
+                                <img src="<?= getMedicineImage($medicine->id) ?>" class="rounded" width="60px">
+                              </td>
+                              <td class="align-middle"><?= $medicine->medicine_name ?></td>
+                              <td class="align-middle"><?= count($category) > 0 ? $category[0]->category_name : "<em>NULL</em>" ?></td>
+                              <td class="align-middle"><?= count($brand) > 0 ? $brand[0]->brand_name : "<em>NULL</em>" ?></td>
+                              <td class="align-middle"><?= $medicine->generic_name ?></td>
+                              <td class="align-middle"><?= $medicine->description ?></td>
+                              <td class="align-middle"><?= $medicine->dosage ?></td>
+                              <td class="align-middle">
+                                <a href="#editEditMedicine<?= $medicine->id ?>" class="h5 text-info m-2" data-toggle="modal">
+                                  <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
                                 </a>
-                                <a href="#" onclick="handleOpenEditModal('<?= $medicine->medicine_id ?>')" class="h5 text-warning m-2">
-                                  <i class="fa fa-edit" title="Edit Medicine" data-toggle="tooltip"></i>
-                                </a>
-                                <?php if ($medicine->quantity == 0 && getCartCountByMedId($medicine->medicine_id) == 0) : ?>
-                                  <a href="#" onclick="return deleteData('medicines', 'medicine_id', '<?= $medicine->medicine_id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
-                                    <i class="fa fa-times-circle"></i>
-                                  </a>
-                                <?php endif; ?>
                               </td>
                             </tr>
-                            <?php include("../components/modal-edit-medicine.php"); ?>
+                            <?php #include("../components/modal-edit-medicine.php"); 
+                            ?>
                           <?php endforeach; ?>
 
                         </tbody>
@@ -108,7 +96,7 @@ if (!$isLogin) {
   </div>
 
   <div class="modal fade" id="addMed" tabindex="-1" role="dialog" aria-labelledby="New Medicine" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title text-secondary">
@@ -125,7 +113,7 @@ if (!$isLogin) {
 
               <div class="col-md-12 mb-1">
                 <div class="form-group">
-                  <img src="<?= getMedicineImage() ?>" class="rounded mx-auto d-block" style="width: 200px; height: 200px;" id="modalAdd-display">
+                  <img src="<?= getMedicineImage() ?>" class="rounded mx-auto d-block" style="width: 150px; height: 150px;" id="modalAdd-display">
                 </div>
                 <div class="mt-3" style="display: flex; justify-content: center;" id="modalAdd-browse">
                   <button type="button" class="btn btn-primary btn-sm" onclick="return changeImage('#formInput-add')">
@@ -142,40 +130,27 @@ if (!$isLogin) {
                 </div>
               </div>
 
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Medicine Type <span class="text-danger">*</span></label>
-                  <select name="med_type_id" class="choices form-select" required>
-                    <option value="" selected disabled>Select Medicine Type</option>
-                    <?php
-                    $medicineTypes = getTableData("medicine_types", "status", "active");
-                    foreach ($medicineTypes as $medicineType) :
-                    ?>
-                      <option value="<?= $medicineType->type_id ?>"><?= $medicineType->name ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Manufacturers <span class="text-danger">*</span></label>
-                  <select name="med_manufacturer_id" class="choices form-select" required>
-                    <option value="" selected disabled>Select Manufacturer</option>
-                    <?php
-                    $manufacturerTypes = getTableData("manufacturers", "status", "active");
-                    foreach ($manufacturerTypes as $manufacturer) :
-                    ?>
-                      <option value="<?= $manufacturer->manufacturer_id ?>"><?= $manufacturer->name ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-              </div>
-
               <div class="col-md-12 mb-1">
                 <div class="form-group">
-                  <label>Therapeutic Classification <span class="text-danger">*</span></label>
-                  <input type="text" name="classification" class="form-control" required>
+                  <label>Name <span class="text-danger">*</span></label>
+                  <input type="text" name="name" class="form-control" required>
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-1">
+                <div class="form-group">
+                  <label> Category <span class="text-danger">*</span> </label>
+                  <button type="button" id="btnAddCategory" class="btn btn-sm btn-primary mr-0" style="float: right;">New</button>
+
+                  <select name="category_id" id="select_category" class="form-control">
+                    <option value="">-- select category --</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6 mb-1">
+                <div class="form-group">
+                  <label>Dose <span class="text-danger">*</span></label>
+                  <input type="text" name="dose" class="form-control" required>
                 </div>
               </div>
 
@@ -188,39 +163,16 @@ if (!$isLogin) {
               <div class="col-md-6 mb-1">
                 <div class="form-group">
                   <label>Brand name <span class="text-danger">*</span></label>
-                  <input type="text" name="brand_name" class="form-control" required>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Dose <span class="text-danger">*</span></label>
-                  <input type="text" name="dose" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Price <span class="text-danger">*</span></label>
-                  <input type="number" name="price" class="form-control" required>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Quantity <span class="text-danger">*</span></label>
-                  <input type="number" name="quantity" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Expiration <span class="text-danger">*</span></label>
-                  <input type="date" name="expiration" class="form-control" min="<?= date("Y-m-d") ?>" required>
+                  <button id="btnAddBrand" type="button" class="btn btn-sm btn-primary mr-0" style="float: right;">New</button>
+                  <select name="brand_id" id="select_brand" class="form-control">
+                    <option value="">-- select brand name --</option>
+                  </select>
                 </div>
               </div>
 
               <div class="col-md-12 mb-1">
                 <div class="form-group">
-                  <label>Medicine Description</label>
+                  <label>Description</label>
                   <textarea class="form-control" name="med_desc" rows="5"></textarea>
                 </div>
               </div>
@@ -228,6 +180,7 @@ if (!$isLogin) {
           </div>
           <div class="modal-footer">
             <button type="submit" id="btnAdd" class="btn btn-primary">Submit</button>
+            <button type="reset" class="btn btn-warning">Reset</button>
             <button type="button" class="btn btn-danger" onclick="closeModal('#addMed')">Cancel</button>
           </div>
         </form>
@@ -236,43 +189,179 @@ if (!$isLogin) {
     </div>
   </div>
 
+  <div class="modal fade" id="addCategory" tabindex="-1" role="dialog" aria-labelledby="New Category" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-secondary">
+            New Category
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="addCategoryForm" method="POST">
+          <input type="text" name="action" value="add" hidden readonly>
+          <div class="modal-body">
+
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label">Name</label>
+              <div class="col-sm-10">
+                <input type="text" name="name" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label">Description</label>
+              <div class="col-sm-10">
+                <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addBrand" tabindex="-1" role="dialog" aria-labelledby="New Brand" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-secondary">
+            New Brand
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="addBrandForm" method="POST">
+          <input type="text" name="action" value="add" hidden readonly>
+          <div class="modal-body">
+
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label">Name</label>
+              <div class="col-sm-10">
+                <input type="text" name="name" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label class="col-sm-2 col-form-label">Description</label>
+              <div class="col-sm-10">
+                <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
+              </div>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+
   <?php include("../components/scripts.php") ?>
   <script>
+    $("#addMed").modal("show")
+
     $("#modalAdd-clear").hide()
 
-    function handleAddQuantity(medId) {
-      swal.fire({
-        title: 'Number of Quantity to be added',
-        input: 'number',
-        showLoaderOnConfirm: true,
-        confirmButtonText: 'Add',
-        confirmButtonColor: "#2ca961",
-        showCancelButton: true,
-      }).then((res) => {
-        if (res.isConfirmed) {
-          $.post(
-            "<?= $SERVER_NAME ?>/backend/nodes?action=add_medicine_quantity", {
-              quantity_to_add: res.value,
-              medicine_id: medId
-            },
-            (data, status) => {
-              const resp = JSON.parse(data)
-              swal.fire({
-                title: resp.success ? "Success!" : 'Error!',
-                html: resp.message,
-                icon: resp.success ? "success" : 'error',
-              }).then(() => resp.success ? window.location.reload() : undefined)
+    $("#btnAddBrand").on("click", function() {
+      $("#addMed").modal("hide")
+      $("#addBrand").modal("show")
+    })
 
-            }).fail(function(e) {
-            swal.fire({
-              title: 'Error!',
-              text: e.statusText,
-              icon: 'error',
-            })
+    $("#btnAddCategory").on("click", function() {
+      $("#addMed").modal("hide")
+      $("#addCategory").modal("show")
+    })
+
+    $("#addCategory").on("hidden.bs.modal", function() {
+      $("#addMed").modal("show")
+      $("#addCategoryForm").get(0).reset()
+    })
+
+    $("#addMed").on("shown.bs.modal", function() {
+      $.get(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=get_category",
+        (data, status) => {
+          const resp = JSON.parse(data)
+          console.log(resp)
+          resp.forEach(e => {
+            $("#select_category").append(`<option value='${e.id}' title='${e.description}'>${e.category_name}</option>`)
           });
-        }
-      })
-    }
+        })
+      $.get(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=get_brand",
+        (data, status) => {
+          const resp = JSON.parse(data)
+          console.log(resp)
+          resp.forEach(e => {
+            $("#select_brand").append(`<option value='${e.id}' title='${e.description}'>${e.brand_name}</option>`)
+          });
+        })
+    })
+
+    $("#addBrand").on("hidden.bs.modal", function() {
+      $("#addMed").modal("show")
+      $("#addBrandForm").get(0).reset()
+    })
+
+    const closeModal = (modalId) => $(modalId).modal("hide")
+
+    $("#addBrandForm").on("submit", function(e) {
+      swal.showLoading();
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=save_brand",
+        $(this).serialize(),
+        (data, status) => {
+          const resp = JSON.parse(data)
+          swal.fire({
+            title: resp.success ? "Success!" : 'Error!',
+            html: resp.message,
+            icon: resp.success ? "success" : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
+      e.preventDefault()
+    })
+
+    $("#addCategoryForm").on("submit", function(e) {
+      swal.showLoading();
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=save_category",
+        $(this).serialize(),
+        (data, status) => {
+          const resp = JSON.parse(data)
+          swal.fire({
+            title: resp.success ? "Success!" : 'Error!',
+            html: resp.message,
+            icon: resp.success ? "success" : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
+      e.preventDefault()
+    })
 
     function handleOpenEditModal(medId) {
       const modalId = `#editMed${medId}`
@@ -289,9 +378,6 @@ if (!$isLogin) {
         $(modalEditBrowseBtn).hide()
       }
     }
-
-    // $("#addMed").modal("show")
-    const closeModal = (modalId) => $(modalId).modal("hide")
 
     function handleSubmitEditMedicine(formId, medId) {
       swal.showLoading();
@@ -355,7 +441,7 @@ if (!$isLogin) {
         buttons: [{
           extend: 'searchBuilder',
           config: {
-            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+            columns: [1, 2, 3, 4, 5, 6]
           }
         }],
         dom: 'Bfrtip',

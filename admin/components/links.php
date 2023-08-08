@@ -22,17 +22,31 @@ $links = array(
     )
   ),
   array(
-    "title" => "Manufacturers",
+    "title" => "Suppliers",
     "config" => array(
       "icon" => "fa fa-cogs",
-      "url" => "$SERVER_NAME/admin/views/manufacturers"
+      "url" => "$SERVER_NAME/admin/views/suppliers"
     )
   ),
   array(
-    "title" => "Medicine Types",
+    "title" => "Category",
     "config" => array(
       "icon" => "fa fa-briefcase-medical",
-      "url" => "$SERVER_NAME/admin/views/medicine-types"
+      "url" => "$SERVER_NAME/admin/views/category"
+    )
+  ),
+  array(
+    "title" => "Brands",
+    "config" => array(
+      "icon" => "fa fa-prescription",
+      "url" => "$SERVER_NAME/admin/views/brands"
+    )
+  ),
+  array(
+    "title" => "Purchase Order",
+    "config" => array(
+      "icon" => "fa fa-cash-register",
+      "url" => "$SERVER_NAME/admin/views/purchase-orders"
     )
   ),
   array(
@@ -40,6 +54,13 @@ $links = array(
     "config" => array(
       "icon" => "fa fa-pills",
       "url" => "$SERVER_NAME/admin/views/medicines"
+    )
+  ),
+  array(
+    "title" => "Stocks",
+    "config" => array(
+      "icon" => "fa fa-layer-group",
+      "url" => "$SERVER_NAME/admin/views/stocks"
     )
   ),
   array(

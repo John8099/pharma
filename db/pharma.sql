@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 27, 2023 at 09:12 AM
+-- Generation Time: Aug 08, 2023 at 09:45 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -33,6 +33,13 @@ CREATE TABLE `brands` (
   `brand_description` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `brands`
+--
+
+INSERT INTO `brands` (`id`, `brand_name`, `brand_description`) VALUES
+(1, 'Name', 'Description');
+
 -- --------------------------------------------------------
 
 --
@@ -42,8 +49,15 @@ CREATE TABLE `brands` (
 CREATE TABLE `category` (
   `id` int(11) NOT NULL,
   `category_name` varchar(100) NOT NULL,
-  `decription` varchar(100) NOT NULL
+  `description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `category`
+--
+
+INSERT INTO `category` (`id`, `category_name`, `description`) VALUES
+(1, 'Category', 'Description');
 
 -- --------------------------------------------------------
 
@@ -85,12 +99,20 @@ CREATE TABLE `medicine_profile` (
   `id` int(11) NOT NULL,
   `medicine_name` varchar(100) NOT NULL,
   `category_id` int(11) DEFAULT NULL,
-  `image` varchar(100) NOT NULL,
+  `image` varchar(100) DEFAULT NULL,
   `brand_id` int(11) DEFAULT NULL,
   `generic_name` varchar(100) NOT NULL,
   `description` text NOT NULL,
   `dosage` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `medicine_profile`
+--
+
+INSERT INTO `medicine_profile` (`id`, `medicine_name`, `category_id`, `image`, `brand_id`, `generic_name`, `description`, `dosage`) VALUES
+(1, 'name', 1, NULL, 1, 'generic', 'description', '12'),
+(2, 'Test', 1, NULL, 1, 'Test', 'Test test', '12');
 
 -- --------------------------------------------------------
 
@@ -188,6 +210,13 @@ CREATE TABLE `supplier` (
   `contact` varchar(32) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `supplier`
+--
+
+INSERT INTO `supplier` (`id`, `supplier_name`, `address`, `contact`) VALUES
+(1, 'Supplier', 'Address', '09876543');
+
 -- --------------------------------------------------------
 
 --
@@ -203,9 +232,20 @@ CREATE TABLE `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(250) NOT NULL,
   `role` enum('user','admin') NOT NULL,
-  `avatar` text NOT NULL,
-  `isNew` tinyint(1) NOT NULL
+  `avatar` text DEFAULT NULL,
+  `isNew` tinyint(1) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `uname`, `fname`, `mname`, `lname`, `email`, `password`, `role`, `avatar`, `isNew`) VALUES
+(1, 'Admin', 'Super', NULL, 'Admin', 'admin@email.com', '$argon2i$v=19$m=65536,t=4,p=1$Y1YzSWRVNmNRWGdEZk9NYQ$v8M9BPPgZfJNn0P6TCYDtZepQPzxi8l/oGqKIYDw0R0', 'admin', NULL, NULL),
+(2, 'uname1', 'John', NULL, 'Montemar', 'montemar@gmail.com', '$argon2i$v=19$m=65536,t=4,p=1$aEVtY3pyRmZtQTNPM2FXdA$DuH66gPeocjaRTJxtwzzRT+tLb529XQiD0PsLjBGX5c', 'user', NULL, NULL),
+(3, 'uname2', 'Test', 'Test', 'Test', 'awd@awd', '$argon2i$v=19$m=65536,t=4,p=1$elhZdzlSQVBTaFguQ3Qvag$IXVjsB6M0sxE9jYH/HnOmSalRZYFHZL49UiFoJy4RBA', 'admin', NULL, NULL),
+(4, 'uname3', 'Test', 'Test', 'Test', 'test@test', '$argon2i$v=19$m=65536,t=4,p=1$czZVOXBrbFRFemtqd3NJeQ$2X5i31DVAt9YMdv6/CQcp2MF1EGQH1CT7rJDDxSRnEc', 'admin', NULL, NULL),
+(5, 'Test2', 'Test', 'Test', 'Test', 'test4@email.com', '$argon2i$v=19$m=65536,t=4,p=1$QlJ2QVdmWnlPc3NZbzFBRQ$dlwlblh78LPeXFY2xZhAv2Kn64HDkDg1BYV7dFHlTlE', 'admin', NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -311,13 +351,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `brands`
 --
 ALTER TABLE `brands`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `category`
 --
 ALTER TABLE `category`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `inventory_general`
@@ -335,7 +375,7 @@ ALTER TABLE `invoice`
 -- AUTO_INCREMENT for table `medicine_profile`
 --
 ALTER TABLE `medicine_profile`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `order_details`
@@ -377,13 +417,13 @@ ALTER TABLE `sales`
 -- AUTO_INCREMENT for table `supplier`
 --
 ALTER TABLE `supplier`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables

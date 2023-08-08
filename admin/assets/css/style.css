@@ -9732,3 +9732,7 @@ input:checked + .slider:before {
   vertical-align: baseline;
   font-size: 12px;
 }
+
+img {
+  object-fit: cover;
+}

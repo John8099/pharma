@@ -44,10 +44,10 @@ if (!$isLogin) {
                         <thead>
                           <tr>
                             <th>Avatar</th>
+                            <th>Username</th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Date Created</th>
                             <!-- <th>Action</th> -->
                           </tr>
                         </thead>
@@ -65,6 +65,7 @@ if (!$isLogin) {
                                 <td>
                                   <img src="<?= getAvatar($admin->id) ?>" class="img-radius" width="40px">
                                 </td>
+                                <td><?= $admin->uname ?></td>
                                 <td><?= getFullName($admin->id, "with_middle") ?></td>
                                 <td><?= $admin->email ?></td>
 
@@ -81,7 +82,6 @@ if (!$isLogin) {
                                     Admin
                                   <?php endif; ?>
                                 </td>
-                                <td><?= date("Y-m-d", strtotime($admin->createdAt)); ?></td>
                                 <!-- <td>
                                   <a href="#" class="h5 text-info m-2" title="Edit" data-toggle="tooltip">
                                     <i class="fa fa-cog"></i>
@@ -145,6 +145,12 @@ if (!$isLogin) {
                 <span class="input-group-text"><i class="feather icon-user"></i></span>
               </div>
               <input type="text" name="lname" class="form-control" placeholder="Last name" required>
+            </div>
+            <div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="feather icon-user"></i></span>
+              </div>
+              <input type="text" name="uname" class="form-control" placeholder="Username" required>
             </div>
             <div class="input-group mb-2">
               <div class="input-group-prepend">
