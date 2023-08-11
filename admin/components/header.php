@@ -27,6 +27,11 @@
 
   <link rel=" stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap4.min.css">
 
+  <link rel=" stylesheet" href="<?= $SERVER_NAME ?>/admin/assets/plugins/jquery-editable-select/jquery-editable-select.css">
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+
   <style>
     .dtb-popover-close {
       display: none !important;

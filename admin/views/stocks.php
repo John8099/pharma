@@ -33,8 +33,8 @@ if (!$isLogin) {
                     <div class="card-header p-2">
                       <div class="w-100 d-flex justify-content-end">
 
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addPurchased">
-                          New Purchase
+                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addStock">
+                          Add Stock
                         </button>
                       </div>
                     </div>
@@ -42,13 +42,14 @@ if (!$isLogin) {
                       <table id="purchasedTable" class="table table-hover">
                         <thead>
                           <tr>
-                            <th>Supplier Name</th>
-                            <th>Created By</th>
+                            <th>Product #</th>
                             <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
-                            <th>Creation Date</th>
-                            <th>Payment Amount</th>
-                            <th>Payment Date</th>
+                            <th>Price</th>
+                            <th>Supplier Name</th>
                             <th>Quantity</th>
+                            <th>Received</th>
+                            <th>Expiration</th>
+                            <th>Serial #</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -56,31 +57,34 @@ if (!$isLogin) {
                           $query = mysqli_query(
                             $conn,
                             "SELECT 
-                            (SELECT supplier_name FROM supplier s WHERE s.id = po.supplier_id) AS 'supplier_name',
-                            created_by,
-                            mp.medicine_name,
-                            mp.generic_name,
-                            (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
-                            creation_date,
-                            payment_amount,
-                            payment_date,
-                            quantity
-                            FROM purchase_order po
+                              ig.product_number,
+                              mp.medicine_name,
+                              mp.generic_name,
+                              (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
+                              ig.price_id,
+                              (SELECT supplier_name FROM supplier s WHERE s.id = ig.supplier_id) AS 'supplier_name',
+                              ig.quantity,
+                              ig.date_recieved,
+                              ig.expiration_date,
+                              ig.serial_number
+                            FROM inventory_general ig
                             LEFT JOIN medicine_profile mp
-                            ON mp.id = po.medicine_id
-                            WHERE po.supplier_id IS NOT NULL and po.medicine_id IS NOT NULL
+                            ON mp.id = ig.medicine_id
                               "
                           );
-                          while ($purchased = mysqli_fetch_object($query)) :
+                          while ($inventory = mysqli_fetch_object($query)) :
+                            $priceData = getTableData("price", "id", $inventory->price_id);
+                            $price = count($priceData) > 0 ? $priceData[0]->price : "NULL";
                           ?>
                             <tr>
-                              <td class="align-middle"><?= $purchased->supplier_name ?></td>
-                              <td class="align-middle"><?= getFullName($purchased->created_by) ?></td>
-                              <td class="align-middle"><?= "$purchased->medicine_name/ $purchased->brand_name/ $purchased->generic_name" ?></td>
-                              <td class="align-middle"><?= $purchased->creation_date ?></td>
-                              <td class="align-middle"><?= $purchased->payment_amount ?></td>
-                              <td class="align-middle"><?= $purchased->payment_date ?></td>
-                              <td class="align-middle"><?= $purchased->quantity ?></td>
+                              <td class="align-middle"><?= $inventory->product_number ?></td>
+                              <td class="align-middle"><?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?></td>
+                              <td class="align-middle"><?= $price ?></td>
+                              <td class="align-middle"><?= $inventory->supplier_name ?></td>
+                              <td class="align-middle"><?= $inventory->quantity ?></td>
+                              <td class="align-middle"><?= $inventory->date_recieved ?></td>
+                              <td class="align-middle"><?= $inventory->expiration_date ?></td>
+                              <td class="align-middle"><?= $inventory->serial_number ?></td>
                             </tr>
                           <?php endwhile; ?>
                         </tbody>
@@ -99,38 +103,21 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addPurchased" tabindex="-1" role="dialog" aria-labelledby="New Purchase" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <!-- Modal Add Purchased Order -->
+  <div class="modal fade" id="addStock" tabindex="-1" role="dialog" aria-labelledby="Add Stock" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title text-secondary">
-            New Purchase
+            Add Stock
           </h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form id="addPurchaseForm" method="POST">
+        <form id="addStockForm" method="POST">
           <div class="modal-body">
 
-            <div class="form-group ">
-              <label class="form-label">Supplier Name</label>
-              <div class="row">
-                <div class="col-10">
-                  <select name="supplier_id" id="select_supp" data-live-search="true" class="selectpicker form-control" title="-- select supplier --" required>
-                    <?php
-                    $supplierData = getTableData("supplier");
-                    foreach ($supplierData as $supplier) {
-                      echo "<option value='$supplier->id'>$supplier->supplier_name</option>";
-                    }
-                    ?>
-                  </select>
-                </div>
-                <div class="col-2 d-flex justify-content-center align-items-center">
-                  <button id="btnAddSup" class="btn btn-sm btn-primary" type="button">New</button>
-                </div>
-              </div>
-            </div>
 
             <div class="form-group ">
               <label class="form-label">Medicine <small class="text-muted">(Name/ Brand/ Generic)</small> </label>
@@ -159,22 +146,71 @@ if (!$isLogin) {
             </div>
 
             <div class="form-group ">
+              <label class="form-label">Supplier Name</label>
+              <div class="row">
+                <div class="col-10">
+                  <select name="supplier_id" id="select_supp" data-live-search="true" class="selectpicker form-control" title="-- select supplier --" required>
+                    <?php
+                    $supplierData = getTableData("supplier");
+                    foreach ($supplierData as $supplier) {
+                      echo "<option value='$supplier->id'>$supplier->supplier_name</option>";
+                    }
+                    ?>
+                  </select>
+                </div>
+                <div class="col-2 d-flex justify-content-center align-items-center">
+                  <button id="btnAddSup" class="btn btn-sm btn-primary" type="button">New</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group ">
 
               <div class="row">
-                <div class="col-md-4">
-                  <label class="form-label">Payment Date</label>
-                  <input type="date" name="payment_date" value="<?= date("Y-m-d") ?>" class="form-control" required>
+                <div class="col-md-6">
+                  <label class="form-label">Price</label>
+                  <div class="row">
+                    <div class="col-10">
+                      <select name="price" id="select_price" required>
+                        <?php
+                        $supplierData = getTableData("supplier");
+                        foreach ($supplierData as $supplier) {
+                          echo "<option value='$supplier->id'>$supplier->supplier_name</option>";
+                        }
+                        ?>
+                      </select>
+                    </div>
+                    <div class="col-2 d-flex justify-content-center align-items-center">
+                      <button id="btnAddSup" class="btn btn-sm btn-primary" type="button">New</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-md-4">
-                  <label class="form-label">Payment Amount</label>
-                  <input type="number" name="payment_amount" class="form-control" required>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                   <label class="form-label">Quantity</label>
                   <input type="number" name="quantity" class="form-control" required>
                 </div>
 
               </div>
+            </div>
+
+            <div class="form-group ">
+
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="form-label">Received Date</label>
+                  <input type="date" name="received_date" value="<?= date("Y-m-d") ?>" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Expiration Date</label>
+                  <input type="date" name="received_date" min="<?= date("Y-m-d") ?>" class="form-control" required>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="form-group ">
+              <label class="form-label">Serial Number</label>
+              <input type="text" name="serial_number" class="form-control" required>
             </div>
 
           </div>
@@ -187,6 +223,7 @@ if (!$isLogin) {
     </div>
   </div>
 
+  <!-- Add Medicine -->
   <div class="modal fade" id="addMed" tabindex="-1" role="dialog" aria-labelledby="New Medicine" aria-hidden="true" data-backdrop="static" data-keyboard="false" style="overflow-y: scroll;">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -290,6 +327,7 @@ if (!$isLogin) {
     </div>
   </div>
 
+  <!-- Modal Category -->
   <div class="modal fade" id="addCategory" tabindex="-1" role="dialog" aria-labelledby="New Category" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -330,6 +368,7 @@ if (!$isLogin) {
     </div>
   </div>
 
+  <!-- Modal Brand  -->
   <div class="modal fade" id="addBrand" tabindex="-1" role="dialog" aria-labelledby="New Brand" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -370,6 +409,7 @@ if (!$isLogin) {
     </div>
   </div>
 
+  <!-- Modal Supplier -->
   <div class="modal fade" id="addSupplier" tabindex="-1" role="dialog" aria-labelledby="New Supplier" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -418,20 +458,23 @@ if (!$isLogin) {
 
   <?php include("../components/scripts.php") ?>
   <script>
+    $("#select_price").editableSelect();
+    $('#select_price').attr("placeholder", "Select or Type Price");
+
     const closeModal = (modalId) => $(modalId).modal("hide")
 
-    // $("#addPurchased").modal("show")
+    $("#addStock").modal("show")
 
     $("#modalAdd-clear").hide()
 
     $("#btnAddSup").on("click", function() {
       $("#addSupplier").modal("show")
-      $("#addPurchased").modal("hide")
+      $("#addStock").modal("hide")
     })
 
     $("#btnAddMed").on("click", function() {
       $("#addMed").modal("show")
-      $("#addPurchased").modal("hide")
+      $("#addStock").modal("hide")
     })
 
     $("#btnAddBrand").on("click", function() {
@@ -583,7 +626,7 @@ if (!$isLogin) {
         $("#addSupplierForm").get(0).reset()
         $("#addSupplier").modal("hide")
       }
-      $("#addPurchased").modal("show")
+      $("#addStock").modal("show")
     }
 
     function getCategory() {
@@ -667,7 +710,7 @@ if (!$isLogin) {
       handleSavePurchase($(e[0].form).serialize())
     }
 
-    $("#addPurchaseForm").on("submit", function(e) {
+    $("#addStockForm").on("submit", function(e) {
       swal.showLoading();
       handleSavePurchase($(this).serialize())
       e.preventDefault()

@@ -79,6 +79,18 @@ if (isset($_GET['action'])) {
       case "get_brand":
         get_select_data("brands");
         break;
+      case "get_supplier":
+        get_select_data("supplier");
+        break;
+      case "get_medicine":
+        get_select_data("medicine_profile");
+        break;
+      case "save_purchase":
+        save_purchase();
+        break;
+      case "delete_med":
+        delete_med();
+        break;
       default:
         null;
         break;
@@ -89,9 +101,87 @@ if (isset($_GET['action'])) {
   }
 }
 
+function delete_med()
+{
+  global $conn, $_POST;
+
+  $deletedData = array(
+    "deleted" => "1"
+  );
+
+  $up = update("medicine_profile", $deletedData, "id", $_POST["medicine_id"]);
+
+  if ($up) {
+    $response["success"] = true;
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
+}
+
+function save_purchase()
+{
+  global $conn, $_POST, $_SESSION;
+
+  $supplier_id = $_POST["supplier_id"];
+  $medicine_id = $_POST["medicine_id"];
+  $payment_date = $_POST["payment_date"];
+  $payment_amount = $_POST["payment_amount"];
+  $quantity = $_POST["quantity"];
+
+  $createdBy = $_SESSION["userId"];
+  $creationDate = date("Y-m-d");
+
+  $purchaseOrderData = array(
+    "supplier_id" => $supplier_id,
+    "created_by" => $createdBy,
+    "medicine_id" => $medicine_id,
+    "creation_date" => $creationDate,
+    "payment_amount" => $payment_amount,
+    "payment_date" => $payment_date,
+    "quantity" => $quantity
+  );
+
+  $procPurchase = insert("purchase_order", $purchaseOrderData);
+
+  if ($procPurchase) {
+    $response["success"] = true;
+    $response["message"] = "Purchase order successfully added.";
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
+}
+
 function get_select_data($table)
 {
-  $data = getTableData($table);
+  global $conn;
+
+  $data = [];
+
+  if ($table == "medicine_profile") {
+    $medQuery = mysqli_query(
+      $conn,
+      "SELECT 
+      mp.id,
+      mp.medicine_name,
+      mp.generic_name,
+      (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name'
+      FROM medicine_profile mp
+      "
+    );
+
+    while ($row = mysqli_fetch_object($medQuery)) {
+      array_push($data, $row);
+    }
+  } else {
+    $data = getTableData($table);
+  }
+
   returnResponse($data);
 }
 
@@ -339,6 +429,8 @@ function medicine_save()
     $uploadedImg = uploadImg($medicine_img, "../media/drugs");
     $medicineData["image"] = $uploadedImg->success ? $uploadedImg->file_name : "";
 
+    $comm = null;
+
     if ($action == "add") {
       $comm = insert("medicine_profile", $medicineData);
     } else if ($action == "edit") {
@@ -374,6 +466,8 @@ function save_brand()
   global $conn, $_POST;
 
   $brandId = isset($_POST["brandId"]) ? $_POST["brandId"] : null;
+  $type = isset($_POST["type"]) ? $_POST["type"] : null;
+
   $name = ucwords($_POST["name"]);
   $description = ucwords(nl2br($_POST["description"]));
 
@@ -395,6 +489,12 @@ function save_brand()
     if ($procBrand) {
       $response["success"] = true;
       $response["message"] = "Brand successfully " . ($action == "add" ? "added." : "updated.");
+
+      if ($type == "add_select") {
+        $response["id"] = $procBrand;
+        $response["description"] = $description;
+        $response["brand_name"] = $name;
+      }
     } else {
       $response["success"] = false;
       $response["message"] = mysqli_error($conn);

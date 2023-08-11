@@ -52,8 +52,12 @@ window.clearImg = function (imgDisplayId, divClearId, divBrowseId, medId) {
   $("input[type=file]").val("");
   $(imgDisplayId).attr("src", `${host}/public/medicine.png`);
 
-  $(divClearId).hide();
-  $(divBrowseId).show();
+  $(divClearId).addClass("d-none").removeClass("d-flex");
+  $(divBrowseId).addClass("d-flex").removeClass("d-none");
+
+  // $(divClearId).hide();
+  // $(divBrowseId).show();
+
   $(`#isCleared${medId}`).val("Yes");
 };
 
@@ -69,7 +73,7 @@ window.previewFile = function (input, imgDisplayId, divClearId, divBrowseId) {
 
     reader.readAsDataURL(file);
 
-    $(divBrowseId).hide();
-    $(divClearId).show();
+    $(divClearId).addClass("d-flex").removeClass("d-none");
+    $(divBrowseId).addClass("d-none").removeClass("d-flex");
   }
 };

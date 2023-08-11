@@ -54,8 +54,11 @@ if (!$isLogin) {
                         </thead>
                         <tbody>
                           <?php
-                          $medicineData = getTableData("medicine_profile");
-                          foreach ($medicineData as $medicine) :
+                          $medicineData = mysqli_query(
+                            $conn,
+                            "SELECT * FROM medicine_profile WHERE deleted <> 1"
+                          );
+                          while ($medicine = mysqli_fetch_object($medicineData)) :
                             $category = getTableData("category", "id", $medicine->category_id);
                             $brand = getTableData("brands", "id", $medicine->brand_id);
                           ?>
@@ -70,14 +73,18 @@ if (!$isLogin) {
                               <td class="align-middle"><?= $medicine->description ?></td>
                               <td class="align-middle"><?= $medicine->dosage ?></td>
                               <td class="align-middle">
-                                <a href="#editEditMedicine<?= $medicine->id ?>" class="h5 text-info m-2" data-toggle="modal">
+                                <a href="#editMed<?= $medicine->id ?>" class="h5 text-info m-2" data-toggle="modal">
                                   <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
                                 </a>
+                                <a href="#" onclick="deleteMed('<?= $medicine->id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                  <i class="fa fa-times-circle"></i>
+                                </a>
+
                               </td>
                             </tr>
-                            <?php #include("../components/modal-edit-medicine.php"); 
+                            <?php include("../components/modal-edit-medicine.php");
                             ?>
-                          <?php endforeach; ?>
+                          <?php endwhile; ?>
 
                         </tbody>
                       </table>
@@ -95,7 +102,7 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addMed" tabindex="-1" role="dialog" aria-labelledby="New Medicine" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+  <div class="modal fade" id="addMed" tabindex="-1" role="dialog" aria-labelledby="New Medicine" aria-hidden="true" data-backdrop="static" data-keyboard="false" style="overflow-y: scroll;">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -142,8 +149,13 @@ if (!$isLogin) {
                   <label> Category <span class="text-danger">*</span> </label>
                   <button type="button" id="btnAddCategory" class="btn btn-sm btn-primary mr-0" style="float: right;">New</button>
 
-                  <select name="category_id" id="select_category" class="form-control">
-                    <option value="">-- select category --</option>
+                  <select class="selectpicker form-control" name="category_id" id="select_category" data-container="body" data-live-search="true" title="-- select category --" required>
+                    <?php
+                    $categoryData = getTableData("category");
+                    foreach ($categoryData as $category) {
+                      echo "<option value='$category->id'>$category->category_name</option>";
+                    }
+                    ?>
                   </select>
                 </div>
               </div>
@@ -164,8 +176,13 @@ if (!$isLogin) {
                 <div class="form-group">
                   <label>Brand name <span class="text-danger">*</span></label>
                   <button id="btnAddBrand" type="button" class="btn btn-sm btn-primary mr-0" style="float: right;">New</button>
-                  <select name="brand_id" id="select_brand" class="form-control">
-                    <option value="">-- select brand name --</option>
+                  <select name="brand_id" id="select_brand" data-live-search="true" class="selectpicker form-control" title="-- select brand --" required>
+                    <?php
+                    $brandData = getTableData("brands");
+                    foreach ($brandData as $brand) {
+                      echo "<option value='$brand->id'>$brand->brand_name</option>";
+                    }
+                    ?>
                   </select>
                 </div>
               </div>
@@ -181,7 +198,6 @@ if (!$isLogin) {
           <div class="modal-footer">
             <button type="submit" id="btnAdd" class="btn btn-primary">Submit</button>
             <button type="reset" class="btn btn-warning">Reset</button>
-            <button type="button" class="btn btn-danger" onclick="closeModal('#addMed')">Cancel</button>
           </div>
         </form>
 
@@ -202,6 +218,7 @@ if (!$isLogin) {
         </div>
         <form id="addCategoryForm" method="POST">
           <input type="text" name="action" value="add" hidden readonly>
+          <input type="text" name="type" value="add_select" hidden readonly>
           <div class="modal-body">
 
             <div class="form-group row">
@@ -241,6 +258,7 @@ if (!$isLogin) {
         </div>
         <form id="addBrandForm" method="POST">
           <input type="text" name="action" value="add" hidden readonly>
+          <input type="text" name="type" value="add_select" hidden readonly>
           <div class="modal-body">
 
             <div class="form-group row">
@@ -267,10 +285,9 @@ if (!$isLogin) {
     </div>
   </div>
 
-
   <?php include("../components/scripts.php") ?>
   <script>
-    $("#addMed").modal("show")
+    // $("#addMed").modal("show")
 
     $("#modalAdd-clear").hide()
 
@@ -289,33 +306,86 @@ if (!$isLogin) {
       $("#addCategoryForm").get(0).reset()
     })
 
-    $("#addMed").on("shown.bs.modal", function() {
+    function deleteMed(medId) {
+      swal.fire({
+        title: "Are you sure you want to remove this item?",
+        text: "You can't undo this action after successful deletion.",
+        icon: "warning",
+        confirmButtonText: "Delete",
+        confirmButtonColor: "#dc3545",
+        showCancelButton: true,
+      }).then((d) => {
+        if (d.isConfirmed) {
+          swal.showLoading();
+          $.post(
+            "<?= $SERVER_NAME ?>/backend/nodes?action=delete_med", {
+              medicine_id: medId
+            },
+            (data, status) => {
+              const resp = JSON.parse(data);
+              if (!resp.success) {
+                swal.fire({
+                  title: "Error!",
+                  html: resp.message,
+                  icon: "error",
+                });
+              } else {
+                window.location.reload();
+              }
+            }
+          ).fail(function(e) {
+            swal.fire({
+              title: "Error!",
+              html: e.statusText,
+              icon: "error",
+            });
+          });
+        }
+      });
+    }
+
+    function getCategory() {
       $.get(
         "<?= $SERVER_NAME ?>/backend/nodes?action=get_category",
         (data, status) => {
           const resp = JSON.parse(data)
-          console.log(resp)
-          resp.forEach(e => {
-            $("#select_category").append(`<option value='${e.id}' title='${e.description}'>${e.category_name}</option>`)
-          });
+
+          var options = [];
+
+          for (var i = 0; i < resp.length; i++) {
+            var option = `<option value='${resp[i].id}' >${resp[i].category_name}</option>`;
+            options.push(option);
+          }
+
+          $('#select_category').empty();
+          $('#select_category').html(options);
+          $('#select_category').selectpicker('refresh');
         })
+    }
+
+    function getBrand() {
       $.get(
         "<?= $SERVER_NAME ?>/backend/nodes?action=get_brand",
         (data, status) => {
           const resp = JSON.parse(data)
-          console.log(resp)
-          resp.forEach(e => {
-            $("#select_brand").append(`<option value='${e.id}' title='${e.description}'>${e.brand_name}</option>`)
-          });
+
+          var options = [];
+
+          for (var i = 0; i < resp.length; i++) {
+            var option = `<option value='${resp[i].id}' >${resp[i].brand_name}</option>`;
+            options.push(option);
+          }
+
+          $('#select_brand').empty();
+          $('#select_brand').html(options);
+          $('#select_brand').selectpicker('refresh');
         })
-    })
+    }
 
     $("#addBrand").on("hidden.bs.modal", function() {
       $("#addMed").modal("show")
       $("#addBrandForm").get(0).reset()
     })
-
-    const closeModal = (modalId) => $(modalId).modal("hide")
 
     $("#addBrandForm").on("submit", function(e) {
       swal.showLoading();
@@ -328,7 +398,14 @@ if (!$isLogin) {
             title: resp.success ? "Success!" : 'Error!',
             html: resp.message,
             icon: resp.success ? "success" : 'error',
-          }).then(() => resp.success ? window.location.reload() : undefined)
+          }).then(() => {
+            if (resp.success) {
+              closeModal("#addBrand")
+              $("#addBrandForm").get(0).reset()
+              getBrand()
+              $("#addMed").modal("show")
+            }
+          })
 
         }).fail(function(e) {
         swal.fire({
@@ -351,7 +428,14 @@ if (!$isLogin) {
             title: resp.success ? "Success!" : 'Error!',
             html: resp.message,
             icon: resp.success ? "success" : 'error',
-          }).then(() => resp.success ? window.location.reload() : undefined)
+          }).then(() => {
+            if (resp.success) {
+              closeModal("#addCategory")
+              $("#addCategoryForm").get(0).reset()
+              getCategory()
+              $("#addMed").modal("show")
+            }
+          })
 
         }).fail(function(e) {
         swal.fire({
@@ -363,6 +447,8 @@ if (!$isLogin) {
       e.preventDefault()
     })
 
+    const closeModal = (modalId) => $(modalId).modal("hide")
+
     function handleOpenEditModal(medId) {
       const modalId = `#editMed${medId}`
       const modalEditBrowseBtn = `#modalEdit-browse${medId}`
@@ -370,23 +456,16 @@ if (!$isLogin) {
       const modalDisplayImg = `#modalEdit-display${medId}`
 
       $(modalId).modal("show")
-      const imgFile = $(modalDisplayImg)[0].src.split("/").pop()
-
-      if (imgFile === "medicine.png") {
-        $(modalClearBrowseBtn).hide()
-      } else {
-        $(modalEditBrowseBtn).hide()
-      }
     }
 
     function handleSubmitEditMedicine(formId, medId) {
       swal.showLoading();
-      const type = $(`#type${medId}`).val()
-      const man = $(`#man${medId}`).val()
+      const category = $(`#sel_cat${medId}`).val()
+      const brand = $(`#sel_brand${medId}`).val()
 
       let formData = new FormData($(formId)[0]);
-      formData.append("med_type_id", type)
-      formData.append("med_manufacturer_id", man)
+      formData.append("category_id", category)
+      formData.append("brand_id", brand)
 
       handleSaveMedicine(formData)
     }
@@ -429,7 +508,9 @@ if (!$isLogin) {
       var table = $(tableId).DataTable({
         paging: true,
         lengthChange: false,
-        ordering: true,
+        order: [
+          [1, 'asc']
+        ],
         info: true,
         autoWidth: false,
         responsive: true,
@@ -438,6 +519,10 @@ if (!$isLogin) {
             button: 'Filter',
           }
         },
+        columnDefs: [{
+          "targets": [0, 7],
+          "orderable": false
+        }],
         buttons: [{
           extend: 'searchBuilder',
           config: {
