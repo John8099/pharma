@@ -56,6 +56,7 @@ if (!$isLogin) {
                           $query = mysqli_query(
                             $conn,
                             "SELECT 
+                            po.medicine_id,
                             (SELECT supplier_name FROM supplier s WHERE s.id = po.supplier_id) AS 'supplier_name',
                             created_by,
                             mp.medicine_name,
@@ -72,16 +73,28 @@ if (!$isLogin) {
                               "
                           );
                           while ($purchased = mysqli_fetch_object($query)) :
+                            $imgSrc = getMedicineImage($purchased->medicine_id);
+                            $exploded =  explode("/", $imgSrc);
+                            $alt = $exploded[count($exploded) - 1];
                           ?>
                             <tr>
                               <td class="align-middle"><?= $purchased->supplier_name ?></td>
                               <td class="align-middle"><?= getFullName($purchased->created_by) ?></td>
-                              <td class="align-middle"><?= "$purchased->medicine_name/ $purchased->brand_name/ $purchased->generic_name" ?></td>
+                              <td class="align-middle">
+                                <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage')">
+                                  <?= "$purchased->medicine_name/ $purchased->brand_name/ $purchased->generic_name" ?>
+                                </button>
+                              </td>
                               <td class="align-middle"><?= $purchased->creation_date ?></td>
                               <td class="align-middle"><?= $purchased->payment_amount ?></td>
                               <td class="align-middle"><?= $purchased->payment_date ?></td>
                               <td class="align-middle"><?= $purchased->quantity ?></td>
                             </tr>
+                            <div id='divModalImage' class='div-modal pt-5'>
+                              <span class='close' onclick='handleClose(`divModalImage`)'>&times;</span>
+                              <img class='div-modal-content' src="<?= $imgSrc  ?>">
+                              <div id="imgCaption"><?= $alt ?></div>
+                            </div>
                           <?php endwhile; ?>
                         </tbody>
                       </table>
@@ -114,7 +127,7 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group ">
-              <label class="form-label">Supplier Name</label>
+              <label class="form-label">Supplier Name <span class="text-danger">*</span></label>
               <div class="row">
                 <div class="col-10">
                   <select name="supplier_id" id="select_supp" data-live-search="true" class="selectpicker form-control" title="-- select supplier --" required>
@@ -133,7 +146,7 @@ if (!$isLogin) {
             </div>
 
             <div class="form-group ">
-              <label class="form-label">Medicine <small class="text-muted">(Name/ Brand/ Generic)</small> </label>
+              <label class="form-label">Medicine <small class="text-muted">(Name/ Brand/ Generic)</small> <span class="text-danger">*</span></label>
               <div class="row">
                 <div class="col-10">
                   <select name="medicine_id" id="select_med" data-live-search="true" class="selectpicker form-control" title="-- select medicine --" required>
@@ -162,15 +175,15 @@ if (!$isLogin) {
 
               <div class="row">
                 <div class="col-md-4">
-                  <label class="form-label">Payment Date</label>
+                  <label class="form-label">Payment Date <span class="text-danger">*</span></label>
                   <input type="date" name="payment_date" value="<?= date("Y-m-d") ?>" class="form-control" required>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label">Payment Amount</label>
+                  <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
                   <input type="number" name="payment_amount" class="form-control" required>
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label">Quantity</label>
+                  <label class="form-label">Quantity <span class="text-danger">*</span></label>
                   <input type="number" name="quantity" class="form-control" required>
                 </div>
 
@@ -307,7 +320,7 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>
@@ -347,7 +360,7 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>
@@ -386,21 +399,21 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Address</label>
+              <label class="col-sm-2 col-form-label">Address <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="address" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Contact</label>
+              <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="contact" class="form-control" required>
               </div>

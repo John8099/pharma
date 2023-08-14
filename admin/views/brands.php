@@ -84,7 +84,7 @@ if (!$isLogin) {
                                     <div class="modal-body">
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Name</label>
+                                        <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
                                         <div class="col-sm-10">
                                           <input type="text" name="name" class="form-control" value="<?= $brand->brand_name ?>" required>
                                         </div>
@@ -140,7 +140,7 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>

@@ -43,13 +43,6 @@ $links = array(
     )
   ),
   array(
-    "title" => "Purchase Order",
-    "config" => array(
-      "icon" => "fa fa-cash-register",
-      "url" => "$SERVER_NAME/admin/views/purchase-orders"
-    )
-  ),
-  array(
     "title" => "Medicines",
     "config" => array(
       "icon" => "fa fa-pills",
@@ -57,10 +50,24 @@ $links = array(
     )
   ),
   array(
+    "title" => "Purchase Order",
+    "config" => array(
+      "icon" => "fa fa-cash-register",
+      "url" => "$SERVER_NAME/admin/views/purchase-orders"
+    )
+  ),
+  array(
     "title" => "Stocks",
     "config" => array(
       "icon" => "fa fa-layer-group",
       "url" => "$SERVER_NAME/admin/views/stocks"
+    )
+  ),
+  array(
+    "title" => "Invoice",
+    "config" => array(
+      "icon" => "fa fa-file-invoice",
+      "url" => "$SERVER_NAME/admin/views/orders"
     )
   ),
   array(

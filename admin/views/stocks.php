@@ -39,7 +39,7 @@ if (!$isLogin) {
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="purchasedTable" class="table table-hover">
+                      <table id="stockTable" class="table table-hover">
                         <thead>
                           <tr>
                             <th>Product #</th>
@@ -50,6 +50,7 @@ if (!$isLogin) {
                             <th>Received</th>
                             <th>Expiration</th>
                             <th>Serial #</th>
+                            <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -57,6 +58,8 @@ if (!$isLogin) {
                           $query = mysqli_query(
                             $conn,
                             "SELECT 
+                              ig.id AS 'inventory_id',
+                              ig.medicine_id,
                               ig.product_number,
                               mp.medicine_name,
                               mp.generic_name,
@@ -64,7 +67,7 @@ if (!$isLogin) {
                               ig.price_id,
                               (SELECT supplier_name FROM supplier s WHERE s.id = ig.supplier_id) AS 'supplier_name',
                               ig.quantity,
-                              ig.date_recieved,
+                              ig.date_received,
                               ig.expiration_date,
                               ig.serial_number
                             FROM inventory_general ig
@@ -75,17 +78,35 @@ if (!$isLogin) {
                           while ($inventory = mysqli_fetch_object($query)) :
                             $priceData = getTableData("price", "id", $inventory->price_id);
                             $price = count($priceData) > 0 ? $priceData[0]->price : "NULL";
+
+                            $imgSrc = getMedicineImage($inventory->medicine_id);
+                            $exploded =  explode("/", $imgSrc);
+                            $alt = $exploded[count($exploded) - 1];
                           ?>
                             <tr>
                               <td class="align-middle"><?= $inventory->product_number ?></td>
-                              <td class="align-middle"><?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?></td>
+                              <td class="align-middle">
+                                <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage')">
+                                  <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
+                                </button>
+                              </td>
                               <td class="align-middle"><?= $price ?></td>
                               <td class="align-middle"><?= $inventory->supplier_name ?></td>
                               <td class="align-middle"><?= $inventory->quantity ?></td>
-                              <td class="align-middle"><?= $inventory->date_recieved ?></td>
+                              <td class="align-middle"><?= $inventory->date_received ?></td>
                               <td class="align-middle"><?= $inventory->expiration_date ?></td>
                               <td class="align-middle"><?= $inventory->serial_number ?></td>
+                              <td class="align-middle">
+                                <a href="#" onclick="handleAddQuantity('<?= $inventory->inventory_id ?>')" class="h5 text-success m-2">
+                                  <i class="fa fa-plus-circle" title="Add Quantity" data-toggle="tooltip"></i>
+                                </a>
+                              </td>
                             </tr>
+                            <div id='divModalImage' class='div-modal pt-5'>
+                              <span class='close' onclick='handleClose(`divModalImage`)'>&times;</span>
+                              <img class='div-modal-content' src="<?= $imgSrc  ?>">
+                              <div id="imgCaption"><?= $alt ?></div>
+                            </div>
                           <?php endwhile; ?>
                         </tbody>
                       </table>
@@ -103,7 +124,7 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <!-- Modal Add Purchased Order -->
+  <!-- Modal Add Stock -->
   <div class="modal fade" id="addStock" tabindex="-1" role="dialog" aria-labelledby="Add Stock" aria-hidden="true" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -117,10 +138,8 @@ if (!$isLogin) {
         </div>
         <form id="addStockForm" method="POST">
           <div class="modal-body">
-
-
             <div class="form-group ">
-              <label class="form-label">Medicine <small class="text-muted">(Name/ Brand/ Generic)</small> </label>
+              <label class="form-label">Medicine <small class="text-muted">(Name/ Brand/ Generic)</small> <span class="text-danger">*</span></label>
               <div class="row">
                 <div class="col-10">
                   <select name="medicine_id" id="select_med" data-live-search="true" class="selectpicker form-control" title="-- select medicine --" required>
@@ -146,7 +165,7 @@ if (!$isLogin) {
             </div>
 
             <div class="form-group ">
-              <label class="form-label">Supplier Name</label>
+              <label class="form-label">Supplier Name <span class="text-danger">*</span></label>
               <div class="row">
                 <div class="col-10">
                   <select name="supplier_id" id="select_supp" data-live-search="true" class="selectpicker form-control" title="-- select supplier --" required>
@@ -168,25 +187,19 @@ if (!$isLogin) {
 
               <div class="row">
                 <div class="col-md-6">
-                  <label class="form-label">Price</label>
-                  <div class="row">
-                    <div class="col-10">
-                      <select name="price" id="select_price" required>
-                        <?php
-                        $supplierData = getTableData("supplier");
-                        foreach ($supplierData as $supplier) {
-                          echo "<option value='$supplier->id'>$supplier->supplier_name</option>";
-                        }
-                        ?>
-                      </select>
-                    </div>
-                    <div class="col-2 d-flex justify-content-center align-items-center">
-                      <button id="btnAddSup" class="btn btn-sm btn-primary" type="button">New</button>
-                    </div>
-                  </div>
+                  <label class="form-label">Price <span class="text-danger">*</span></label>
+                  <input type="number" name="price" step=".01" class="form-control" required>
+                  <!-- <select name="price" id="select_price" class="form-control" required>
+                    <?php
+                    $supplierData = getTableData("supplier");
+                    foreach ($supplierData as $supplier) {
+                      echo "<option value='$supplier->id'>$supplier->supplier_name</option>";
+                    }
+                    ?>
+                  </select> -->
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Quantity</label>
+                  <label class="form-label">Quantity <span class="text-danger">*</span></label>
                   <input type="number" name="quantity" class="form-control" required>
                 </div>
 
@@ -197,19 +210,19 @@ if (!$isLogin) {
 
               <div class="row">
                 <div class="col-md-6">
-                  <label class="form-label">Received Date</label>
+                  <label class="form-label">Received Date <span class="text-danger">*</span></label>
                   <input type="date" name="received_date" value="<?= date("Y-m-d") ?>" class="form-control" required>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Expiration Date</label>
-                  <input type="date" name="received_date" min="<?= date("Y-m-d") ?>" class="form-control" required>
+                  <label class="form-label">Expiration Date <span class="text-danger">*</span></label>
+                  <input type="date" name="expiration_date" min="<?= date("Y-m-d") ?>" class="form-control" required>
                 </div>
 
               </div>
             </div>
 
             <div class="form-group ">
-              <label class="form-label">Serial Number</label>
+              <label class="form-label">Serial Number <span class="text-danger">*</span></label>
               <input type="text" name="serial_number" class="form-control" required>
             </div>
 
@@ -345,7 +358,7 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>
@@ -386,7 +399,7 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>
@@ -426,21 +439,21 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Address</label>
+              <label class="col-sm-2 col-form-label">Address <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="address" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Contact</label>
+              <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="contact" class="form-control" required>
               </div>
@@ -463,7 +476,7 @@ if (!$isLogin) {
 
     const closeModal = (modalId) => $(modalId).modal("hide")
 
-    $("#addStock").modal("show")
+    // $("#addStock").modal("show")
 
     $("#modalAdd-clear").hide()
 
@@ -618,6 +631,40 @@ if (!$isLogin) {
       e.preventDefault()
     })
 
+    function handleAddQuantity(inventoryId) {
+      swal.fire({
+        title: 'Number of Quantity to be added',
+        input: 'number',
+        showLoaderOnConfirm: true,
+        confirmButtonText: 'Add',
+        confirmButtonColor: "#2ca961",
+        showCancelButton: true,
+      }).then((res) => {
+        if (res.isConfirmed) {
+          $.post(
+            "<?= $SERVER_NAME ?>/backend/nodes?action=add_medicine_quantity", {
+              quantity_to_add: res.value,
+              inventory_id: inventoryId
+            },
+            (data, status) => {
+              const resp = JSON.parse(data)
+              swal.fire({
+                title: resp.success ? "Success!" : 'Error!',
+                html: resp.message,
+                icon: resp.success ? "success" : 'error',
+              }).then(() => resp.success ? window.location.reload() : undefined)
+
+            }).fail(function(e) {
+            swal.fire({
+              title: 'Error!',
+              text: e.statusText,
+              icon: 'error',
+            })
+          });
+        }
+      })
+    }
+
     function closeMedModal(action) {
       if (action === "med") {
         $("#addMedForm").get(0).reset()
@@ -705,20 +752,20 @@ if (!$isLogin) {
         })
     }
 
-    function handleEditPurchase(e) {
+    function handleEditStock(e) {
       swal.showLoading();
-      handleSavePurchase($(e[0].form).serialize())
+      handleSaveStock($(e[0].form).serialize())
     }
 
     $("#addStockForm").on("submit", function(e) {
       swal.showLoading();
-      handleSavePurchase($(this).serialize())
+      handleSaveStock($(this).serialize())
       e.preventDefault()
     })
 
-    function handleSavePurchase(serializeData) {
+    function handleSaveStock(serializeData) {
       $.post(
-        "<?= $SERVER_NAME ?>/backend/nodes?action=save_purchase",
+        "<?= $SERVER_NAME ?>/backend/nodes?action=save_stock",
         serializeData,
         (data, status) => {
           const resp = JSON.parse(data)
@@ -738,7 +785,7 @@ if (!$isLogin) {
     }
 
     $(document).ready(function() {
-      const tableId = "#purchasedTable";
+      const tableId = "#stockTable";
       var table = $(tableId).DataTable({
         paging: true,
         lengthChange: false,

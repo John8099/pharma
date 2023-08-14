@@ -86,21 +86,21 @@ if (!$isLogin) {
                                     <div class="modal-body">
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Name</label>
+                                        <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
                                         <div class="col-sm-10">
                                           <input type="text" name="name" value="<?= $supplier->supplier_name ?>" class="form-control" required>
                                         </div>
                                       </div>
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Address</label>
+                                        <label class="col-sm-2 col-form-label">Address <span class="text-danger">*</span></label>
                                         <div class="col-sm-10">
                                           <input type="text" name="address" value="<?= $supplier->address ?>" class="form-control" required>
                                         </div>
                                       </div>
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Contact</label>
+                                        <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
                                         <div class="col-sm-10">
                                           <input type="text" name="contact" value="<?= $supplier->contact ?>" class="form-control" required>
                                         </div>
@@ -149,21 +149,21 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name</label>
+              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="name" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Address</label>
+              <label class="col-sm-2 col-form-label">Address <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="address" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Contact</label>
+              <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="contact" class="form-control" required>
               </div>

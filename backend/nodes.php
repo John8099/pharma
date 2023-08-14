@@ -91,6 +91,9 @@ if (isset($_GET['action'])) {
       case "delete_med":
         delete_med();
         break;
+      case "save_stock":
+        save_stock();
+        break;
       default:
         null;
         break;
@@ -99,6 +102,54 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function save_stock()
+{
+  global $conn, $_POST;
+
+  $medicine_id = $_POST["medicine_id"];
+  $supplier_id = $_POST["supplier_id"];
+  $price = $_POST["price"];
+  $quantity = $_POST["quantity"];
+  $received_date = $_POST["received_date"];
+  $expiration_date = $_POST["expiration_date"];
+  $serial_number = $_POST["serial_number"];
+
+  $priceData = array(
+    "price" => $price,
+    "status" => "active"
+  );
+
+  $price_id = insert("price", $priceData);
+
+  if ($price_id) {
+    $stockData = array(
+      "medicine_id" => $medicine_id,
+      "price_id" => $price_id,
+      "supplier_id" => $supplier_id,
+      "quantity" => $quantity,
+      "date_received" => $received_date,
+      "expiration_date" => $expiration_date,
+      "serial_number" => $serial_number,
+      "product_number" => generateSystemId("inventory_general", "PROD")
+    );
+
+    $inStock = insert("inventory_general", $stockData);
+
+    if ($inStock) {
+      $response["success"] = true;
+      $response["message"] = "Stock successfully added.";
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
 }
 
 function delete_med()
@@ -206,7 +257,7 @@ function admin_checkout()
 
     if (count($cartData) > 0) {
       $cartDetails = array(
-        "order_code" => generateOrderCode(),
+        "order_code" => generateSystemId("order", "ODR"),
         "user_id" => $_SESSION["userId"],
         "overall_total" => "",
         "order_from" => "system",
@@ -371,20 +422,20 @@ function add_medicine_quantity()
   global $conn, $_POST;
 
   $quantity_to_add = $_POST['quantity_to_add'];
-  $medicine_id = $_POST['medicine_id'];
+  $inventory_id = $_POST['inventory_id'];
 
-  $medicine_data = getTableData("medicines", "medicine_id", $medicine_id);
+  $inventoryData = getTableData("inventory_general", "id", $inventory_id);
 
-  if (count($medicine_data) > 0) {
-    $newMedicineQty = intval($medicine_data[0]->quantity) + intval($quantity_to_add);
-    $medicine_arr = array(
-      "quantity" => $newMedicineQty
+  if (count($inventoryData) > 0) {
+    $newInventoryQty = intval($inventoryData[0]->quantity) + intval($quantity_to_add);
+    $inventory_arr = array(
+      "quantity" => $newInventoryQty
     );
-    $comm = update("medicines", $medicine_arr, "medicine_id", $medicine_id);
+    $comm = update("inventory_general", $inventory_arr, "id", $inventory_id);
 
     if ($comm) {
       $response["success"] = true;
-      $response["message"] = "Medicine successfully added.";
+      $response["message"] = "Successfully added.";
     } else {
       $response["success"] = false;
       $response["message"] = mysqli_error($conn);
@@ -412,7 +463,16 @@ function medicine_save()
   $dose = $_POST["dose"];
   $generic_name = ucwords($_POST["generic_name"]);
   $brand_id = $_POST["brand_id"];
-  $med_desc = ucfirst(nl2br($_POST["med_desc"]));
+
+  $med_desc = "";
+
+  $action = $_POST["action"];
+
+  if ($_POST["med_desc"] == "" && $action == "add") {
+    $med_desc = ucfirst(nl2br($_POST["med_desc"]));
+  } elseif ($_POST["med_desc"] == "" && $action == "edit") {
+    $med_desc = "set_null";
+  }
 
   if (!isMedicineExist(strtolower($name), strtolower($generic_name), $brand_id, strtolower($dose), $category_id, $medicine_id)) {
 
@@ -469,9 +529,15 @@ function save_brand()
   $type = isset($_POST["type"]) ? $_POST["type"] : null;
 
   $name = ucwords($_POST["name"]);
-  $description = ucwords(nl2br($_POST["description"]));
+  $description = "";
 
   $action = $_POST["action"];
+
+  if ($_POST["description"] == "" && $action == "add") {
+    $description = ucfirst(nl2br($_POST["description"]));
+  } elseif ($_POST["description"] == "" && $action == "edit") {
+    $description = "set_null";
+  }
 
   if (!isBrandExist($name, $brandId)) {
     $brandData = array(
@@ -513,9 +579,15 @@ function save_category()
 
   $categoryId = isset($_POST["categoryId"]) ? $_POST["categoryId"] : null;
   $name = ucwords($_POST["name"]);
-  $description = ucwords(nl2br($_POST["description"]));
+  $description = "";
 
   $action = $_POST["action"];
+
+  if ($_POST["description"] == "" && $action == "add") {
+    $description = ucfirst(nl2br($_POST["description"]));
+  } elseif ($_POST["description"] == "" && $action == "edit") {
+    $description = "set_null";
+  }
 
   if (!isCategoryExist($name, $categoryId)) {
     $categoryData = array(

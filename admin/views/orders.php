@@ -123,36 +123,36 @@ if (!$isLogin) {
       function handleAddToCart(selectedMed) {
         swal.showLoading()
         const html = `
-                      <ul class="list-group text-dark">
-                        <li class="list-group-item">
-                          Therapeutic Classification: 
-                          <strong>${selectedMed.classification}</strong>
-                        </li>
-                        <li class="list-group-item">
-                          Generic name: 
-                          <strong>${selectedMed.generic}</strong>
-                        </li>
-                        <li class="list-group-item">
-                          Brand name:
-                          <strong>${selectedMed.brand}</strong>
-                        </li>
-                        <li class="list-group-item">
-                          Dose:
-                          <strong>${selectedMed.dose}</strong>
-                        </li>
-                        <li class="list-group-item">
-                          Type:
-                          <strong>${selectedMed.type}</strong>
-                        </li>
-                        <li class="list-group-item">
-                          Quantity:
-                          <strong>${selectedMed.quantity}</strong>
-                        </li>
-                        <li class="list-group-item">
-                          Price:
-                          <strong>${selectedMed.price}</strong>
-                        </li>
-                      </ul>
+                <ul class="list-group text-dark">
+                  <li class="list-group-item">
+                    Therapeutic Classification: 
+                    <strong>${selectedMed.classification}</strong>
+                  </li>
+                  <li class="list-group-item">
+                    Generic name: 
+                    <strong>${selectedMed.generic}</strong>
+                  </li>
+                  <li class="list-group-item">
+                    Brand name:
+                    <strong>${selectedMed.brand}</strong>
+                  </li>
+                  <li class="list-group-item">
+                    Dose:
+                    <strong>${selectedMed.dose}</strong>
+                  </li>
+                  <li class="list-group-item">
+                    Type:
+                    <strong>${selectedMed.type}</strong>
+                  </li>
+                  <li class="list-group-item">
+                    Quantity:
+                    <strong>${selectedMed.quantity}</strong>
+                  </li>
+                  <li class="list-group-item">
+                    Price:
+                    <strong>${selectedMed.price}</strong>
+                  </li>
+                </ul>
         `
         swal.fire({
           title: "Medicine details",

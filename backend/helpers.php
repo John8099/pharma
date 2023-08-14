@@ -268,7 +268,7 @@ function insert($table, $data)
   return null;
 }
 
-function generateSystemId($preferredLetter = null)
+function generateSystemId($table, $primaryStr, $preferredLetter = null)
 {
   global $conn, $db;
   $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -276,46 +276,21 @@ function generateSystemId($preferredLetter = null)
   $AUTO_INCREMENT = mysqli_fetch_object(
     mysqli_query(
       $conn,
-      "SELECT AUTO_INCREMENT AS ID FROM information_schema.tables WHERE table_name = 'medicines' and table_schema = '$db'"
+      "SELECT AUTO_INCREMENT AS ID FROM information_schema.tables WHERE table_name = '$table' and table_schema = '$db'"
     )
   );
 
   $countUser = mysqli_num_rows(
     mysqli_query(
       $conn,
-      "SELECT COUNT(*) AS count FROM medicines"
+      "SELECT COUNT(*) AS count FROM `$table`"
     )
   );
 
   $letterIndex = intval(intval($countUser) / 100);
   $letter = $preferredLetter == null ? $characters[$letterIndex] : $preferredLetter;
 
-  return "MED" . date('y') . $letter . str_pad($AUTO_INCREMENT->ID, 4, '0', STR_PAD_LEFT);
-}
-
-function generateOrderCode($preferredLetter = null)
-{
-  global $conn, $db;
-  $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-  $AUTO_INCREMENT = mysqli_fetch_object(
-    mysqli_query(
-      $conn,
-      "SELECT AUTO_INCREMENT AS ID FROM information_schema.tables WHERE table_name = 'medicines' and table_schema = '$db'"
-    )
-  );
-
-  $countUser = mysqli_num_rows(
-    mysqli_query(
-      $conn,
-      "SELECT COUNT(*) AS count FROM orders"
-    )
-  );
-
-  $letterIndex = intval(intval($countUser) / 100);
-  $letter = $preferredLetter == null ? $characters[$letterIndex] : $preferredLetter;
-
-  return "ODR" . date('y') . $letter . str_pad($AUTO_INCREMENT->ID, 3, '0', STR_PAD_LEFT);
+  return $primaryStr . date('y') . $letter . str_pad($AUTO_INCREMENT->ID, 4, '0', STR_PAD_LEFT);
 }
 
 function isSelected($value, $toCheck)
@@ -380,7 +355,7 @@ function getMedicineImage($itemId = null)
   if ($itemId) {
     $medicineQuery = mysqli_query(
       $conn,
-      "SELECT * FROM medicine_profile WHERE id='$itemId'"
+      "SELECT * FROM medicines WHERE medicine_id='$itemId'"
     );
 
     if (mysqli_num_rows($medicineQuery) > 0) {

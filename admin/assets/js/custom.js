@@ -1,3 +1,18 @@
+window.handleOpenModalImg = (modalId) => {
+  $("html").css({
+    overflow: "hidden",
+  });
+  $(`#${modalId}`).show();
+};
+
+window.handleClose = (modalId) => {
+  $(`#${modalId}`).fadeOut("slow", function () {
+    $("html").css({
+      overflow: "visible",
+    });
+  });
+};
+
 window.deleteData = function (table, col, val) {
   swal
     .fire({
