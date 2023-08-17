@@ -355,7 +355,7 @@ function getMedicineImage($itemId = null)
   if ($itemId) {
     $medicineQuery = mysqli_query(
       $conn,
-      "SELECT * FROM medicines WHERE medicine_id='$itemId'"
+      "SELECT * FROM medicine_profile WHERE id='$itemId'"
     );
 
     if (mysqli_num_rows($medicineQuery) > 0) {

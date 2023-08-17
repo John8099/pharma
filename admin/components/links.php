@@ -67,7 +67,7 @@ $links = array(
     "title" => "Invoice",
     "config" => array(
       "icon" => "fa fa-file-invoice",
-      "url" => "$SERVER_NAME/admin/views/orders"
+      "url" => "$SERVER_NAME/admin/views/invoice"
     )
   ),
   array(
