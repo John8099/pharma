@@ -798,6 +798,10 @@ if (!$isLogin) {
             button: 'Filter',
           }
         },
+        columnDefs: [{
+          "targets": [8],
+          "orderable": false
+        }],
         buttons: [{
           extend: 'searchBuilder',
           config: {

@@ -41,8 +41,6 @@ if (!$isLogin) {
                       <table id="stockTable" class="table table-hover">
                         <thead>
                           <tr>
-                            <th class="d-none"></th>
-                            <th class="d-none"></th>
                             <th>Product #</th>
                             <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
                             <th>Price</th>
@@ -79,15 +77,13 @@ if (!$isLogin) {
                             $alt = $exploded[count($exploded) - 1];
                           ?>
                             <tr>
-                              <td class="d-none inventoryId"></td>
-                              <td class="d-none medicineId"></td>
                               <td class="align-middle productNumber"><?= $inventory->product_number ?></td>
                               <td class="align-middle medicineName">
                                 <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage')">
                                   <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                 </button>
                               </td>
-                              <td class="align-middle price"><?= $price ?></td>
+                              <td class="align-middle price"><?= "₱ " . $price ?></td>
                               <td class="align-middle quantity"><?= $inventory->quantity ?></td>
                               <td class="align-middle"><?= $inventory->expiration_date ?></td>
                               <td class="align-middle">
@@ -175,6 +171,10 @@ if (!$isLogin) {
                           <button id="btnDiscount" class="btn btn-warning btn-block btn-sm m-2" style="height: 43px;">
                             Discount
                           </button>
+
+                          <button id="btnClear" class="btn btn-danger btn-block btn-sm m-2 d-none" style="height: 43px;">
+                            Clear Discount
+                          </button>
                         </div>
                         <div class="col-md-6 m-0">
                           <button id="btnCheckout" class="btn btn-primary btn-block btn-sm m-2" style="height: 43px;" id="btnCheckOut">
@@ -213,13 +213,13 @@ if (!$isLogin) {
           "targets": [5],
           "orderable": false
         }],
-        buttons: [{
-          extend: 'searchBuilder',
-          config: {
-            columns: [0, 1, 2, 3, 4, 5]
-          }
-        }],
-        dom: 'Bfrtip',
+        // buttons: [{
+        //   extend: 'searchBuilder',
+        //   config: {
+        //     columns: [0, 1, 2, 3, 4]
+        //   }
+        // }],
+        // dom: 'Bfrtip',
       });
 
       const tableId2 = "#orderTable";
@@ -239,11 +239,41 @@ if (!$isLogin) {
       orderTable.buttons().container()
         .appendTo(`${tableId2}_wrapper .col-md-6:eq(0)`);
 
+      $("#btnDiscount").on("click", function() {
+        $(this).addClass("d-none")
+        $("#btnClear").removeClass("d-none")
+      })
+
+      $("#btnClear").on("click", function() {
+        $(this).addClass("d-none")
+        $("#btnDiscount").removeClass("d-none")
+      })
+
       $("#btnCheckout").on("click", function() {
-        const orderTableData = orderTable.rows().data()
-        if (orderTableData.length > 0) {
-          console.log(orderTableData)
+        const selectedOrder = orderTable.rows().nodes();
+        let checkOutData = {
+          subTotal: 0.00,
+          discount: 0.00,
+          total: 0.00,
+          data: []
         }
+
+        selectedOrder.each((e) => {
+          const elChild = $(e).children();
+          const data = {
+            product_number: $(elChild[0]).text(),
+            quantity: $(elChild[3]).text(),
+            orderTotal: Number($(elChild[4]).text().replace("₱", "").trim())
+          }
+
+          checkOutData.data.push(data)
+        })
+
+        checkOutData.subTotal = Number($("#subTotal").text().replace("₱", "").trim())
+        checkOutData.discount = Number($("#discount").text().replace("₱", "").trim())
+        checkOutData.total = Number($("#overallTotal").text().replace("₱", "").trim())
+
+        console.log(checkOutData)
       })
 
       function removeRow(el, tableIndex, quantityToAdd) {
@@ -259,27 +289,24 @@ if (!$isLogin) {
           .remove()
           .draw();
 
-        const newTotal = (Number(priceEl.text().trim()) * quantityToAdd).toFixed(2)
-
-        updateSubTotal(newTotal, "minus")
+        updateSubTotal()
       }
 
-      function updateSubTotal(total, action = "add") {
-        const subTotal = Number($("#subTotal").text().replace("₱", "").trim())
-        const oldTotal = total.includes("₱") ? Number(total.replace("₱", "")) : Number(total);
+      function updateSubTotal() {
+        const selectedOrder = orderTable.rows().nodes();
+        let orderTableSubtotals = 0.00
 
-        let newTotal = 0
-        if (action == "minus") {
-          newTotal = (Number(subTotal) - Number(oldTotal));
-        } else {
-          newTotal = (Number(subTotal) + Number(oldTotal));
-        }
-        $("#subTotal").html(`₱ ${newTotal.toFixed(2)}`)
+        selectedOrder.each((e) => {
+          const orderTableSubtotalsEl = $(e).children()[4];
+          orderTableSubtotals += Number($(orderTableSubtotalsEl).text().replace("₱", "").trim());
+        })
 
-        updateOverAllTotal(action)
+        $("#subTotal").html(`₱ ${orderTableSubtotals.toFixed(2)}`)
+
+        updateOverAllTotal()
       }
 
-      function updateOverAllTotal(action) {
+      function updateOverAllTotal() {
         const subTotal = Number($("#subTotal").text().replace("₱", "").trim())
         const discount = Number($("#discount").text().replace("₱", "").trim())
 
@@ -310,43 +337,44 @@ if (!$isLogin) {
             const price = el.closest("tr").find(".price")
             const quantity = el.closest("tr").find(".quantity")
 
-            let subTotal = ''
+            const orderData = orderTable.rows().data().toArray();
+            const orderDataIndex = orderData.findIndex((e) => e.some((s) => s === prodNumber.text().trim()))
 
-            // const orderData = orderTable.rows().data().toArray();
-            // const orderDataIndex = orderData.findIndex((e) => e.some((s) => s === prodNumber.text().trim()))
+            if (orderDataIndex == -1) {
+              const quantityEl = JSON.stringify(el.closest("tr"))
 
-            // if (orderDataIndex == -1) {
-            const quantityEl = JSON.stringify(el.closest("tr"))
-            subTotal = `₱ ${(Number(res.value) * Number(price.text().trim())).toFixed(2)}`
-
-            orderTable.row.add([
-              prodNumber.html(),
-              medicineName.html(),
-              price.html(),
-              res.value,
-              subTotal,
-              `
+              orderTable.row.add([
+                prodNumber.html(),
+                medicineName.html(),
+                price.html(),
+                res.value,
+                `₱ ${(Number(res.value) * Number(price.text().trim().replace("₱", ""))).toFixed(2)}`,
+                `
                 <a href='javascript:void(0);' onclick="removeRow($(this), ${stockTable.row(el.closest("tr")).index()}, ${res.value})" class='h5 text-danger m-2'>
                   <i class='fa fa-times-circle' title='Remove' data-toggle='tooltip'></i>
                 </a>
                 `
-            ]).draw(false);
+              ]).draw();
 
-            const newQuantity = Number(quantity.text().trim()) - Number(res.value)
-            quantity.html(newQuantity)
-            // } else {
-            //   const selectedOrder = orderTable.rows(orderDataIndex).nodes();
-            //   const children = $(selectedOrder).children();
+              const newQuantity = Number(quantity.text().trim()) - Number(res.value)
+              quantity.html(newQuantity)
 
-            //   const quantityEl = $(selectedOrder[0].childNodes[3]);
-            //   const newQuantity = Number(quantityEl.text().trim()) + Number(res.value)
+            } else {
+              const selectedOrder = orderTable.rows(orderDataIndex).nodes();
+              const children = $(selectedOrder).children();
 
-            //   quantityEl.html(newQuantity)
+              const quantityEl = $(selectedOrder[0].childNodes[3]);
+              const newQuantity = Number(quantityEl.text().trim()) + Number(res.value)
 
-            //   subTotal = `₱ ${(Number(newQuantity) * Number(price.text().trim())).toFixed(2)}`
-            // }
+              quantityEl.html(newQuantity)
 
-            updateSubTotal(subTotal)
+              const subTotalEl = $(selectedOrder[0].childNodes[4]);
+              const newTotal = `₱ ${(Number(newQuantity) * Number(price.text().trim().replace("₱", ""))).toFixed(2)}`
+
+              subTotalEl.html(newTotal)
+            }
+
+            updateSubTotal()
           }
         })
       }
