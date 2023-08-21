@@ -37,7 +37,7 @@ if (!$isLogin) {
                         </button>
                       </h3>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" style="overflow-x: scroll;">
                       <table id="stockTable" class="table table-hover">
                         <thead>
                           <tr>
@@ -111,7 +111,7 @@ if (!$isLogin) {
                         Orders Information
                       </h3>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" style="overflow-x: scroll;">
                       <table id="orderTable" class="table table-hover">
                         <thead>
                           <tr>
@@ -256,6 +256,30 @@ if (!$isLogin) {
     </div>
     <?php include("../components/scripts.php") ?>
     <script>
+      $("#checkoutForm").on("submit", function(e) {
+        e.preventDefault()
+        swal.showLoading()
+
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=save_checkout",
+          $(this).serialize(),
+          (data, status) => {
+            const resp = JSON.parse(data)
+            swal.fire({
+              title: resp.success ? "Success!" : 'Error!',
+              html: resp.message,
+              icon: resp.success ? "success" : 'error',
+            }).then(() => resp.success ? window.location.href = `print-receipt?id=${resp.invoice_id}` : undefined)
+
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
+        });
+      })
+
       let isDiscounted = false;
 
       const tableId = "#stockTable";
@@ -265,7 +289,7 @@ if (!$isLogin) {
         ordering: true,
         info: true,
         autoWidth: false,
-        responsive: true,
+        responsive: false,
         language: {
           searchBuilder: {
             button: 'Filter',
@@ -274,14 +298,7 @@ if (!$isLogin) {
         columnDefs: [{
           "targets": [5],
           "orderable": false
-        }],
-        // buttons: [{
-        //   extend: 'searchBuilder',
-        //   config: {
-        //     columns: [0, 1, 2, 3, 4]
-        //   }
-        // }],
-        // dom: 'Bfrtip',
+        }]
       });
 
       const tableId2 = "#orderTable";
@@ -291,7 +308,7 @@ if (!$isLogin) {
         ordering: false,
         info: false,
         autoWidth: false,
-        responsive: true,
+        responsive: false,
         searching: false
       });
 
@@ -303,9 +320,9 @@ if (!$isLogin) {
 
 
       $("#inputAmount").on("input", function() {
-        $("#inputChange").val("123")
+        // $("#inputChange").val("123")
         $("#inputChange").change()
-        console.log($(this).val())
+        // console.log($(this).val())
       })
 
       $("#inputChange").on("change", function() {
@@ -392,12 +409,18 @@ if (!$isLogin) {
         $("#discount").html(`₱ ${newDiscount.toFixed(2)}`)
       }
 
-      function removeRow(el, tableIndex, quantityToAdd) {
+      function removeRow(el, tableIndex) {
         const selectedStock = stockTable.rows(tableIndex).nodes()[0];
         const quantityEl = $(selectedStock).find(".quantity")
         const priceEl = $(selectedStock).find(".price")
 
-        const newQuantity = Number(quantityEl.text().trim()) + Number(quantityToAdd)
+        const orderSelectedRowIndex = orderTable.row(el.closest("tr")).index();
+        const orderData = orderTable.rows(orderSelectedRowIndex).nodes();
+        const children = $(orderData).children();
+
+        const orderQuantityEl = $(orderData[0].childNodes[3]);
+
+        const newQuantity = Number(quantityEl.text().trim()) + Number(orderQuantityEl.text().trim())
         quantityEl.html(newQuantity)
 
         orderTable
@@ -474,7 +497,7 @@ if (!$isLogin) {
                 res.value,
                 `₱ ${(Number(res.value) * Number(price.text().trim().replace("₱", ""))).toFixed(2)}`,
                 `
-                <a href='javascript:void(0);' onclick="removeRow($(this), ${stockTable.row(el.closest("tr")).index()}, ${res.value})" class='h5 text-danger m-2'>
+                <a href='javascript:void(0);' onclick="removeRow($(this), ${stockTable.row(el.closest("tr")).index()})" class='h5 text-danger m-2'>
                   <i class='fa fa-times-circle' title='Remove' data-toggle='tooltip'></i>
                 </a>
                 `

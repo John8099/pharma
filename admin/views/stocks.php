@@ -90,7 +90,7 @@ if (!$isLogin) {
                                   <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                 </button>
                               </td>
-                              <td class="align-middle"><?= $price ?></td>
+                              <td class="align-middle"><?= "₱ " . number_format($price, 2, '.', ',') ?></td>
                               <td class="align-middle"><?= $inventory->supplier_name ?></td>
                               <td class="align-middle"><?= $inventory->quantity ?></td>
                               <td class="align-middle"><?= $inventory->date_received ?></td>

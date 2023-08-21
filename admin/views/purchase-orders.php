@@ -86,7 +86,7 @@ if (!$isLogin) {
                                 </button>
                               </td>
                               <td class="align-middle"><?= $purchased->creation_date ?></td>
-                              <td class="align-middle"><?= $purchased->payment_amount ?></td>
+                              <td class="align-middle"><?= "₱ " . number_format($purchased->payment_amount, 2, '.', ',') ?></td>
                               <td class="align-middle"><?= $purchased->payment_date ?></td>
                               <td class="align-middle"><?= $purchased->quantity ?></td>
                             </tr>

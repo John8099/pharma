@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 18, 2023 at 09:12 AM
+-- Generation Time: Aug 21, 2023 at 09:48 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -93,7 +93,8 @@ CREATE TABLE `inventory_general` (
 --
 
 INSERT INTO `inventory_general` (`id`, `medicine_id`, `price_id`, `supplier_id`, `quantity`, `date_received`, `expiration_date`, `serial_number`, `product_number`) VALUES
-(1, 1, 1, 1, 30, '2023-08-17', '2023-08-31', '098awdawd123', 'PROD23A0001');
+(1, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0001'),
+(2, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0002');
 
 -- --------------------------------------------------------
 
@@ -104,8 +105,18 @@ INSERT INTO `inventory_general` (`id`, `medicine_id`, `price_id`, `supplier_id`,
 CREATE TABLE `invoice` (
   `id` int(11) NOT NULL,
   `payment_id` int(11) DEFAULT NULL,
-  `subtotal` varchar(32) NOT NULL
+  `order_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL COMMENT 'cashier id',
+  `date_created` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `invoice`
+--
+
+INSERT INTO `invoice` (`id`, `payment_id`, `order_id`, `user_id`, `date_created`) VALUES
+(1, 1, 1, 1, '2023-08-21 02:46:48'),
+(2, 2, 2, 1, '2023-08-21 04:09:24');
 
 -- --------------------------------------------------------
 
@@ -153,6 +164,16 @@ CREATE TABLE `order_details` (
   `inventory_general_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `order_details`
+--
+
+INSERT INTO `order_details` (`id`, `order_id`, `order_subtotal`, `quantity`, `inventory_general_id`) VALUES
+(1, 1, 24.00, 2, 1),
+(2, 1, 93.00, 3, 2),
+(3, 2, 24.00, 2, 1),
+(4, 2, 62.00, 2, 2);
+
 -- --------------------------------------------------------
 
 --
@@ -162,10 +183,21 @@ CREATE TABLE `order_details` (
 CREATE TABLE `order_tbl` (
   `id` int(11) NOT NULL,
   `order_number` varchar(32) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `order_total` decimal(11,2) NOT NULL,
-  `date_ordered` date NOT NULL
+  `user_id` int(11) DEFAULT NULL COMMENT 'set null if walk in',
+  `subtotal` decimal(11,2) NOT NULL,
+  `discount` decimal(11,2) NOT NULL,
+  `overall_total` decimal(11,2) NOT NULL,
+  `type` enum('walk_in','online') NOT NULL,
+  `date_ordered` date NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `order_tbl`
+--
+
+INSERT INTO `order_tbl` (`id`, `order_number`, `user_id`, `subtotal`, `discount`, `overall_total`, `type`, `date_ordered`) VALUES
+(1, 'ORD23A0001', NULL, 117.00, 23.40, 93.60, 'walk_in', '2023-08-21'),
+(2, 'ORD23A0002', NULL, 86.00, 17.20, 68.80, 'walk_in', '2023-08-21');
 
 -- --------------------------------------------------------
 
@@ -175,12 +207,19 @@ CREATE TABLE `order_tbl` (
 
 CREATE TABLE `payment` (
   `id` int(11) NOT NULL,
-  `order_details_id` int(11) DEFAULT NULL,
-  `date_paid` date NOT NULL,
+  `order_id` int(11) DEFAULT NULL,
   `paid_amount` decimal(11,2) NOT NULL,
-  `discount` decimal(11,2) NOT NULL,
-  `customer_change` decimal(11,2) NOT NULL
+  `customer_change` decimal(11,2) NOT NULL,
+  `date_paid` date NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payment`
+--
+
+INSERT INTO `payment` (`id`, `order_id`, `paid_amount`, `customer_change`, `date_paid`) VALUES
+(1, 1, 100.00, 6.40, '2023-08-21'),
+(2, 2, 100.00, 31.20, '2023-08-21');
 
 -- --------------------------------------------------------
 
@@ -199,7 +238,9 @@ CREATE TABLE `price` (
 --
 
 INSERT INTO `price` (`id`, `price`, `status`) VALUES
-(1, 21.00, 'active');
+(1, 21.00, 'active'),
+(2, 12.00, 'active'),
+(3, 31.00, 'active');
 
 -- --------------------------------------------------------
 
@@ -213,7 +254,7 @@ CREATE TABLE `purchase_order` (
   `created_by` int(11) DEFAULT NULL,
   `medicine_id` int(11) DEFAULT NULL,
   `creation_date` date NOT NULL,
-  `payment_amount` varchar(32) NOT NULL,
+  `payment_amount` decimal(11,2) NOT NULL,
   `payment_date` date NOT NULL,
   `quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -223,7 +264,7 @@ CREATE TABLE `purchase_order` (
 --
 
 INSERT INTO `purchase_order` (`id`, `supplier_id`, `created_by`, `medicine_id`, `creation_date`, `payment_amount`, `payment_date`, `quantity`) VALUES
-(3, 1, 1, 1, '2023-08-09', '5012', '2023-08-09', 5);
+(3, 1, 1, 1, '2023-08-09', 5012.00, '2023-08-09', 5);
 
 -- --------------------------------------------------------
 
@@ -234,9 +275,17 @@ INSERT INTO `purchase_order` (`id`, `supplier_id`, `created_by`, `medicine_id`, 
 CREATE TABLE `sales` (
   `id` int(11) NOT NULL,
   `invoice_id` int(11) DEFAULT NULL,
-  `quantity_sold` int(11) NOT NULL,
-  `sales_date` date NOT NULL
+  `total_quantity_sold` int(11) NOT NULL,
+  `sales_date` date NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sales`
+--
+
+INSERT INTO `sales` (`id`, `invoice_id`, `total_quantity_sold`, `sales_date`) VALUES
+(2, 1, 5, '2023-08-21'),
+(3, 2, 4, '2023-08-21');
 
 -- --------------------------------------------------------
 
@@ -321,7 +370,9 @@ ALTER TABLE `inventory_general`
 --
 ALTER TABLE `invoice`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `payment_id` (`payment_id`);
+  ADD KEY `payment_id` (`payment_id`),
+  ADD KEY `order_id` (`order_id`),
+  ADD KEY `user_id` (`user_id`);
 
 --
 -- Indexes for table `medicine_profile`
@@ -351,7 +402,7 @@ ALTER TABLE `order_tbl`
 --
 ALTER TABLE `payment`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `order_details_id` (`order_details_id`);
+  ADD KEY `payment_ibfk_1` (`order_id`);
 
 --
 -- Indexes for table `price`
@@ -407,13 +458,13 @@ ALTER TABLE `category`
 -- AUTO_INCREMENT for table `inventory_general`
 --
 ALTER TABLE `inventory_general`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `invoice`
 --
 ALTER TABLE `invoice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `medicine_profile`
@@ -425,25 +476,25 @@ ALTER TABLE `medicine_profile`
 -- AUTO_INCREMENT for table `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `order_tbl`
 --
 ALTER TABLE `order_tbl`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `price`
 --
 ALTER TABLE `price`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `purchase_order`
@@ -455,7 +506,7 @@ ALTER TABLE `purchase_order`
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `supplier`
@@ -485,7 +536,9 @@ ALTER TABLE `inventory_general`
 -- Constraints for table `invoice`
 --
 ALTER TABLE `invoice`
-  ADD CONSTRAINT `invoice_ibfk_1` FOREIGN KEY (`payment_id`) REFERENCES `payment` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `invoice_ibfk_1` FOREIGN KEY (`payment_id`) REFERENCES `payment` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `invoice_ibfk_2` FOREIGN KEY (`order_id`) REFERENCES `order_tbl` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `invoice_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `medicine_profile`
@@ -511,7 +564,7 @@ ALTER TABLE `order_tbl`
 -- Constraints for table `payment`
 --
 ALTER TABLE `payment`
-  ADD CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`order_details_id`) REFERENCES `order_details` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `order_tbl` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `purchase_order`

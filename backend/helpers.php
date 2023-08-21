@@ -148,6 +148,40 @@ function checkItemNameCount($itemId = null, $itemName)
   return $itemNameCount;
 }
 
+function getTableWithWhere($table, $condition = null)
+{
+  global $conn;
+
+  $data = array();
+
+  $cond = $condition ? " WHERE $condition" : "";
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM $table $cond"
+  );
+
+  while ($res = mysqli_fetch_object($query)) {
+    array_push($data, $res);
+  }
+
+  return $data;
+}
+
+function getSingleDataWithWhere($table, $condition = null)
+{
+  global $conn;
+
+  $cond = $condition ? " WHERE $condition" : "";
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM $table $cond"
+  );
+
+  return mysqli_num_rows($query) > 0 ? mysqli_fetch_object($query) : null;
+}
+
 function getTableData($table, $column = null, $value = null)
 {
   global $conn;
