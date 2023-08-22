@@ -54,7 +54,11 @@ if (!$isLogin) {
                               <td><?= $order->order_number ?></td>
                               <td><?= $order->user_id ? getFullName($order->user_id) : "-----" ?></td>
                               <td><?= getFullName($invoice->user_id) ?></td>
-                              <td><?= $sale->total_quantity_sold ?></td>
+                              <td>
+                                <button type="button" onclick="return window.location.href='order-details?id=<?= $order->id ?>'" class="btn btn-link btn-sm">
+                                  <?= $sale->total_quantity_sold ?>
+                                </button>
+                              </td>
                               <td><?= $order->type == "walk_in" ? "Over the counter" : "Online" ?></td>
                               <td><?= "₱ " . number_format($order->overall_total, 2, '.', ',') ?></td>
                               <td><?= date("Y-m-d", strtotime($sale->sales_date)) ?></td>

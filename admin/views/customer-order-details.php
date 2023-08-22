@@ -37,7 +37,7 @@ if (!$isLogin) {
                     <div class="card-body">
                       <div class="row">
                         <div class="col-md-12">
-                          <table id="orderDetails" class="table table-hover">
+                          <table id="customerOrderDetails" class="table table-hover">
                             <thead>
                               <tr>
                                 <th>Order #</th>
@@ -51,9 +51,10 @@ if (!$isLogin) {
                             <tbody>
                               <?php
                               $orderDetails = getTableWithWhere("order_details", "order_id='$_GET[id]'");
+                              $orderTotal = 0;
                               foreach ($orderDetails as $detail) :
+                                $orderTotal += $detail->order_subtotal;
                                 $order = getSingleDataWithWhere("order_tbl", "id='$detail->order_id'");
-
 
                                 $medicineQ = mysqli_query(
                                   $conn,
@@ -98,10 +99,44 @@ if (!$isLogin) {
 
                             </tbody>
                           </table>
+
                         </div>
                       </div>
 
+                      <div class="row justify-content-end">
+                        <div class="col-md-4">
+                          <div class="row">
+                            <div class="col-6">
+                              <ul class="list-group list-group-flush text-dark">
+                                <li class="list-group-item">
+                                  <h4>
+                                    Total
+                                  </h4>
+                                </li>
+                              </ul>
+                            </div>
+                            <div class="col-6">
+                              <ul class="list-group list-group-flush text-dark">
+                                <li class="list-group-item">
+                                  <h4>
+                                    <?= "₱ " . number_format($orderTotal, 2, '.', ',') ?>
+                                  </h4>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                    <?php
+                    $order = getSingleDataWithWhere("order_tbl", "id='$_GET[id]'");
+                    ?>
+                    <?php if ($order->status != "claimed") : ?>
+                      <div class="card-footer d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary btn-sm">Set Preparing</button>
+                        <button type="button" class="btn btn-info btn-sm">Set To Claim</button>
+                      </div>
+                    <?php endif; ?>
                   </div>
                 </div>
               </div>
@@ -115,7 +150,7 @@ if (!$isLogin) {
     <?php include("../components/scripts.php") ?>
     <script>
       $(document).ready(function() {
-        const tableId = "#orderDetails";
+        const tableId = "#customerOrderDetails";
         var table = $(tableId).DataTable({
           paging: false,
           lengthChange: false,
