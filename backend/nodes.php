@@ -94,6 +94,9 @@ if (isset($_GET['action'])) {
       case "save_stock":
         save_stock();
         break;
+      case "save_checkout":
+        save_checkout();
+        break;
       default:
         null;
         break;
@@ -102,6 +105,84 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function save_checkout()
+{
+  global $conn, $_POST, $_SESSION;
+
+  $productData = json_decode($_POST["productData"]);
+  $subTotal = $_POST["subTotal"];
+  $discount = $_POST["discount"];
+  $total = $_POST["total"];
+  $amount = $_POST["amount"];
+  $change = $_POST["change"];
+
+  $totalQuantitySold = 0;
+
+  $orderTableData = array(
+    "order_number" => generateSystemId("order_tbl", "ORD"),
+    "user_id" => NULL,
+    "subtotal" => $subTotal,
+    "discount" => $discount,
+    "overall_total" => $total,
+    "type" => "walk_in"
+  );
+
+  $orderIn = insert("order_tbl", $orderTableData);
+
+  foreach ($productData->data as $product) {
+    $inventory = getSingleDataWithWhere("inventory_general", "product_number = '$product->product_number'");
+
+    $orderDetailsData = array(
+      "order_id" => $orderIn,
+      "order_subtotal" => "$product->orderTotal",
+      "quantity" => "$product->quantity",
+      "inventory_general_id" => $inventory->id
+    );
+
+    $orderDetailsIn = insert("order_details", $orderDetailsData);
+
+    if ($orderDetailsIn) {
+      $totalQuantitySold += intval($product->quantity);
+      $newQuantity = intval($inventory->quantity) - intval($product->quantity);
+
+      $updateInData = array(
+        "quantity" => "$newQuantity"
+      );
+
+      $updateIn = update("inventory_general", $updateInData, "id", $inventory->id);
+    }
+  }
+
+  $paymentData = array(
+    "order_id" => $orderIn,
+    "paid_amount" => "$amount",
+    "customer_change" => "$change"
+  );
+
+  $paymentIn = insert("payment", $paymentData);
+
+  $invoiceData = array(
+    "payment_id" => $paymentIn,
+    "order_id" => $orderIn,
+    "user_id" => $_SESSION["userId"]
+  );
+
+  $invoiceIn = insert("invoice", $invoiceData);
+
+  $salesData = array(
+    "invoice_id" => $invoiceIn,
+    "total_quantity_sold" => $totalQuantitySold
+  );
+
+  $salesIn = insert("sales", $salesData);
+
+  $response["success"] = true;
+  $response["message"] = "Item(s) successfully added to invoice";
+  $response["invoice_id"] = $invoiceIn;
+
+  returnResponse($response);
 }
 
 function save_stock()

@@ -81,17 +81,17 @@ if (!$isLogin) {
                               <td class="align-middle"><?= $purchased->supplier_name ?></td>
                               <td class="align-middle"><?= getFullName($purchased->created_by) ?></td>
                               <td class="align-middle">
-                                <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage')">
+                                <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage<?= $purchased->medicine_id ?>')">
                                   <?= "$purchased->medicine_name/ $purchased->brand_name/ $purchased->generic_name" ?>
                                 </button>
                               </td>
                               <td class="align-middle"><?= $purchased->creation_date ?></td>
-                              <td class="align-middle"><?= $purchased->payment_amount ?></td>
+                              <td class="align-middle"><?= "₱ " . number_format($purchased->payment_amount, 2, '.', ',') ?></td>
                               <td class="align-middle"><?= $purchased->payment_date ?></td>
                               <td class="align-middle"><?= $purchased->quantity ?></td>
                             </tr>
-                            <div id='divModalImage' class='div-modal pt-5'>
-                              <span class='close' onclick='handleClose(`divModalImage`)'>&times;</span>
+                            <div id='divModalImage<?= $purchased->medicine_id ?>' class='div-modal pt-5'>
+                              <span class='close' onclick='handleClose(`divModalImage<?= $purchased->medicine_id ?>`)'>&times;</span>
                               <img class='div-modal-content' src="<?= $imgSrc  ?>">
                               <div id="imgCaption"><?= $alt ?></div>
                             </div>

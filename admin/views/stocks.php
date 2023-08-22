@@ -86,11 +86,11 @@ if (!$isLogin) {
                             <tr>
                               <td class="align-middle"><?= $inventory->product_number ?></td>
                               <td class="align-middle">
-                                <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage')">
+                                <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage<?= $inventory->inventory_id ?>')">
                                   <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                 </button>
                               </td>
-                              <td class="align-middle"><?= $price ?></td>
+                              <td class="align-middle"><?= "₱ " . number_format($price, 2, '.', ',') ?></td>
                               <td class="align-middle"><?= $inventory->supplier_name ?></td>
                               <td class="align-middle"><?= $inventory->quantity ?></td>
                               <td class="align-middle"><?= $inventory->date_received ?></td>
@@ -102,8 +102,8 @@ if (!$isLogin) {
                                 </a>
                               </td>
                             </tr>
-                            <div id='divModalImage' class='div-modal pt-5'>
-                              <span class='close' onclick='handleClose(`divModalImage`)'>&times;</span>
+                            <div id='divModalImage<?= $inventory->inventory_id ?>' class='div-modal pt-5'>
+                              <span class='close' onclick='handleClose(`divModalImage<?= $inventory->inventory_id ?>`)'>&times;</span>
                               <img class='div-modal-content' src="<?= $imgSrc  ?>">
                               <div id="imgCaption"><?= $alt ?></div>
                             </div>
@@ -798,6 +798,10 @@ if (!$isLogin) {
             button: 'Filter',
           }
         },
+        columnDefs: [{
+          "targets": [8],
+          "orderable": false
+        }],
         buttons: [{
           extend: 'searchBuilder',
           config: {

@@ -67,28 +67,28 @@ $links = array(
     "title" => "Invoice",
     "config" => array(
       "icon" => "fa fa-file-invoice",
-      "url" => "$SERVER_NAME/admin/views/orders"
+      "url" => "$SERVER_NAME/admin/views/invoice"
     )
   ),
+  // array(
+  //   "title" => "Order",
+  //   "config" => array(
+  //     "icon" => "fa fa-cart-plus",
+  //     "url" => "$SERVER_NAME/admin/views/orders"
+  //   )
+  // ),
   array(
-    "title" => "Order",
-    "config" => array(
-      "icon" => "fa fa-cart-plus",
-      "url" => "$SERVER_NAME/admin/views/orders"
-    )
-  ),
-  array(
-    "title" => "Online Orders",
+    "title" => "Customer Orders",
     "config" => array(
       "icon" => "fa fa-cart-arrow-down",
-      "url" => "$SERVER_NAME/admin/views/online-orders"
+      "url" => "$SERVER_NAME/admin/views/customer-orders"
     )
   ),
   array(
-    "title" => "Orders History",
+    "title" => "Sales",
     "config" => array(
       "icon" => "fa fa-receipt",
-      "url" => "$SERVER_NAME/admin/views/order-history"
+      "url" => "$SERVER_NAME/admin/views/sales"
     )
   ),
 
