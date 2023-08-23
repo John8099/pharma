@@ -1516,3 +1516,7 @@ a:hover {
   height: 30px;
   object-fit: cover;
 }
+
+img {
+  object-fit: contain;
+}

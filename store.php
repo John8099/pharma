@@ -21,114 +21,164 @@ include("./backend/nodes.php");
     <div class="site-section">
       <div class="container">
 
-        <div class="row d-none">
-          <div class="col-lg-6">
-            <h3 class="mb-3 h6 text-uppercase text-black d-block">Filter by Price</h3>
-            <div id="slider-range" class="border-primary"></div>
-            <input type="text" name="text" id="amount" class="form-control border-0 pl-0 bg-white" disabled="" />
-          </div>
-          <div class="col-lg-6">
-            <h3 class="mb-3 h6 text-uppercase text-black d-block">Filter by Reference</h3>
-            <button type="button" class="btn btn-secondary btn-md dropdown-toggle px-4" id="dropdownMenuReference" data-toggle="dropdown">Reference</button>
-            <div class="dropdown-menu" aria-labelledby="dropdownMenuReference">
-              <a class="dropdown-item" href="#">Relevance</a>
-              <a class="dropdown-item" href="#">Name, A to Z</a>
-              <a class="dropdown-item" href="#">Name, Z to A</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="#">Price, low to high</a>
-              <a class="dropdown-item" href="#">Price, high to low</a>
-            </div>
-          </div>
-        </div>
-
         <div class="row">
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_01.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Bioderma</a></h3>
-            <p class="price">$55.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_02.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Chanca Piedra</a></h3>
-            <p class="price">$70.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_03.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Umcka Cold Care</a></h3>
-            <p class="price">$120.00</p>
-          </div>
+          <?php
+          $limit = 3;
+          $offset = !isset($_GET["offset"]) ? 0 : $_GET["offset"];
 
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-
-            <a href="shop-single.html"> <img src="./assets/images/product_04.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Cetyl Pure</a></h3>
-            <p class="price">$20.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_05.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">CLA Core</a></h3>
-            <p class="price">$38.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_06.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Poo Pourri</a></h3>
-            <p class="price">$38.00</p>
-          </div>
-
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_01.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Bioderma</a></h3>
-            <p class="price">$55.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_02.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Chanca Piedra</a></h3>
-            <p class="price">$70.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_03.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Umcka Cold Care</a></h3>
-            <p class="price">$120.00</p>
-          </div>
-
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-
-            <a href="shop-single.html"> <img src="./assets/images/product_04.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Cetyl Pure</a></h3>
-            <p class="price">$20.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_05.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">CLA Core</a></h3>
-            <p class="price">$38.00</p>
-          </div>
-          <div class="col-sm-6 col-lg-4 text-center item mb-4">
-            <a href="shop-single.html"> <img src="./assets/images/product_06.png" alt="Image"></a>
-            <h3 class="text-dark"><a href="shop-single.html">Poo Pourri</a></h3>
-            <p class="price">$38.00</p>
-          </div>
+          $inventoryQStr = "";
+          if (isset($_GET['medicine'])) {
+            $inventoryQStr = "SELECT 
+              ig.id AS 'inventory_id',
+              ig.medicine_id,
+              mp.medicine_name,
+              mp.generic_name,
+              ig.product_number,
+              (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
+              (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+              FROM inventory_general ig
+              LEFT JOIN medicine_profile mp
+              ON mp.id = ig.medicine_id
+              WHERE mp.medicine_name LIKE '%$_GET[medicine]%'
+              LIMIT $limit
+              OFFSET $offset
+              ";
+          } else {
+            $inventoryQStr = "SELECT 
+              ig.id AS 'inventory_id',
+              ig.medicine_id,
+              mp.medicine_name,
+              mp.generic_name,
+              ig.product_number,
+              (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
+              (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+              FROM inventory_general ig
+              LEFT JOIN medicine_profile mp
+              ON mp.id = ig.medicine_id
+              LIMIT $limit
+              OFFSET $offset
+              ";
+          }
+          $inventoryQ = mysqli_query($conn, $inventoryQStr);
+          if (mysqli_num_rows($inventoryQ) > 0) :
+            while ($inventory = mysqli_fetch_object($inventoryQ)) :
+          ?>
+              <div class="col-sm-6 col-lg-4 text-center item mb-4">
+                <a href="./shop-single?id=<?= $inventory->inventory_id ?>">
+                  <img src="<?= getMedicineImage($inventory->medicine_id) ?>" style="width: 270px; height: 370px;" alt="Image">
+                </a>
+                <h3 class="text-dark">
+                  <a href="./shop-single?id=<?= $inventory->inventory_id ?>">
+                    <?= $inventory->medicine_name ?>
+                  </a>
+                </h3>
+                <p class="price"><?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></p>
+              </div>
+          <?php endwhile;
+          endif;
+          ?>
         </div>
-        <div class="row mt-5">
-          <div class="col-md-12 text-center">
-            <div class="site-block-27">
-              <ul>
-                <li><a href="#">&lt;</a></li>
-                <li class="active"><span>1</span></li>
-                <li><a href="#">2</a></li>
-                <li><a href="#">3</a></li>
-                <li><a href="#">4</a></li>
-                <li><a href="#">5</a></li>
-                <li><a href="#">&gt;</a></li>
-              </ul>
+        <?php
+        $currentPage = !isset($_GET["page"]) ? 1 : $_GET["page"];
+
+        if (mysqli_num_rows($inventoryQ) > 0) :
+          $searchVal = isset($_GET["medicine"]) ? $_GET['medicine'] : "";
+          $pageCount = getPageCount($searchVal, $limit);
+
+          if ($pageCount > 0) :
+            $filterBy = urlencode($searchVal);
+        ?>
+
+            <div class="row mt-5">
+              <div class="col-md-12 text-center">
+                <div class="site-block-27">
+                  <ul>
+                    <li>
+                      <button type="button" class="btn btn-link btn-sm" onclick="previousPage('<?= $currentPage ?>','<?= $filterBy ?>', '<?= $offset ?>', '<?= $limit ?>')" <?= intval($currentPage) == 1 ? "disabled" : "" ?>>
+                        <a href="javascript:void()">
+                          <span>
+                            &lt;
+                          </span>
+                        </a>
+                      </button>
+                    </li>
+
+                    <?php
+                    for ($i = 1; $i <= $pageCount; $i++) : ?>
+                      <li class="<?= $currentPage == $i ? "active" : "" ?>">
+                        <button type="button" class="btn btn-link btn-sm" onclick="changeLoc(<?= $i ?>, <?= $limit * intval($i - 1) ?>, '<?= $filterBy ?>')">
+                          <a href="javascript:void()">
+                            <span><?= $i ?></span>
+                          </a>
+                        </button>
+
+                      </li>
+                    <?php endfor; ?>
+                    <li>
+                      <button type="button" class="btn btn-link btn-sm " onclick="nextItemPage('<?= $currentPage ?>','<?= $filterBy ?>', '<?= $offset ?>', '<?= $limit ?>')" <?= intval($currentPage) == intval($pageCount) ? "disabled" : "" ?>>
+                        <a href="javascript:void()">
+                          <span>
+                            &gt;
+                          </span>
+                        </a>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+        <?php endif;
+        endif; ?>
+
       </div>
     </div>
 
   </div>
 
   <?php include("./components/scripts.php") ?>
+  <script>
+    function previousPage(page, filter, offset, limit) {
+      const newOffset = Number(offset) - Number(limit);
+      const newPage = Number(page) - 1;
+      let path = "<?= $SERVER_NAME ?>/store";
+
+      if (filter == "") {
+        path += `?page=${newPage}&&offset=${newOffset}`
+      } else {
+        path += `?medicine=${filter}&&page=${newPage}&&offset=${newOffset}`
+      }
+
+      window.location.href = path
+    }
+
+    function nextItemPage(page, filter, offset, limit) {
+      const newOffset = Number(offset) + Number(limit);
+      const newPage = Number(page) + 1;
+      let path = "<?= $SERVER_NAME ?>/store";
+
+      if (filter == "") {
+        path += `?page=${newPage}&&offset=${newOffset}`
+      } else {
+        path += `?medicine=${filter}&&page=${newPage}&&offset=${newOffset}`
+      }
+
+      window.location.href = path
+    }
+
+    function changeLoc(page, offset, filter) {
+      let path = "<?= $SERVER_NAME ?>/store";
+
+      if (filter == "") {
+        path += `?page=${page}&&offset=${offset}`
+      } else {
+        path += `?medicine=${filter}&&page=${page}&&offset=${offset}`
+      }
+
+      window.location.href = path
+    }
+  </script>
+
+  </script>
 
 </body>
 

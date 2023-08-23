@@ -131,7 +131,7 @@ if (!$isLogin) {
               </div>
 
               <div class="row">
-                <div class="col-12">
+                <div class="col-md-12">
                   <div class="card">
                     <div class="card-header">
                       <h5>Monthly Sales</h5>
@@ -150,7 +150,7 @@ if (!$isLogin) {
                * 
                */
 
-              $months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+              $months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
 
               $barData = array();
 
@@ -234,7 +234,6 @@ if (!$isLogin) {
         barGap: 3,
         resize: true,
         responsive: true,
-        labels: ['Bar 1', 'Bar 2'],
         ykeys: ["a", "b"],
         labels: ["Online", "Over the counter"],
         barColors: ["#3949AB", "#2ca961"],

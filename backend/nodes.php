@@ -31,8 +31,11 @@ if (isset($_GET['action'])) {
       case "addUser":
         addUser();
         break;
+      case "update_profile":
+        update_profile();
+        break;
       case "update-user":
-        updateUser();
+        update_profile();
         break;
       case "check_email":
         checkEmailIfExistR();
@@ -97,6 +100,9 @@ if (isset($_GET['action'])) {
       case "save_checkout":
         save_checkout();
         break;
+      case "lock_screen":
+        lock_screen();
+        break;
       default:
         null;
         break;
@@ -105,6 +111,41 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function getPageCount($searchVal = "", $limit)
+{
+  global $conn;
+  $query = null;
+  $qStr = ("SELECT 
+            ig.id AS 'inventory_id',
+            ig.medicine_id,
+            mp.medicine_name,
+            mp.generic_name,
+            ig.product_number,
+            (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
+            (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+            FROM inventory_general ig
+            LEFT JOIN medicine_profile mp
+            ON mp.id = ig.medicine_id
+          " . " WHERE mp.medicine_name LIKE '%$searchVal%'");
+
+  $query = mysqli_query($conn, $qStr);
+
+  return ceil(mysqli_num_rows($query) / $limit);
+}
+
+function lock_screen()
+{
+  global $_SESSION;
+  $user = getUserById($_SESSION['userId']);
+
+  session_unset();
+  session_destroy();
+
+  session_start();
+  $_SESSION["email"] = $user->email;
+  header("location: ../admin/views/lock-screen");
 }
 
 function save_checkout()
@@ -793,25 +834,37 @@ function changePassword()
   global $conn, $_POST;
 
   $userId = $_POST["userId"];
-  $password = $_POST["nPassword"];
 
-  $update = update(
-    "users",
-    array(
-      "password" => md5($password),
-      "isNew" => "set_null"
-    ),
-    "id",
-    $userId
-  );
+  $old = $_POST["old_password"];
+  $new = $_POST["new_password"];
 
-  if ($update) {
-    $response["success"] = true;
-    $response["userId"] = $userId;
-    $response["message"] = "Password successfully change";
-  } else {
+  $user = getUserById($userId);
+
+  if ($old == $new) {
     $response["success"] = false;
-    $response["message"] = mysqli_error($conn);
+    $response["message"] = "Old password and New password should not be the same.";
+  } else if (!password_verify($old, $user->password)) {
+    $response["success"] = false;
+    $response["message"] = "Old password does not match!";
+  } else {
+    $update = update(
+      "users",
+      array(
+        "password" => password_hash($new, PASSWORD_ARGON2I),
+        "isNew" => "set_null"
+      ),
+      "id",
+      $userId
+    );
+
+    if ($update) {
+      $response["success"] = true;
+      $response["userId"] = $userId;
+      $response["message"] = "Password successfully change";
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
   }
 
   returnResponse($response);
@@ -865,17 +918,24 @@ function checkEmailIfExistF($email, $id = null)
   ) > 0 ? true : false;
 }
 
-function updateUser()
+function update_profile()
 {
-  global $conn, $_POST, $_FILES;
+  global $conn, $_POST, $_FILES, $_SESSION;
 
-  $profile = $_FILES["profile"];
-  $userId = $_POST['id'];
   $uploadedFile = "";
+
+  $set_null = $_POST["set_null"];
+  $profile = $_FILES["image"];
+
+  $fname = ucwords($_POST["fname"]);
+  $mname = $_POST["mname"] ? ucwords($_POST["mname"]) : null;
+  $lname = ucwords($_POST["lname"]);
+  $email = $_POST["email"];
+  $uname = $_POST["uname"];
 
   if (intval($profile["error"]) == 0) {
     $uploadFile = date("mdY-his") . "_" . basename($profile['name']);
-    $target_dir = "../media";
+    $target_dir = "../media/users";
 
     if (!is_dir($target_dir)) {
       mkdir($target_dir, 0777, true);
@@ -886,190 +946,23 @@ function updateUser()
     } else {
       $response["success"] = false;
       $response["message"] = "Error uploading profile.<br>Please try again later.";
+      exit();
     }
-    exit();
   }
 
-  $personalData = array(
-    "first_name" => ucwords($_POST["fname"]),
-    "middle_name" => ucwords($_POST["mname"]),
-    "last_name" => ucwords($_POST["lname"]),
-    "course_id" => $_POST["course"],
-    "year" => ucwords($_POST["year"]),
-    "section" => ucwords($_POST["section"]),
-    "school" => ucwords($_POST["school"]),
-    "place_of_birth" => ucwords($_POST["pob"]),
-    "date_of_birth" => $_POST["dob"],
-    "gender" => ucwords($_POST["gender"]),
-    "address" => ucwords($_POST["address"]),
-    "mobile_number" => $_POST["mobileNumber"],
-    "email" => $_POST["email"],
-    "blood_type" => ucwords($_POST["bloodType"]),
-    "body_built" => ucwords($_POST["bodyBuilt"]),
-    "height" => $_POST["height"],
-    "weight" => $_POST["weight"],
-    "ethnic_group" => ucwords($_POST["ethnicGroup"]),
-    "religion" => ucwords($_POST["religion"]),
-    "citizenship" => ucwords($_POST["citizenship"]),
-    "identification_mark" => $_POST["identificationMark"],
-    "hair_color" => ucwords($_POST["hairColor"]),
-    "eye_color" => ucwords($_POST["eyeColor"]),
-    "civil_status" => ucwords($_POST["civil"]),
-    "avatar" => "$uploadedFile"
+  $userProfileData = array(
+    "uname" => $uname,
+    "fname" => $fname,
+    "mname" => $mname,
+    "lname" => $lname,
+    "email" => $email,
+    "avatar" => $set_null == "Yes" ? "set_null" : $uploadedFile
   );
 
-  $updatePersonalData = update("users", $personalData, "id", $userId);
-  if ($updatePersonalData) {
-    // Civil Data
-    if ($_POST["civil"] == "Married") {
-      $civilData = array(
-        "name_of_spouse" => ucwords($_POST["spouseName"]),
-        "address" => ucwords($_POST["spouseAddress"]),
-        "contact" => $_POST["spouseContact"],
-        "occupation" => ucwords($_POST["spouseOccupation"]),
-        "company_name" => ucwords($_POST["spouseCompany"])
-      );
-
-      if (isset($_POST['civil_id'])) {
-        update("civil", $civilData, "user_id", $userId);
-      } else {
-        $civilData["user_id"] = $userId;
-        insert("civil", $civilData);
-      }
-    } else {
-      $civilDataDB = getTableData("civil", "user_id", $userId);
-
-      if ($civilDataDB) {
-        delete("civil", "civil_id", $userId);
-      }
-    }
-
-    // Children Data
-    if (count($_POST["childrenName"]) > 1) {
-
-      for ($i = 0; $i < count($_POST["childrenName"]); $i++) {
-        $childrenData = array(
-          "name" => ucwords($_POST["childrenName"][$i]),
-          "date_of_birth" => $_POST["childrenDOB"][$i],
-          "place_birth" => $_POST["childrenPOB"][$i],
-          "grade_or_year" => $_POST["childrenGradeOrYearLevel"][$i],
-          "school" => ucwords($_POST["childrenSchool"][$i])
-        );
-
-        if ($_POST["childrenID"][$i] != "0") {
-          update("childrens", $childrenData, "children_id", $_POST["childrenID"][$i]);
-        } else {
-          $childrenData["user_id"] = $userId;
-          insert("childrens", $childrenData);
-        }
-      }
-    } else {
-      $childrenData = array(
-        "name" => ucwords($_POST["childrenName"][0]),
-        "date_of_birth" => $_POST["childrenDOB"][0],
-        "place_birth" => $_POST["childrenPOB"][0],
-        "grade_or_year" => $_POST["childrenGradeOrYearLevel"][0],
-        "school" => ucwords($_POST["childrenSchool"][0])
-      );
-
-      if ($_POST["childrenID"][0] != "0") {
-        update("childrens", $childrenData, "children_id", $_POST["childrenID"][0]);
-      } else {
-        $childrenData["user_id"] = $userId;
-        insert("childrens", $childrenData);
-      }
-    }
-
-    // Family Data
-    $familyData = array(
-      "father_name" => ucwords($_POST["fatherName"]),
-      "father_date_of_birth" => $_POST["fatherDOB"],
-      "father_place_of_birth" => ucwords($_POST["fatherPOB"]),
-      "father_address" => ucwords($_POST["fatherAddress"]),
-      "father_contact" => $_POST["fatherContact"],
-      "father_occupation" => ucwords($_POST["fatherOccupation"]),
-      "father_company_name" => ucwords($_POST["fatherCompany"]),
-      "mother_name" => ucwords($_POST["motherName"]),
-      "mother_date_of_birth" => $_POST["motherDOB"],
-      "mother_place_of_birth" => ucwords($_POST["motherPOB"]),
-      "mother_address" => ucwords($_POST["motherAddress"]),
-      "mother_contact" => $_POST["motherContact"],
-      "mother_occupation" => ucwords($_POST["motherOccupation"]),
-      "mother_company_name" => ucwords($_POST["motherCompany"]),
-    );
-
-    update("family", $familyData, "user_id", $userId);
-
-    // Siblings Data
-    if (count($_POST["siblingName"]) > 1) {
-      for ($i = 0; $i < count($_POST["siblingName"]); $i++) {
-        $siblingData = array(
-          "name" => ucwords($_POST["siblingName"][$i]),
-          "date_of_birth" => $_POST["siblingDOB"][$i],
-          "occupation" => ucwords($_POST["siblingOccupation"][$i]),
-          "company" => ucwords($_POST["siblingCompany"][$i]),
-        );
-
-        if ($_POST["siblingID"][$i] != "0") {
-          update("siblings", $siblingData, "sibling_id", $_POST["siblingID"][$i]);
-        } else {
-          $siblingData["user_id"] = $userId;
-          insert("siblings", $siblingData);
-        }
-      }
-    } else {
-      $siblingData = array(
-        "name" => ucwords($_POST["siblingName"][0]),
-        "date_of_birth" => $_POST["siblingDOB"][0],
-        "occupation" => ucwords($_POST["siblingOccupation"][0]),
-        "company" => ucwords($_POST["siblingCompany"][0]),
-      );
-
-      if ($_POST["siblingID"][0] != "0") {
-        update("siblings", $siblingData, "sibling_id", $_POST["siblingID"][0]);
-      } else {
-        $siblingData["user_id"] = $userId;
-        insert("siblings", $siblingData);
-      }
-    }
-
-    // Education Data
-    if (count($_POST["educationLevel"]) > 1) {
-      for ($i = 0; $i < count($_POST["educationLevel"]); $i++) {
-        $educationData = array(
-          "education_level" => ucwords($_POST["educationLevel"][$i]),
-          "course_taken" => ucwords($_POST["educationCourse"][$i]),
-          "name_of_school" => ucwords($_POST["educationSchoolName"][$i]),
-          "address" => ucwords($_POST["educationAddress"][$i]),
-          "year_completed" => $_POST["yearCompleted"][$i],
-        );
-
-        if ($_POST["educationID"][$i] != "0") {
-          update("education", $educationData, "education_id", $_POST["educationID"][$i]);
-        } else {
-          $educationData["user_id"] = $userId;
-          insert("education", $educationData);
-        }
-      }
-    } else {
-      $educationData = array(
-        "education_level" => ucwords($_POST["educationLevel"][0]),
-        "course_taken" => ucwords($_POST["educationCourse"][0]),
-        "name_of_school" => ucwords($_POST["educationSchoolName"][0]),
-        "address" => ucwords($_POST["educationAddress"][0]),
-        "year_completed" => $_POST["yearCompleted"][0],
-      );
-
-      if ($_POST["educationID"][0] != "0") {
-        update("education", $educationData, "education_id", $_POST["educationID"][0]);
-      } else {
-        $educationData["user_id"] = $userId;
-        insert("education", $educationData);
-      }
-    }
-
+  $updateUser = update("users", $userProfileData, "id", $_SESSION["userId"]);
+  if ($updateUser) {
     $response["success"] = true;
-    $response["message"] = "User has been updated successfully";
+    $response["message"] = "Profile updated successfully";
   } else {
     $response["success"] = false;
     $response["message"] = mysqli_error($conn);
@@ -1103,6 +996,10 @@ function login()
 
         if ($role == "admin") {
           $response["isNew"] = $user->isNew;
+
+          if ($_SESSION["email"]) {
+            unset($_SESSION["email"]);
+          }
         }
       } else {
         $response["success"] = false;

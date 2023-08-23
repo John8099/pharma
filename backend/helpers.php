@@ -373,10 +373,12 @@ function getFullName($userId, $format = "") // format = with_middle
 function getAvatar($userId)
 {
   global $SERVER_NAME;
-  $user = getUserById($userId);
+  if ($userId) {
+    $user = getUserById($userId);
 
-  if ($user->avatar) {
-    return "$SERVER_NAME/media/$user->avatar";
+    if ($user->avatar) {
+      return "$SERVER_NAME/media/users/$user->avatar";
+    }
   }
 
   return "$SERVER_NAME/public/default.png";

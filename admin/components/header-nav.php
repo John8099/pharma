@@ -91,6 +91,7 @@
            </div>
          </div>
        </li>
+       
        <li>
          <div class="dropdown drp-user">
            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -105,8 +106,8 @@
                </a>
              </div>
              <ul class="pro-body">
-               <li><a href="" class="dropdown-item"><i class="feather icon-user"></i> Profile</a></li>
-               <li><a href="<?= $SERVER_NAME ?>/backend/nodes?action=logout&&location=admin" class="dropdown-item"><i class="feather icon-lock"></i> Lock Screen</a></li>
+               <li><a href="./user-profile" class="dropdown-item"><i class="feather icon-user"></i> Profile</a></li>
+               <li><a href="<?= $SERVER_NAME ?>/backend/nodes?action=lock_screen" class="dropdown-item"><i class="feather icon-lock"></i> Lock Screen</a></li>
              </ul>
            </div>
          </div>
