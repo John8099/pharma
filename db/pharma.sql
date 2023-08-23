@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 21, 2023 at 09:48 AM
+-- Generation Time: Aug 23, 2023 at 09:36 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -94,7 +94,21 @@ CREATE TABLE `inventory_general` (
 
 INSERT INTO `inventory_general` (`id`, `medicine_id`, `price_id`, `supplier_id`, `quantity`, `date_received`, `expiration_date`, `serial_number`, `product_number`) VALUES
 (1, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0001'),
-(2, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0002');
+(2, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0002'),
+(3, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0003'),
+(4, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0004'),
+(5, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0005'),
+(6, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0006'),
+(7, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0007'),
+(8, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0008'),
+(9, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0009'),
+(10, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0010'),
+(11, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0011'),
+(12, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0012'),
+(13, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0013'),
+(14, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0014'),
+(15, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0015'),
+(16, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0016');
 
 -- --------------------------------------------------------
 
@@ -141,10 +155,10 @@ CREATE TABLE `medicine_profile` (
 --
 
 INSERT INTO `medicine_profile` (`id`, `medicine_name`, `category_id`, `image`, `brand_id`, `generic_name`, `description`, `dosage`, `deleted`) VALUES
-(1, 'Name', NULL, NULL, 11, 'Generic', 'Description', '30', 0),
-(4, 'Test', 1, '08102023-070109_Screenshot (33).png', 1, 'Generic', 'Test', '12', 0),
-(5, 'Test', 1, NULL, 6, 'Test', 'Test', '12', 0),
-(6, 'Test 1', 4, NULL, 6, 'Test 1', 'Test ', 'test', 0),
+(1, 'Name', NULL, '08222023-083205_Formet.jpg', 11, 'Generic', 'Description', '30', 0),
+(4, 'Test', 1, '08222023-083214_IMG_1833.JPG', 1, 'Generic', 'Test', '12', 0),
+(5, 'Test', 1, '08222023-083224_Skelan.png', 6, 'Test', 'Test', '12', 0),
+(6, 'Test 1', 4, '08222023-083233_Poten-Cee.jpg', 6, 'Test 1', 'Test ', 'test', 0),
 (7, 'Test1 ', 5, NULL, 1, 'Test 1 ', 'Test', 'awd', 1),
 (8, 'Test 123', 1, NULL, 1, 'Test 123', 'Test', '12', 1),
 (9, 'Test 31', 1, NULL, 1, 'Test 21', 'Test', '21', 1),
@@ -184,20 +198,21 @@ CREATE TABLE `order_tbl` (
   `id` int(11) NOT NULL,
   `order_number` varchar(32) NOT NULL,
   `user_id` int(11) DEFAULT NULL COMMENT 'set null if walk in',
-  `subtotal` decimal(11,2) NOT NULL,
-  `discount` decimal(11,2) NOT NULL,
-  `overall_total` decimal(11,2) NOT NULL,
+  `subtotal` decimal(11,2) DEFAULT NULL,
+  `discount` decimal(11,2) DEFAULT NULL,
+  `overall_total` decimal(11,2) DEFAULT NULL,
   `type` enum('walk_in','online') NOT NULL,
-  `date_ordered` date NOT NULL DEFAULT current_timestamp()
+  `date_ordered` date NOT NULL DEFAULT current_timestamp(),
+  `status` enum('pending','preparing','to claim','claimed') DEFAULT NULL COMMENT 'pending, preparing, to claim, claimed'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `order_tbl`
 --
 
-INSERT INTO `order_tbl` (`id`, `order_number`, `user_id`, `subtotal`, `discount`, `overall_total`, `type`, `date_ordered`) VALUES
-(1, 'ORD23A0001', NULL, 117.00, 23.40, 93.60, 'walk_in', '2023-08-21'),
-(2, 'ORD23A0002', NULL, 86.00, 17.20, 68.80, 'walk_in', '2023-08-21');
+INSERT INTO `order_tbl` (`id`, `order_number`, `user_id`, `subtotal`, `discount`, `overall_total`, `type`, `date_ordered`, `status`) VALUES
+(1, 'ORD23A0001', NULL, 117.00, 23.40, 93.60, 'walk_in', '2023-08-21', 'claimed'),
+(2, 'ORD23A0002', NULL, 86.00, 17.20, 68.80, 'walk_in', '2023-08-21', 'claimed');
 
 -- --------------------------------------------------------
 
@@ -334,11 +349,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `uname`, `fname`, `mname`, `lname`, `email`, `password`, `role`, `avatar`, `isNew`) VALUES
-(1, 'Admin', 'Super', NULL, 'Admin', 'admin@email.com', '$argon2i$v=19$m=65536,t=4,p=1$Y1YzSWRVNmNRWGdEZk9NYQ$v8M9BPPgZfJNn0P6TCYDtZepQPzxi8l/oGqKIYDw0R0', 'admin', NULL, NULL),
+(1, 'Admin', 'Super', 'A', 'Admin', 'admin@email.com', '$argon2i$v=19$m=65536,t=4,p=1$cEdNeDRRRWUwR1VQMGtoRQ$FlSDL4rCgkTy/L2ceA2fmIgPWoeN73f5CgKmj8Fykdw', 'admin', '08232023-082651_person_5.jpg', NULL),
 (2, 'uname1', 'John', NULL, 'Montemar', 'montemar@gmail.com', '$argon2i$v=19$m=65536,t=4,p=1$aEVtY3pyRmZtQTNPM2FXdA$DuH66gPeocjaRTJxtwzzRT+tLb529XQiD0PsLjBGX5c', 'user', NULL, NULL),
 (3, 'uname2', 'Test', 'Test', 'Test', 'awd@awd', '$argon2i$v=19$m=65536,t=4,p=1$elhZdzlSQVBTaFguQ3Qvag$IXVjsB6M0sxE9jYH/HnOmSalRZYFHZL49UiFoJy4RBA', 'admin', NULL, NULL),
 (4, 'uname3', 'Test', 'Test', 'Test', 'test@test', '$argon2i$v=19$m=65536,t=4,p=1$czZVOXBrbFRFemtqd3NJeQ$2X5i31DVAt9YMdv6/CQcp2MF1EGQH1CT7rJDDxSRnEc', 'admin', NULL, NULL),
-(5, 'Test2', 'Test', 'Test', 'Test', 'test4@email.com', '$argon2i$v=19$m=65536,t=4,p=1$QlJ2QVdmWnlPc3NZbzFBRQ$dlwlblh78LPeXFY2xZhAv2Kn64HDkDg1BYV7dFHlTlE', 'admin', NULL, NULL);
+(5, 'Test2', 'Test', 'Test', 'Test', 'test4@email.com', '$argon2i$v=19$m=65536,t=4,p=1$QlJ2QVdmWnlPc3NZbzFBRQ$dlwlblh78LPeXFY2xZhAv2Kn64HDkDg1BYV7dFHlTlE', 'admin', NULL, NULL),
+(6, 'Awd', 'Awd', 'Awd', 'Awd', 'awd@awd.com', '$argon2i$v=19$m=65536,t=4,p=1$Li5Zd2pWQXR4eExkdmRLaA$7FW0dekryGVwIiqJcwwhM5YPvct/tdqG1LRYqdfju/w', 'admin', NULL, 1);
 
 --
 -- Indexes for dumped tables
@@ -458,7 +474,7 @@ ALTER TABLE `category`
 -- AUTO_INCREMENT for table `inventory_general`
 --
 ALTER TABLE `inventory_general`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `invoice`
@@ -518,7 +534,7 @@ ALTER TABLE `supplier`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables

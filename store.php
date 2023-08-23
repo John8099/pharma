@@ -20,10 +20,10 @@ include("./backend/nodes.php");
 
     <div class="site-section">
       <div class="container">
-
+        <?= isset($_GET['medicine']) ? "<h3 class=\" text-center\"> Search result for \"$_GET[medicine]\" </h3>" : "" ?>
         <div class="row">
           <?php
-          $limit = 3;
+          $limit = 12;
           $offset = !isset($_GET["offset"]) ? 0 : $_GET["offset"];
 
           $inventoryQStr = "";
