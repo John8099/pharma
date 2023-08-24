@@ -167,7 +167,8 @@ function save_checkout()
     "subtotal" => $subTotal,
     "discount" => $discount,
     "overall_total" => $total,
-    "type" => "walk_in"
+    "type" => "walk_in",
+    "status" => "claimed"
   );
 
   $orderIn = insert("order_tbl", $orderTableData);

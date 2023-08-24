@@ -1,6 +1,4 @@
-<?php
-include("./backend/nodes.php");
-?>
+<?php include("./backend/nodes.php"); ?>
 <!DOCTYPE html>
 <html lang="en">
 
