@@ -51,7 +51,7 @@
                 </a>
               </li>
               <li class="d-lg-none">
-                <a href="">
+                <a href="<?= $SERVER_NAME ?>/orders">
                   Orders
                 </a>
               </li>
@@ -67,9 +67,20 @@
 
       <div class="icons">
         <a href="#" class="icons-btn d-inline-block js-search-open"><span class="icon-search"></span></a>
-        <a href="cart.html" class="icons-btn d-inline-block bag">
+        <a href="<?= $SERVER_NAME ?>/cart" class="icons-btn d-inline-block bag">
           <span class="icon-shopping-cart"></span>
-          <span class="number">2</span>
+          <?php
+          $cartCount = 0;
+          if ($isLogin) {
+            $cartData = getTableWithWhere("cart", "user_id ='$user->id' and status='pending' and checkout_date IS NULL");
+            foreach ($cartData as $cart) {
+              $cartCount += $cart->quantity;
+            }
+          }
+          ?>
+          <?php if ($cartCount > 0) : ?>
+            <span class="number"><?= $cartCount ?></span>
+          <?php endif; ?>
         </a>
         <?php if (!$isLogin) : ?>
           <a href="#" class="icons-btn d-inline-block user-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -92,7 +103,7 @@
               Sign up
             </a>
           <?php else : ?>
-            <a class="dropdown-item" href="">
+            <a class="dropdown-item" href="<?= $SERVER_NAME ?>/orders">
               <i class="icon-shopping-bag mr-2"></i>
               Orders
             </a>

@@ -45,18 +45,18 @@ function getCartCount($userId)
   return mysqli_num_rows($query) > 0 ? mysqli_num_rows($query) : 0;
 }
 
-function getCartDataIdIfExist($medicineId, $userId)
+function getCartDataIdIfExist($inventoryId, $userId)
 {
   global $conn;
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM carts WHERE user_id='$userId' and medicine_id='$medicineId'"
+    "SELECT * FROM cart WHERE user_id='$userId' and inventory_id='$inventoryId'"
   );
 
   if (mysqli_num_rows($query) > 0) {
     $cartData = mysqli_fetch_object($query);
-    return $cartData->cart_id;
+    return $cartData->id;
   }
 
   return null;
@@ -382,6 +382,29 @@ function getAvatar($userId)
   }
 
   return "$SERVER_NAME/public/default.png";
+}
+
+function getPrescriptionImg($id = null)
+{
+  global $SERVER_NAME, $conn;
+
+  $defaultPrescription = "$SERVER_NAME/public/prescription.png";
+  
+  if ($id) {
+    $medicineQuery = mysqli_query(
+      $conn,
+      "SELECT * FROM order_tbl WHERE id='$id'"
+    );
+
+    if (mysqli_num_rows($medicineQuery) > 0) {
+      $medicine = mysqli_fetch_object($medicineQuery);
+      if ($medicine->image) {
+        return "$SERVER_NAME/media/prescription/$medicine->prescription";
+      }
+      return $defaultPrescription;
+    }
+  }
+  return $defaultPrescription;
 }
 
 function getMedicineImage($itemId = null)

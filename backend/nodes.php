@@ -67,8 +67,8 @@ if (isset($_GET['action'])) {
       case "remove_to_cart":
         remove_to_cart();
         break;
-      case "change_qty":
-        change_qty();
+      case "update_cart":
+        update_cart();
         break;
       case "admin_checkout":
         admin_checkout();
@@ -103,6 +103,9 @@ if (isset($_GET['action'])) {
       case "lock_screen":
         lock_screen();
         break;
+      case "checkout":
+        checkout();
+        break;
       default:
         null;
         break;
@@ -111,6 +114,121 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function checkout()
+{
+  global $conn, $_SESSION, $_FILES;
+
+  $user_id = $_SESSION["userId"];
+  $prescription = $_FILES["prescription_img"];
+  $orderNumber = generateSystemId("order_tbl", "ORD");
+
+  $orderData = array(
+    "order_number" => $orderNumber,
+    "user_id" => $user_id,
+    "subtotal" => "",
+    "discount" => "0.00",
+    "overall_total" => "",
+    "type" => "online",
+    "status" => "pending",
+    "prescription" => ""
+  );
+
+  $uploadedImg = uploadImg($prescription, "../media/prescription");
+  $orderData["prescription"] = $uploadedImg->success ? $uploadedImg->file_name : "";
+
+  $orderSubtotal = 0.00;
+  $overallTotal = 0.00;
+
+  $cartData = getTableWithWhere("cart", "user_id ='$user_id' and status='pending' and checkout_date IS NULL");
+
+  // Create total
+  foreach ($cartData as $cart) {
+    $inventoryQStr = mysqli_query(
+      $conn,
+      "SELECT 
+      ig.id AS 'inventory_id',
+      ig.medicine_id,
+      (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+      FROM inventory_general ig
+      LEFT JOIN medicine_profile mp
+      ON mp.id = ig.medicine_id
+      WHERE ig.id = '$cart->id'
+      "
+    );
+    $inventory = mysqli_fetch_object($inventoryQStr);
+
+    if (mysqli_num_rows($inventoryQStr) > 0) {
+      $orderSubtotal += (intval($inventory->price) * intval($cart->quantity));
+      $overallTotal += (intval($inventory->price) * intval($cart->quantity));
+    }
+  }
+
+  $orderData["subtotal"] = $orderSubtotal;
+  $orderData["overall_total"] = $overallTotal;
+
+  $orderIn = insert("order_tbl", $orderData);
+
+  if ($orderIn) {
+    // Insert order details
+    foreach ($cartData as $cart) {
+      $inventoryQStr = mysqli_query(
+        $conn,
+        "SELECT 
+        ig.id AS 'inventory_id',
+        ig.medicine_id,
+        ig.quantity,
+        (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+        FROM inventory_general ig
+        LEFT JOIN medicine_profile mp
+        ON mp.id = ig.medicine_id
+        WHERE ig.id = '$cart->id'
+      "
+      );
+
+      if (mysqli_num_rows($inventoryQStr) > 0) {
+        $inventory = mysqli_fetch_object($inventoryQStr);
+
+        $subTotal = (intval($inventory->price) * intval($cart->quantity));
+
+        $orderDetailsData = array(
+          "order_id" => $orderIn,
+          "order_subtotal" => "$subTotal",
+          "quantity" => "$cart->quantity",
+          "inventory_general_id" => $inventory->inventory_id
+        );
+
+        $orderDetailsIn = insert("order_details", $orderDetailsData);
+
+        if ($orderDetailsIn) {
+          $newQuantity = intval($inventory->quantity) - intval($cart->quantity);
+
+          $updateInData = array(
+            "quantity" => "$newQuantity"
+          );
+
+          $updateIn = update("inventory_general", $updateInData, "id", $inventory->inventory_id);
+
+          if ($updateIn) {
+            $dateNow = date("Y-m-d");
+            $updateCartData = array(
+              "checkout_date" => $dateNow
+            );
+            update("cart", $updateCartData, "id", $cart->id);
+          }
+        }
+      }
+    }
+
+    $response["success"] = true;
+    $response["message"] = "Your order is now being process!<br>Please present the order number upon claiming the order.<br><strong>Order number</strong> is be located in your order page.<br>Thank you!";
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
 }
 
 function getPageCount($searchVal = "", $limit)
@@ -428,38 +546,36 @@ function admin_checkout()
   returnResponse($response);
 }
 
-function change_qty()
+function update_cart()
 {
   global $conn, $_POST, $_SESSION;
 
   if (isset($_SESSION["userId"])) {
-    $action = $_POST["action"];
-    $cart_id = $_POST["cart_id"];
+    $cartDbData = getTableWithWhere("cart", "user_id ='$_SESSION[userId]' and status='pending'");
 
-    $cartData = getTableDataById("carts", "cart_id", $cart_id);
+    $hasError = false;
+    foreach ($cartDbData as $cart) {
+      $cartQuantity = $_POST["cartQty$cart->id"];
 
-    if ($cartData->medicine_id) {
-      try {
-        $medicineData = getTableDataById("medicines", "medicine_id", $cartData->medicine_id);
-        $newMedicineQty = $action == "add" ? intval($medicineData->quantity) - 1 : intval($medicineData->quantity) + 1;
-        $newCartQty = $action == "add" ? intval($cartData->quantity) + 1 : intval($cartData->quantity) - 1;
+      $cartData = array("quantity" => $cartQuantity);
 
-        update("medicines", array("quantity" => $newMedicineQty), "medicine_id", $cartData->medicine_id);
-        update("carts", array("quantity" => $newCartQty), "cart_id", $cartData->cart_id);
+      $updateCart = update("cart", $cartData, "id", $cart->id);
 
-        $response["success"] = true;
-      } catch (Exception $e) {
-        $response["success"] = false;
-        $response["message"] = $e->getMessage();
-      }
+      $hasError = $updateCart && !$hasError ? false : true;
+    }
+
+    if (!$hasError) {
+      $response["success"] = true;
+      $response["message"] = "Cart updated successfully";
     } else {
       $response["success"] = false;
-      $response["message"] = mysqli_error($conn);
+      $response["message"] = ("Other cart items successfully update but encountered an error<br>Error: " . mysqli_error($conn));
     }
   } else {
     $response["success"] = false;
-    $response["message"] = "Internal server error.<br>Please contact administrator";
+    $response["message"] = "Error while updating cart<br>Please try again later.";
   }
+
 
   returnResponse($response);
 }
@@ -494,32 +610,32 @@ function add_to_cart()
 {
   global $conn, $_POST, $_SESSION;
 
-  $quantity_to_add = $_POST["quantity_to_add"];
-  $medicine_id = $_POST["medicine_id"];
+  $inventory_id = $_POST["inventory_id"];
+  $quantity = $_POST["quantity"];
   $userId = $_SESSION["userId"];
 
   if (isset($_SESSION["userId"])) {
-    $cartIdIfExist = getCartDataIdIfExist($medicine_id, $userId);
+    $cartId = getCartDataIdIfExist($inventory_id, $userId);
 
     $cartData = array(
       "user_id" => $userId,
-      "medicine_id" => $medicine_id,
-      "quantity" => $quantity_to_add
+      "inventory_id" => $inventory_id,
+      "quantity" => $quantity
     );
 
-    if ($cartIdIfExist) {
-      $dbCartData = getTableData("carts", "cart_id", $cartIdIfExist);
-      $newCartQuantity = intval($dbCartData[0]->quantity) + intval($quantity_to_add);
+    if ($cartId) {
+      $dbCartData = getTableData("cart", "id", $cartId);
+      $newCartQuantity = intval($dbCartData[0]->quantity) + intval($quantity);
 
-      $comm = update("carts", array("quantity" => $newCartQuantity), "cart_id", $cartIdIfExist);
+      $comm = update("cart", array("quantity" => $newCartQuantity), "id", $cartId);
     } else {
-      $comm = insert("carts", $cartData);
+      $comm = insert("cart", $cartData);
     }
 
     if ($comm) {
-      update_quantity($medicine_id, $quantity_to_add);
+      // update_quantity($medicine_id, $quantity_to_add);
       $response["success"] = true;
-      $response["message"] = "Successfully added to cart.";
+      $response["message"] = "($quantity) Item(s) added to cart.";
     } else {
       $response["success"] = false;
       $response["message"] = mysqli_error($conn);
@@ -998,7 +1114,7 @@ function login()
         if ($role == "admin") {
           $response["isNew"] = $user->isNew;
 
-          if ($_SESSION["email"]) {
+          if (isset($_SESSION["email"])) {
             unset($_SESSION["email"]);
           }
         }

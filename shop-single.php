@@ -3,6 +3,18 @@
 <html lang="en">
 
 <?php include("./components/header.php") ?>
+<style>
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+</style>
 
 <body>
 
@@ -73,7 +85,7 @@
                     </button>
                   </div>
 
-                  <input type="text" class="form-control text-center" value="1" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                  <input type="number" class="form-control text-center" min="1" max="<?= $inventory->quantity ?>" value="1" id="inputQuantity">
 
                   <div class="input-group-append">
                     <button class="btn btn-outline-primary js-btn-plus" type="button">
@@ -136,8 +148,87 @@
 
 </body>
 <script>
+  $(".js-btn-minus").on("click", function(e) {
+    e.preventDefault();
+    const inputNum = $(this).closest(".input-group").find(".form-control");
+    const inputVal = inputNum.val();
+    const minVal = inputNum[0].min;
+
+    if (inputVal != minVal) {
+      inputNum.val(
+        parseInt(
+          $(this).closest(".input-group").find(".form-control").val()
+        ) - 1
+      );
+    } else {
+      inputNum.val(parseInt(minVal));
+    }
+  });
+
+  $(".js-btn-plus").on("click", function(e) {
+    e.preventDefault();
+    const inputNum = $(this).closest(".input-group").find(".form-control");
+    const inputVal = inputNum.val();
+    const maxVal = inputNum[0].max;
+
+    if (inputVal != maxVal) {
+      inputNum.val(parseInt(inputVal) + 1);
+    } else {
+      inputNum.val(parseInt(maxVal));
+    }
+  });
+
+  $("#inputQuantity").on("input", function(e) {
+    const inputVal = $(this).val()
+    const maxVal = $(this)[0].max;
+    const minVal = $(this)[0].min;
+
+    if (Number(maxVal) < Number(inputVal)) {
+      $(this).val(parseInt(maxVal))
+    }
+
+    if (Number(minVal) > Number(inputVal)) {
+      $(this).val(parseInt(minVal))
+    }
+  })
+
   function handleAddToCart(inventoryId) {
-    window.location.href = 'cart.html'
+    const isLogin = "<?= json_encode($isLogin ? true : false) ?>";
+    if (isLogin == "false") {
+      swal.fire({
+        title: "Login Required!",
+        text: "You need to login first before adding to cart.",
+        icon: "warning",
+        showCancelButton: true,
+      }).then((d) => {
+        if (d.isConfirmed) {
+          window.location.href = "./auth?page=sign-in&&url=<?= urlencode($_SERVER['REQUEST_URI']) ?>"
+        }
+      });
+    } else {
+      swal.close()
+      swal.showLoading()
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=add_to_cart", {
+          inventory_id: inventoryId,
+          quantity: $("#inputQuantity").val()
+        },
+        (data, status) => {
+          const resp = JSON.parse(data)
+          swal.fire({
+            title: resp.success ? "Success!" : 'Error!',
+            text: resp.message,
+            icon: resp.success ? "success" : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
+    }
   }
 </script>
 

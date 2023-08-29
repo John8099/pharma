@@ -138,7 +138,7 @@
     function previousPage(page, filter, offset, limit) {
       const newOffset = Number(offset) - Number(limit);
       const newPage = Number(page) - 1;
-      let path = "<?= $SERVER_NAME ?>/store";
+      let path = "<?= $SERVER_NAME ?>/store".trim();
 
       if (filter == "") {
         path += `?page=${newPage}&&offset=${newOffset}`
@@ -152,7 +152,7 @@
     function nextItemPage(page, filter, offset, limit) {
       const newOffset = Number(offset) + Number(limit);
       const newPage = Number(page) + 1;
-      let path = "<?= $SERVER_NAME ?>/store";
+      let path = "<?= $SERVER_NAME ?>/store".trim();
 
       if (filter == "") {
         path += `?page=${newPage}&&offset=${newOffset}`
@@ -164,7 +164,7 @@
     }
 
     function changeLoc(page, offset, filter) {
-      let path = "<?= $SERVER_NAME ?>/store";
+      let path = "<?= $SERVER_NAME ?>/store".trim();
 
       if (filter == "") {
         path += `?page=${page}&&offset=${offset}`
