@@ -12,60 +12,138 @@
 
     <div class="site-section">
       <div class="container">
-        <div class="card">
-          <div class="card-header">
-            <div class="row">
-              <div class="col-md-6">
-                <h5 class="card-title">
-                  Order #:
-                </h5>
-              </div>
-              <div class="col-md-6">
-                <h5 class="card-title text-md-right">
-                  Date Checkout:
-                </h5>
-              </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <h5 class="card-title">
-                  Status:
-                </h5>
-              </div>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="site-blocks-table">
-              <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th class="product-thumbnail">Image</th>
-                    <th class="product-name">Product</th>
-                    <th class="product-price">Price</th>
-                    <th class="product-quantity">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
+        <?php
+        $orderData = getTableWithWhere("order_tbl", "user_id='$_SESSION[userId]' ORDER BY FIELD(status, 'pending', 'preparing', 'to claim', 'claimed', 'declined', 'canceled') ASC");
 
-                </tbody>
-              </table>
+        foreach ($orderData as $order) :
+        ?>
+          <div class="card mb-4">
+            <div class="card-header">
+              <div class="row">
+                <div class="col-md-6">
+                  <h5 class="card-title">
+                    Order #: <?= $order->order_number ?>
+                  </h5>
+                </div>
+                <div class="col-md-6">
+                  <h6 class="card-title text-md-right">
+                    Date Ordered: <?= date("m-d-Y", strtotime($order->date_ordered)) ?>
+                  </h6>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <h5 class="card-title">
+                    Status:
+                    <?php
+                    $badgeColor = "";
+
+                    switch ($order->status) {
+                      case "pending":
+                        $badgeColor = "warning";
+                        break;
+                      case "preparing":
+                        $badgeColor = "primary";
+                        break;
+                      case "to claim":
+                        $badgeColor = "info";
+                        break;
+                      case "claimed":
+                        $badgeColor = "success";
+                        break;
+                      case "canceled":
+                      case "declined":
+                        $badgeColor = "danger";
+                        break;
+                      default:
+                        $badgeColor = "secondary";
+                        null;
+                    }
+                    ?>
+                    <span class="badge badge-<?= $badgeColor ?>">
+                      <?= ucfirst($order->status) ?>
+                    </span>
+
+                  </h5>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <h5 class="card-title">
+                    Note: <?= $order->note ?>
+                  </h5>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="site-blocks-table">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <!-- <th class="product-thumbnail">Prescription</th> -->
+                      <th class="product-thumbnail">Image</th>
+                      <th class="product-name">Product</th>
+                      <th class="product-name">Dosage</th>
+                      <th class="product-price">Price</th>
+                      <th class="product-quantity">Quantity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php
+
+                    $cartData = getTableWithWhere("cart", "user_id='$_SESSION[userId]' and order_id='$order->id'");
+                    foreach ($cartData as $cart) :
+                      $inventoryQStr = mysqli_query(
+                        $conn,
+                        "SELECT 
+                          ig.id AS 'inventory_id',
+                          ig.medicine_id,
+                          mp.dosage,
+                          mp.medicine_name,
+                          (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+                          FROM inventory_general ig
+                          LEFT JOIN medicine_profile mp
+                          ON mp.id = ig.medicine_id
+                          WHERE ig.id = '$cart->id'
+                      "
+                      );
+                      $inventory = mysqli_fetch_object($inventoryQStr);
+                    ?>
+                      <tr>
+                        <td class="product-thumbnail">
+                          <img src="<?= getMedicineImage($inventory->medicine_id) ?>" alt="Image" class="img-fluid">
+                        </td>
+                        <td class="product-name">
+                          <h2 class="h5 text-black"><?= $inventory->medicine_name ?></h2>
+                        </td>
+                        <td><?= $inventory->dosage . "mg" ?></td>
+                        <td> <?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></td>
+                        <td><?= $cart->quantity ?></td>
+                        <!-- <td></td> -->
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-md-6">
+                  <?php if ($order->status == "pending") : ?>
+                    <button type="submit" class="btn btn-danger btn-md m-1" onclick="handleCancelOrder('<?= $order->id ?>')">
+                      Cancel Order
+                    </button>
+                  <?php endif; ?>
+                </div>
+                <div class="col-md-6 text-lg-right text-md-center">
+                  <span class="text-black">
+                    Order Total: <?= "₱ " . number_format($order->overall_total, 2, '.', ',') ?>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="card-footer">
-            <div class="row">
-              <div class="col-md-6">
-                <button type="submit" class="btn btn-danger btn-md m-1" onclick="handleCancelOrder()">
-                  Cancel Order
-                </button>
-              </div>
-              <div class="col-md-6 text-lg-right text-md-center">
-                <span class="text-black">
-                  Order Total: <?= "₱ " . number_format(100, 2, '.', ',') ?>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <?php endforeach; ?>
       </div>
     </div>
 
@@ -120,6 +198,29 @@
 
 </body>
 <script>
+  function handleCancelOrder(orderId) {
+    swal.showLoading()
+    $.post(
+      "<?= $SERVER_NAME ?>/backend/nodes?action=cancel_order", {
+        order_id: orderId
+      },
+      (data, status) => {
+        const resp = JSON.parse(data)
+        swal.fire({
+          title: resp.success ? "Success!" : 'Error!',
+          text: resp.message,
+          icon: resp.success ? "success" : 'error',
+        }).then(() => resp.success ? window.location.reload() : undefined)
+
+      }).fail(function(e) {
+      swal.fire({
+        title: 'Error!',
+        text: e.statusText,
+        icon: 'error',
+      })
+    });
+  }
+
   $("#clear").hide()
 
   $("#uploadPrescription").on("hidden.bs.modal", function(e) {
@@ -161,45 +262,8 @@
     });
   })
 
-  $("#form-update-cart").on("submit", function(e) {
-    swal.showLoading();
-    e.preventDefault();
-
-    $.post(
-      "<?= $SERVER_NAME ?>/backend/nodes?action=update_cart",
-      $(this).serialize(),
-      (data, status) => {
-        const resp = JSON.parse(data)
-        swal.fire({
-          title: resp.success ? "Success!" : 'Error!',
-          text: resp.message,
-          icon: resp.success ? "success" : 'error',
-        }).then(() => resp.success ? window.location.reload() : undefined)
-
-      }).fail(function(e) {
-      swal.fire({
-        title: 'Error!',
-        text: e.statusText,
-        icon: 'error',
-      })
-    });
-  })
-
   function handleCheckout() {
     $("#uploadPrescription").modal("show")
-  }
-
-  function handleRemoveFromCart(cartId) {
-    swal.fire({
-      title: "Login Required!",
-      text: "You need to login first before adding to cart.",
-      icon: "warning",
-      showCancelButton: true,
-    }).then((d) => {
-      if (d.isConfirmed) {
-        window.location.href = "./auth?page=sign-in&&url=<?= urlencode($_SERVER['REQUEST_URI']) ?>"
-      }
-    });
   }
 
   $(".js-btn-minus").on("click", function(e) {
@@ -231,20 +295,6 @@
       inputNum.val(parseInt(maxVal));
     }
   });
-
-  $(".inputQuantity").on("input", function(e) {
-    const inputVal = $(this).val()
-    const maxVal = $(this)[0].max;
-    const minVal = $(this)[0].min;
-
-    if (Number(maxVal) < Number(inputVal)) {
-      $(this).val(parseInt(maxVal))
-    }
-
-    if (Number(minVal) > Number(inputVal)) {
-      $(this).val(parseInt(minVal))
-    }
-  })
 </script>
 
 </html>

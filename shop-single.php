@@ -122,7 +122,7 @@
                     <tr>
                       <td>Dosage</td>
                       <td class="bg-light">
-                        <?= $inventory->dosage ?>
+                        <?= $inventory->dosage . "mg" ?>
                       </td>
                     </tr>
                     <tr>

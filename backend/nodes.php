@@ -106,6 +106,15 @@ if (isset($_GET['action'])) {
       case "checkout":
         checkout();
         break;
+      case "cancel_order":
+        cancel_order();
+        break;
+      case "change_order_status":
+        change_order_status();
+        break;
+      case "claim_online_order":
+        claim_online_order();
+        break;
       default:
         null;
         break;
@@ -114,6 +123,107 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function claim_online_order()
+{
+  global $conn, $_POST;
+
+  $subTotal = $_POST["subTotal"];
+  $discount = $_POST["discount"];
+  $total = $_POST["total"];
+  $amount = $_POST["amount"];
+  $change = $_POST["change"];
+
+  $totalQuantitySold = 0;
+
+  // $paymentData = array(
+  //   "order_id" => $orderIn,
+  //   "paid_amount" => "$amount",
+  //   "customer_change" => "$change"
+  // );
+
+  // $paymentIn = insert("payment", $paymentData);
+
+  // $invoiceData = array(
+  //   "payment_id" => $paymentIn,
+  //   "order_id" => $orderIn,
+  //   "user_id" => $_SESSION["userId"]
+  // );
+
+  // $invoiceIn = insert("invoice", $invoiceData);
+
+  // $salesData = array(
+  //   "invoice_id" => $invoiceIn,
+  //   "total_quantity_sold" => $totalQuantitySold
+  // );
+
+  // $salesIn = insert("sales", $salesData);
+
+  // $response["success"] = true;
+  // $response["message"] = "Item(s) successfully added to invoice";
+  // $response["invoice_id"] = $invoiceIn;
+
+  // returnResponse($response);
+}
+
+function change_order_status()
+{
+  global $_POST;
+
+  $order_id = $_POST["order_id"];
+  $status = $_POST["status"];
+
+  $update = update("order_tbl", array("status" => "$status"), "id", $order_id);
+
+  if ($update) {
+    $response["success"] = true;
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Error while updating order status<br>Please try again later.";
+  }
+
+  returnResponse($response);
+}
+
+function cancel_order()
+{
+  global $conn, $_POST;
+
+  $order_id = $_POST["order_id"];
+
+  $orderData = array(
+    "status" => "canceled",
+    "note" => "User Canceled"
+  );
+
+  $orderUp = update("order_tbl", $orderData, "id", $order_id);
+
+  if ($orderUp) {
+    $orderDetails = getTableWithWhere("order_details", "order_id='$order_id'");
+    foreach ($orderDetails as $detail) {
+      $inventory = getSingleDataWithWhere("inventory_general", "id='$detail->inventory_general_id'");
+
+      $newQuantity = intval($inventory->quantity) + intval($detail->quantity);
+
+      $updateInData = array(
+        "quantity" => "$newQuantity"
+      );
+
+      update("inventory_general", $updateInData, "id", $inventory->id);
+    }
+    update("cart", array("status" => "canceled"), "order_id", $order_id);
+  }
+
+  if (mysqli_error($conn)) {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  } else {
+    $response["success"] = true;
+    $response["message"] = "Order successfully canceled";
+  }
+
+  returnResponse($response);
 }
 
 function checkout()
@@ -213,6 +323,7 @@ function checkout()
           if ($updateIn) {
             $dateNow = date("Y-m-d");
             $updateCartData = array(
+              "order_id" => $orderIn,
               "checkout_date" => $dateNow
             );
             update("cart", $updateCartData, "id", $cart->id);

@@ -32,6 +32,7 @@
                   <tr>
                     <th class="product-thumbnail">Image</th>
                     <th class="product-name">Product</th>
+                    <th class="product-price">Dosage</th>
                     <th class="product-price">Price</th>
                     <th class="product-quantity">Quantity</th>
                     <th class="product-total">Total</th>
@@ -77,6 +78,7 @@
                           <td class="product-name">
                             <h2 class="h5 text-black"><?= $inventory->medicine_name ?></h2>
                           </td>
+                          <td><?= $inventory->dosage . "mg" ?></td>
                           <td> <?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></td>
                           <td>
                             <div class="input-group mb-3 m-auto" style="max-width: 120px;">

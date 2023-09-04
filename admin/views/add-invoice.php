@@ -43,6 +43,7 @@ if (!$isLogin) {
                           <tr>
                             <th>Product #</th>
                             <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
+                            <td>Dosage</td>
                             <th>Price</th>
                             <th>Quantity</th>
                             <th>Expiration</th>
@@ -59,6 +60,7 @@ if (!$isLogin) {
                               mp.medicine_name,
                               mp.generic_name,
                               ig.product_number,
+                              mp.dosage,
                               (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
                               ig.price_id,
                               ig.quantity,
@@ -83,6 +85,7 @@ if (!$isLogin) {
                                   <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                 </button>
                               </td>
+                              <td class="align-middle dosage"><?= $inventory->dosage . "mg" ?></td>
                               <td class="align-middle price"><?= "₱ " . $price ?></td>
                               <td class="align-middle quantity"><?= $inventory->quantity ?></td>
                               <td class="align-middle"><?= $inventory->expiration_date ?></td>
@@ -117,6 +120,7 @@ if (!$isLogin) {
                           <tr>
                             <th>Product #</th>
                             <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
+                            <td>Dosage</td>
                             <th>Price</th>
                             <th>Quantity</th>
                             <th>Total</th>
@@ -296,7 +300,7 @@ if (!$isLogin) {
           }
         },
         columnDefs: [{
-          "targets": [5],
+          "targets": [6],
           "orderable": false
         }]
       });
@@ -351,8 +355,8 @@ if (!$isLogin) {
           const elChild = $(e).children();
           const data = {
             product_number: $(elChild[0]).text(),
-            quantity: $(elChild[3]).text(),
-            orderTotal: Number($(elChild[4]).text().replace("₱", "").trim())
+            quantity: $(elChild[4]).text(),
+            orderTotal: Number($(elChild[5]).text().replace("₱", "").trim())
           }
 
           checkOutData.data.push(data)
@@ -418,7 +422,7 @@ if (!$isLogin) {
         const orderData = orderTable.rows(orderSelectedRowIndex).nodes();
         const children = $(orderData).children();
 
-        const orderQuantityEl = $(orderData[0].childNodes[3]);
+        const orderQuantityEl = $(orderData[0].childNodes[4]);
 
         const newQuantity = Number(quantityEl.text().trim()) + Number(orderQuantityEl.text().trim())
         quantityEl.html(newQuantity)
@@ -437,7 +441,7 @@ if (!$isLogin) {
         let orderTableSubtotals = 0.00
 
         selectedOrder.each((e) => {
-          const orderTableSubtotalsEl = $(e).children()[4];
+          const orderTableSubtotalsEl = $(e).children()[5];
           orderTableSubtotals += Number($(orderTableSubtotalsEl).text().replace("₱", "").trim());
         })
 
@@ -485,6 +489,7 @@ if (!$isLogin) {
             const prodNumber = el.closest("tr").find(".productNumber")
             const medicineName = el.closest("tr").find(".medicineName")
             const price = el.closest("tr").find(".price")
+            const dosage = el.closest("tr").find(".dosage")
 
             const orderData = orderTable.rows().data().toArray();
             const orderDataIndex = orderData.findIndex((e) => e.some((s) => s === prodNumber.text().trim()))
@@ -493,6 +498,7 @@ if (!$isLogin) {
               orderTable.row.add([
                 prodNumber.html(),
                 medicineName.html(),
+                dosage.html(),
                 price.html(),
                 res.value,
                 `₱ ${(Number(res.value) * Number(price.text().trim().replace("₱", ""))).toFixed(2)}`,
@@ -513,12 +519,12 @@ if (!$isLogin) {
               const selectedOrder = orderTable.rows(orderDataIndex).nodes();
               const children = $(selectedOrder).children();
 
-              const quantityEl = $(selectedOrder[0].childNodes[3]);
+              const quantityEl = $(selectedOrder[0].childNodes[4]);
               const newQuantity = `${Number(quantityEl.text().trim()) + Number(res.value)}`
 
               quantityEl.html(newQuantity)
 
-              const subTotalEl = $(selectedOrder[0].childNodes[4]);
+              const subTotalEl = $(selectedOrder[0].childNodes[5]);
               const newTotal = `₱ ${(Number(newQuantity) * Number(price.text().trim().replace("₱", ""))).toFixed(2)}`
 
               subTotalEl.html(newTotal)
