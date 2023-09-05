@@ -28,8 +28,45 @@ if (!$isLogin) {
 
               <div class="row">
                 <div class="col-md-12">
+                  <?php $order = getSingleDataWithWhere("order_tbl", "id='$_GET[id]'"); ?>
                   <div class="card">
                     <div class="card-header p-2 ml-2 mt-2">
+                      <h4 class="card-title">
+                        Status:
+                        <?php
+                        $badgeColor = "";
+
+                        switch ($order->status) {
+                          case "pending":
+                            $badgeColor = "warning";
+                            break;
+                          case "preparing":
+                            $badgeColor = "primary";
+                            break;
+                          case "to claim":
+                            $badgeColor = "info";
+                            break;
+                          case "claimed":
+                            $badgeColor = "success";
+                            break;
+                          case "canceled":
+                          case "declined":
+                            $badgeColor = "danger";
+                            break;
+                          default:
+                            $badgeColor = "secondary";
+                            null;
+                        }
+                        ?>
+                        <span class="badge badge-<?= $badgeColor ?>">
+                          <?= ucfirst($order->status) ?>
+                        </span>
+                      </h4>
+                      <?php if ($order->note) : ?>
+                        <h4>Note:
+                          <span><?= nl2br($order->note) ?></span>
+                        </h4>
+                      <?php endif; ?>
                       <button type="button" onclick="return window.history.back()" class="btn btn-secondary btn-sm float-right">
                         Go Back
                       </button>
@@ -41,6 +78,7 @@ if (!$isLogin) {
                             <thead>
                               <tr>
                                 <th>Order #</th>
+                                <th>Prescription</th>
                                 <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
                                 <th>Dosage</th>
                                 <th>Price</th>
@@ -79,11 +117,20 @@ if (!$isLogin) {
                                 $imgSrc = getMedicineImage($inventory->medicine_id);
                                 $exploded =  explode("/", $imgSrc);
                                 $alt = $exploded[count($exploded) - 1];
+
+                                $prescriptionSrc = getPrescriptionImg($order->id);
+                                $explodedPres =  explode("/", $prescriptionSrc);
+                                $altPres = $explodedPres[count($explodedPres) - 1];
                               ?>
                                 <tr>
                                   <td><?= $order->order_number ?></td>
+                                  <td class="align-middle">
+                                    <?php if ($prescriptionSrc) : ?>
+                                      <img onclick="handleOpenModalImg('divModalPrescription<?= $inventory->inventory_id ?>')" src="<?= $prescriptionSrc ?>" class="rounded modalImg" width="60px">
+                                    <?php endif; ?>
+                                  </td>
                                   <td>
-                                    <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage<?= $inventory->inventory_id ?>')">
+                                    <button type="button" class="btn btn-link btn-lg p-0 m-0 " onclick="handleOpenModalImg('divModalImage<?= $inventory->inventory_id ?>')">
                                       <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                     </button>
                                   </td>
@@ -98,6 +145,15 @@ if (!$isLogin) {
                                   <img class='div-modal-content' src="<?= $imgSrc  ?>">
                                   <div id="imgCaption"><?= $alt ?></div>
                                 </div>
+
+                                <?php if ($prescriptionSrc) : ?>
+                                  <div id='divModalPrescription<?= $inventory->inventory_id ?>' class='div-modal pt-5'>
+                                    <span class='close' onclick='handleClose(`divModalPrescription<?= $inventory->inventory_id ?>`)'>&times;</span>
+                                    <img class='div-modal-content' src="<?= $prescriptionSrc  ?>">
+                                    <div id="imgCaption"><?= $altPres ?></div>
+                                  </div>
+                                <?php endif ?>
+
                               <?php endforeach; ?>
 
                             </tbody>
@@ -126,7 +182,6 @@ if (!$isLogin) {
                     </div>
                     <div class="card-footer d-flex justify-content-end p-2">
                       <?php
-                      $order = getSingleDataWithWhere("order_tbl", "id='$_GET[id]'");
                       $arrayIn = array("pending", "preparing", "to claim");
                       if (in_array($order->status, $arrayIn)) :
                         if ($order->status == "to claim") :
@@ -135,8 +190,17 @@ if (!$isLogin) {
                             Process Claim
                           </button>
                         <?php else : ?>
-                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'preparing')" class="btn btn-primary btn-sm">Set Preparing</button>
-                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'preparing')" class="btn btn-info btn-sm">Set to Claim</button>
+                          <?php if ($order->status == "pending") : ?>
+                            <button type="button" onclick="openModalReason('<?= $order->id ?>')" class="btn btn-danger btn-sm">
+                              Decline
+                            </button>
+                          <?php endif; ?>
+                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'preparing')" class="btn btn-primary btn-sm">
+                            Set Preparing
+                          </button>
+                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'to claim')" class="btn btn-info btn-sm">
+                            Set to Claim
+                          </button>
                         <?php endif; ?>
                       <?php endif; ?>
                     </div>
@@ -163,6 +227,7 @@ if (!$isLogin) {
             </button>
           </div>
           <form id="checkoutForm" method="POST">
+            <input type="text" value="<?= $_GET["id"] ?>" name="order_id" readonly hidden>
             <div class="modal-body">
               <div class="form-group row">
                 <label class="col-sm-2 col-form-label">Subtotal</label>
@@ -209,7 +274,7 @@ if (!$isLogin) {
                 Add Discount
               </button>
 
-              <button type="submit" class="btn btn-primary btn-sm m2">Proceed</button>
+              <button type="submit" id="btnProceed" class="btn btn-primary btn-sm m2 disabled" disabled>Proceed</button>
             </div>
           </form>
 
@@ -217,8 +282,94 @@ if (!$isLogin) {
       </div>
     </div>
 
+    <div class="modal fade" id="modalReason" tabindex="-1" role="dialog" aria-labelledby="New Brand" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-secondary">
+              Reason form
+            </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form id="uploadReason" method="POST">
+            <input type="text" value="<?= $order->id ?>" name="order_id" hidden>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Reason</label>
+                <textarea name="note" class="form-control" cols="30" rows="10"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+
     <?php include("../components/scripts.php") ?>
     <script>
+      $("#uploadReason").on("submit", function(e) {
+        e.preventDefault();
+        swal.showLoading();
+
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=decline_order",
+          $(this).serialize(),
+          (data, status) => {
+            const resp = JSON.parse(data)
+            swal.fire({
+              title: resp.success ? 'Success!' : "Error!",
+              html: resp.message,
+              icon: resp.success ? 'success' : 'error',
+            }).then(() => resp.success ? window.location.reload() : undefined)
+
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
+        });
+      })
+
+      function openModalReason(orderId) {
+        $("#modalReason").modal("show")
+      }
+
+      $("#checkoutForm").on("submit", function(e) {
+        e.preventDefault()
+        swal.showLoading();
+
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=claim_online_order",
+          $(this).serialize(),
+          (data, status) => {
+            const resp = JSON.parse(data)
+            swal.fire({
+              title: resp.success ? 'Success!' : "Error!",
+              html: resp.message,
+              icon: resp.success ? 'success' : 'error',
+            }).then(() => resp.success ? window.location.href = `print-receipt?id=${resp.invoice_id}` : undefined)
+
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
+        });
+      })
+
+      $("#modalCheckOut").on("hidden.bs.modal", function(e) {
+        $("#inputAmount").val("");
+        $("#inputChange").val("0.00")
+      })
+
       function updateData() {
         const subtotal = $("#inputSubTotal").val();
         const discount = $("#inputDiscount").val();
@@ -269,15 +420,25 @@ if (!$isLogin) {
         const amount = Number($("#inputAmount").val())
         const total = Number($("#inputTotal").val())
 
-        const change = (amount - total)
-        if (change <= 0) {
-          $(this).val("0.00")
+        if (amount > total) {
+          $("#btnProceed").removeClass("disabled")
+          $("#btnProceed").prop("disabled", false)
+
+          const change = (amount - total)
+          if (change <= 0) {
+            $(this).val("0.00")
+          } else {
+            $(this).val(change.toFixed(2))
+          }
         } else {
-          $(this).val(change.toFixed(2))
+          $("#btnProceed").addClass("disabled")
+          $("#btnProceed").prop("disabled", true)
         }
+
       })
 
       function handleChangeOrderStatus(orderId, status) {
+        swal.showLoading()
         $.post(
           "<?= $SERVER_NAME ?>/backend/nodes?action=change_order_status", {
             order_id: orderId,
@@ -289,7 +450,7 @@ if (!$isLogin) {
               title: resp.success ? 'Success!' : "Error!",
               html: resp.message,
               icon: resp.success ? 'success' : 'error',
-            }).then(() => resp.success ? window.location.href = './customer-orders' : undefined)
+            }).then(() => resp.success ? window.location.reload() : undefined)
 
           }).fail(function(e) {
           swal.fire({

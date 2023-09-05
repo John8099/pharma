@@ -174,7 +174,7 @@
               <div class="col-md-12 mb-1 text-center">
                 <label class="form-label">Please upload if you have prescription</label>
                 <div class="form-group">
-                  <img src="<?= getPrescriptionImg() ?>" class="rounded mx-auto d-block" style="width: 150px; height: 150px;" id="display">
+                  <img src="./public/prescription.png" class="rounded mx-auto d-block" style="width: 150px; height: 150px;" id="display">
                 </div>
                 <div class="mt-3" style="display: flex; justify-content: center;" id="browse">
                   <button type="button" class="btn btn-primary btn-sm" onclick="return changeImage('#formInput')">

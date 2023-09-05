@@ -219,7 +219,7 @@
             title: resp.success ? "Success!" : 'Error!',
             text: resp.message,
             icon: resp.success ? "success" : 'error',
-          }).then(() => resp.success ? window.location.reload() : undefined)
+          }).then(() => resp.success ? window.location.href='./store': undefined)
 
         }).fail(function(e) {
         swal.fire({

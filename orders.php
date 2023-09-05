@@ -13,7 +13,7 @@
     <div class="site-section">
       <div class="container">
         <?php
-        $orderData = getTableWithWhere("order_tbl", "user_id='$_SESSION[userId]' ORDER BY FIELD(status, 'pending', 'preparing', 'to claim', 'claimed', 'declined', 'canceled') ASC");
+        $orderData = getTableWithWhere("order_tbl", "user_id='$_SESSION[userId]' ORDER BY id DESC, FIELD(status, 'pending', 'preparing', 'to claim', 'claimed', 'declined', 'canceled') ASC");
 
         foreach ($orderData as $order) :
         ?>

@@ -115,6 +115,9 @@ if (isset($_GET['action'])) {
       case "claim_online_order":
         claim_online_order();
         break;
+      case "decline_order":
+        decline_order();
+        break;
       default:
         null;
         break;
@@ -125,9 +128,38 @@ if (isset($_GET['action'])) {
   }
 }
 
-function claim_online_order()
+function decline_order()
 {
   global $conn, $_POST;
+
+  $order_id = $_POST['order_id'];
+  $note = $_POST['note'];
+
+  $orderData = array(
+    "note" => "Declined reason: $note",
+    "status" => "declined"
+  );
+
+  $update = update("order_tbl", $orderData, "id", $order_id);
+
+  if ($update) {
+    $response["success"] = true;
+    $response["message"] = "Successfully declined order.";
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
+}
+
+function claim_online_order()
+{
+  global $conn, $_POST, $_SESSION;
+
+  $order_id = $_POST["order_id"];
+
+  $orderDetailsData = getTableWithWhere("order_details", "order_id='$order_id'");
 
   $subTotal = $_POST["subTotal"];
   $discount = $_POST["discount"];
@@ -135,36 +167,50 @@ function claim_online_order()
   $amount = $_POST["amount"];
   $change = $_POST["change"];
 
-  $totalQuantitySold = 0;
+  $totalQuantitySold = count($orderDetailsData);
 
-  // $paymentData = array(
-  //   "order_id" => $orderIn,
-  //   "paid_amount" => "$amount",
-  //   "customer_change" => "$change"
-  // );
+  $paymentData = array(
+    "order_id" => $order_id,
+    "paid_amount" => "$amount",
+    "customer_change" => "$change"
+  );
 
-  // $paymentIn = insert("payment", $paymentData);
+  $paymentIn = insert("payment", $paymentData);
 
-  // $invoiceData = array(
-  //   "payment_id" => $paymentIn,
-  //   "order_id" => $orderIn,
-  //   "user_id" => $_SESSION["userId"]
-  // );
+  $invoiceData = array(
+    "payment_id" => $paymentIn,
+    "order_id" => $order_id,
+    "user_id" => $_SESSION["userId"]
+  );
 
-  // $invoiceIn = insert("invoice", $invoiceData);
+  $invoiceIn = insert("invoice", $invoiceData);
 
-  // $salesData = array(
-  //   "invoice_id" => $invoiceIn,
-  //   "total_quantity_sold" => $totalQuantitySold
-  // );
+  $salesData = array(
+    "invoice_id" => $invoiceIn,
+    "total_quantity_sold" => $totalQuantitySold
+  );
 
-  // $salesIn = insert("sales", $salesData);
+  $salesIn = insert("sales", $salesData);
 
-  // $response["success"] = true;
-  // $response["message"] = "Item(s) successfully added to invoice";
-  // $response["invoice_id"] = $invoiceIn;
+  $orderData = array(
+    "subtotal" => $subTotal,
+    "discount" => $discount,
+    "overall_total" => $total,
+    "status" => "claimed"
+  );
 
-  // returnResponse($response);
+  $updateOrder = update("order_tbl", $orderData, "id", $order_id);
+
+  if (mysqli_error($conn)) {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  } else {
+    $response["success"] = true;
+    $response["message"] = "Item(s) set claimed";
+    $response["invoice_id"] = $invoiceIn;
+  }
+
+  returnResponse($response);
 }
 
 function change_order_status()

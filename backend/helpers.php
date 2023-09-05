@@ -388,8 +388,8 @@ function getPrescriptionImg($id = null)
 {
   global $SERVER_NAME, $conn;
 
-  $defaultPrescription = "$SERVER_NAME/public/prescription.png";
-  
+  $defaultPrescription = "";
+
   if ($id) {
     $medicineQuery = mysqli_query(
       $conn,
@@ -398,13 +398,13 @@ function getPrescriptionImg($id = null)
 
     if (mysqli_num_rows($medicineQuery) > 0) {
       $medicine = mysqli_fetch_object($medicineQuery);
-      if ($medicine->image) {
+      if ($medicine->prescription) {
         return "$SERVER_NAME/media/prescription/$medicine->prescription";
       }
       return $defaultPrescription;
     }
   }
-  return $defaultPrescription;
+  return "$defaultPrescription";
 }
 
 function getMedicineImage($itemId = null)
