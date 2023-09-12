@@ -91,11 +91,11 @@
            </div>
          </div>
        </li>
-       
+
        <li>
          <div class="dropdown drp-user">
            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-             <i class="icon feather icon-settings"></i>
+             <img src="<?= getAvatar($user->id) ?>" class="img-radius" alt="User-Profile-Image" style="width: 45px">
            </a>
            <div class="dropdown-menu dropdown-menu-right profile-notification">
              <div class="pro-head">

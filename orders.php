@@ -1,4 +1,9 @@
-<?php include("./backend/nodes.php"); ?>
+<?php
+include("./backend/nodes.php");
+if (!$isLogin) {
+  header("location: ./");
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 

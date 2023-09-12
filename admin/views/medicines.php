@@ -151,7 +151,7 @@ if (!$isLogin) {
 
                   <select class="selectpicker form-control" name="category_id" id="select_category" data-container="body" data-live-search="true" title="-- select category --" required>
                     <?php
-                    $categoryData = getTableData("category");
+                    $categoryData = getTableWithWhere("category", "status=1");
                     foreach ($categoryData as $category) {
                       echo "<option value='$category->id'>$category->category_name</option>";
                     }
@@ -178,7 +178,7 @@ if (!$isLogin) {
                   <button id="btnAddBrand" type="button" class="btn btn-sm btn-primary mr-0" style="float: right;">New</button>
                   <select name="brand_id" id="select_brand" data-live-search="true" class="selectpicker form-control" title="-- select brand --" required>
                     <?php
-                    $brandData = getTableData("brands");
+                    $brandData = getTableWithWhere("brands", "status=1");
                     foreach ($brandData as $brand) {
                       echo "<option value='$brand->id'>$brand->brand_name</option>";
                     }

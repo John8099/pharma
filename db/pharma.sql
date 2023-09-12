@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 04, 2023 at 07:46 AM
+-- Generation Time: Sep 13, 2023 at 01:56 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -30,23 +30,24 @@ SET time_zone = "+00:00";
 CREATE TABLE `brands` (
   `id` int(11) NOT NULL,
   `brand_name` text NOT NULL,
-  `brand_description` text NOT NULL
+  `brand_description` text NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `brands`
 --
 
-INSERT INTO `brands` (`id`, `brand_name`, `brand_description`) VALUES
-(1, 'Name', 'Description'),
-(6, 'Test', 'Test'),
-(7, 'Test2', 'Test'),
-(8, 'Testt', 'Test'),
-(9, 'Test1', 'Test'),
-(10, 'Test23', 'Test'),
-(11, 'Test123', 'Test'),
-(12, 'Test124', 'Test'),
-(13, 'Testtest', 'Test');
+INSERT INTO `brands` (`id`, `brand_name`, `brand_description`, `status`) VALUES
+(1, 'Name', 'Description', 0),
+(6, 'Test', 'Test', 1),
+(7, 'Test2', 'Test', 1),
+(8, 'Testt', 'Test', 1),
+(9, 'Test1', 'Test', 1),
+(10, 'Test23', 'Test', 1),
+(11, 'Test123', 'Test', 1),
+(12, 'Test124', 'Test', 1),
+(13, 'Testtest', 'Test', 1);
 
 -- --------------------------------------------------------
 
@@ -73,7 +74,7 @@ INSERT INTO `cart` (`id`, `inventory_id`, `user_id`, `order_id`, `quantity`, `st
 (1, 2, 2, 3, 3, 'canceled', '2023-08-30', '2023-08-30'),
 (2, 3, 2, 3, 2, 'canceled', '2023-08-30', '2023-08-30'),
 (3, 2, 1, NULL, 1, 'pending', '2023-09-04', NULL),
-(4, 1, 2, 4, 1, 'pending', '2023-09-04', '2023-09-04');
+(5, 1, 2, 6, 3, 'pending', '2023-09-05', '2023-09-05');
 
 -- --------------------------------------------------------
 
@@ -84,18 +85,19 @@ INSERT INTO `cart` (`id`, `inventory_id`, `user_id`, `order_id`, `quantity`, `st
 CREATE TABLE `category` (
   `id` int(11) NOT NULL,
   `category_name` varchar(100) NOT NULL,
-  `description` text DEFAULT NULL
+  `description` text DEFAULT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `category`
 --
 
-INSERT INTO `category` (`id`, `category_name`, `description`) VALUES
-(1, 'Category', 'Description'),
-(4, 'Testt', 'Test'),
-(5, 'Test1', 'Test'),
-(6, 'Test', 'Test');
+INSERT INTO `category` (`id`, `category_name`, `description`, `status`) VALUES
+(1, 'Category', 'Description', 0),
+(4, 'Testt', 'Test', 1),
+(5, 'Test1', 'Test', 1),
+(6, 'Test', 'Test', 1);
 
 -- --------------------------------------------------------
 
@@ -124,7 +126,7 @@ INSERT INTO `inventory_general` (`id`, `medicine_id`, `price_id`, `supplier_id`,
 (2, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0002'),
 (3, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0003'),
 (4, 6, 3, 3, 49, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0004'),
-(5, 1, 2, 1, 26, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0005'),
+(5, 1, 2, 1, 23, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0005'),
 (6, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0006'),
 (7, 1, 2, 1, 25, '2023-08-21', '2023-09-07', '098awdawd123', 'PROD23A0007'),
 (8, 6, 3, 3, 50, '2023-08-21', '2023-09-06', '098awdawd123', 'PROD23A0008'),
@@ -158,7 +160,8 @@ CREATE TABLE `invoice` (
 INSERT INTO `invoice` (`id`, `payment_id`, `order_id`, `user_id`, `date_created`) VALUES
 (1, 1, 1, 1, '2023-08-21 02:46:48'),
 (2, 2, 2, 1, '2023-08-21 04:09:24'),
-(3, 3, 5, 1, '2023-09-04 00:17:04');
+(3, 3, 5, 1, '2023-09-04 00:17:04'),
+(4, 4, 4, 1, '2023-09-05 00:44:41');
 
 -- --------------------------------------------------------
 
@@ -219,7 +222,8 @@ INSERT INTO `order_details` (`id`, `order_id`, `order_subtotal`, `quantity`, `in
 (6, 3, 62.00, 2, 2),
 (7, 4, 31.00, 1, 4),
 (8, 5, 48.00, 4, 9),
-(9, 5, 12.00, 1, 7);
+(9, 5, 12.00, 1, 7),
+(10, 6, 36.00, 3, 5);
 
 -- --------------------------------------------------------
 
@@ -249,8 +253,9 @@ INSERT INTO `order_tbl` (`id`, `order_number`, `user_id`, `subtotal`, `discount`
 (1, 'ORD23A0001', NULL, 117.00, 23.40, 93.60, 'walk_in', '2023-08-21', 'claimed', NULL, '0'),
 (2, 'ORD23A0002', NULL, 86.00, 17.20, 68.80, 'walk_in', '2023-08-21', 'claimed', NULL, '0'),
 (3, 'ORD23A0003', 2, 98.00, 0.00, 98.00, 'online', '2023-08-30', 'canceled', 'User Canceled', '08302023-073804_bg_1.jpg'),
-(4, 'ORD23A0004', 2, 31.00, 0.00, 31.00, 'online', '2023-09-04', 'to claim', NULL, '09042023-072620_Capture.PNG'),
-(5, 'ORD23A0005', NULL, 60.00, 12.00, 48.00, 'walk_in', '2023-09-04', 'claimed', NULL, '');
+(4, 'ORD23A0004', 2, 31.00, 0.00, 31.00, 'online', '2023-09-04', 'claimed', NULL, '09042023-072620_Capture.PNG'),
+(5, 'ORD23A0005', NULL, 60.00, 12.00, 48.00, 'walk_in', '2023-09-04', 'claimed', NULL, ''),
+(6, 'ORD23A0006', 2, 36.00, 0.00, 36.00, 'online', '2023-09-05', 'declined', 'Declined reason: test', '');
 
 -- --------------------------------------------------------
 
@@ -273,7 +278,8 @@ CREATE TABLE `payment` (
 INSERT INTO `payment` (`id`, `order_id`, `paid_amount`, `customer_change`, `date_paid`) VALUES
 (1, 1, 100.00, 6.40, '2023-08-21'),
 (2, 2, 100.00, 31.20, '2023-08-21'),
-(3, 5, 500.00, 452.00, '2023-09-04');
+(3, 5, 500.00, 452.00, '2023-09-04'),
+(4, 4, 50.00, 19.00, '2023-09-05');
 
 -- --------------------------------------------------------
 
@@ -340,7 +346,8 @@ CREATE TABLE `sales` (
 INSERT INTO `sales` (`id`, `invoice_id`, `total_quantity_sold`, `sales_date`) VALUES
 (2, 1, 5, '2023-08-21'),
 (3, 2, 4, '2023-08-21'),
-(4, 3, 5, '2023-09-04');
+(4, 3, 5, '2023-09-04'),
+(5, 4, 1, '2023-09-05');
 
 -- --------------------------------------------------------
 
@@ -352,18 +359,19 @@ CREATE TABLE `supplier` (
   `id` int(11) NOT NULL,
   `supplier_name` text NOT NULL,
   `address` text NOT NULL,
-  `contact` varchar(32) NOT NULL
+  `contact` varchar(32) NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `supplier`
 --
 
-INSERT INTO `supplier` (`id`, `supplier_name`, `address`, `contact`) VALUES
-(1, 'Supplier', 'Address', '09876543'),
-(3, 'Test', 'Test', '098765'),
-(4, 'Test1', 'Test', 'Test'),
-(5, 'Test2', 'Test', 'Test');
+INSERT INTO `supplier` (`id`, `supplier_name`, `address`, `contact`, `status`) VALUES
+(1, 'Supplier', 'Address', '09876543', 0),
+(3, 'Test', 'Test', '098765', 1),
+(4, 'Test1', 'Test', 'Test', 1),
+(5, 'Test2', 'Test', 'Test', 1);
 
 -- --------------------------------------------------------
 
@@ -390,7 +398,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `uname`, `fname`, `mname`, `lname`, `email`, `password`, `role`, `avatar`, `isNew`) VALUES
 (1, 'Admin', 'Super', 'A', 'Admin', 'admin@email.com', '$argon2i$v=19$m=65536,t=4,p=1$cEdNeDRRRWUwR1VQMGtoRQ$FlSDL4rCgkTy/L2ceA2fmIgPWoeN73f5CgKmj8Fykdw', 'admin', '08232023-082651_person_5.jpg', NULL),
-(2, 'uname1', 'John', NULL, 'Montemar', 'montemar@gmail.com', '$argon2i$v=19$m=65536,t=4,p=1$aEVtY3pyRmZtQTNPM2FXdA$DuH66gPeocjaRTJxtwzzRT+tLb529XQiD0PsLjBGX5c', 'user', NULL, NULL),
+(2, 'uname1', 'John', 'Awdd', 'Montemar', 'montemar@gmail.com', '$argon2i$v=19$m=65536,t=4,p=1$aEVtY3pyRmZtQTNPM2FXdA$DuH66gPeocjaRTJxtwzzRT+tLb529XQiD0PsLjBGX5c', 'user', NULL, NULL),
 (3, 'uname2', 'Test', 'Test', 'Test', 'awd@awd', '$argon2i$v=19$m=65536,t=4,p=1$elhZdzlSQVBTaFguQ3Qvag$IXVjsB6M0sxE9jYH/HnOmSalRZYFHZL49UiFoJy4RBA', 'admin', NULL, NULL),
 (4, 'uname3', 'Test', 'Test', 'Test', 'test@test', '$argon2i$v=19$m=65536,t=4,p=1$czZVOXBrbFRFemtqd3NJeQ$2X5i31DVAt9YMdv6/CQcp2MF1EGQH1CT7rJDDxSRnEc', 'admin', NULL, NULL),
 (5, 'Test2', 'Test', 'Test', 'Test', 'test4@email.com', '$argon2i$v=19$m=65536,t=4,p=1$QlJ2QVdmWnlPc3NZbzFBRQ$dlwlblh78LPeXFY2xZhAv2Kn64HDkDg1BYV7dFHlTlE', 'admin', NULL, NULL),
@@ -517,7 +525,7 @@ ALTER TABLE `brands`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `category`
@@ -535,7 +543,7 @@ ALTER TABLE `inventory_general`
 -- AUTO_INCREMENT for table `invoice`
 --
 ALTER TABLE `invoice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `medicine_profile`
@@ -547,19 +555,19 @@ ALTER TABLE `medicine_profile`
 -- AUTO_INCREMENT for table `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `order_tbl`
 --
 ALTER TABLE `order_tbl`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `price`
@@ -577,7 +585,7 @@ ALTER TABLE `purchase_order`
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `supplier`

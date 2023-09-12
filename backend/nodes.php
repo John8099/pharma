@@ -926,6 +926,7 @@ function save_brand()
 
   $name = ucwords($_POST["name"]);
   $description = "";
+  $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
 
@@ -938,7 +939,8 @@ function save_brand()
   if (!isBrandExist($name, $brandId)) {
     $brandData = array(
       "brand_name" => $name,
-      "brand_description" => $description
+      "brand_description" => $description,
+      "status" => $status
     );
 
     $procBrand = null;
@@ -976,6 +978,7 @@ function save_category()
   $categoryId = isset($_POST["categoryId"]) ? $_POST["categoryId"] : null;
   $name = ucwords($_POST["name"]);
   $description = "";
+  $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
 
@@ -988,7 +991,8 @@ function save_category()
   if (!isCategoryExist($name, $categoryId)) {
     $categoryData = array(
       "category_name" => $name,
-      "description" => $description
+      "description" => $description,
+      "status" => $status
     );
 
     $procCategory = null;
@@ -1021,6 +1025,7 @@ function save_supplier()
   $name = ucwords($_POST["name"]);
   $address = ucwords($_POST["address"]);
   $contact = ucwords($_POST["contact"]);
+  $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
 
@@ -1028,7 +1033,8 @@ function save_supplier()
     $supplierData = array(
       "supplier_name" => $name,
       "address" => $address,
-      "contact" => $contact
+      "contact" => $contact,
+      "status" => $status
     );
 
     $procSupplier = null;
@@ -1060,7 +1066,7 @@ function addUser()
   $fname = mysqli_escape_string($conn, ucwords($_POST["fname"]));
   $mname = mysqli_escape_string($conn, ucwords($_POST["mname"]));
   $lname = mysqli_escape_string($conn, ucwords($_POST["lname"]));
-  $uname = mysqli_escape_string($conn, ucwords($_POST["uname"]));
+  $uname = isset($_POST["uname"]) ? mysqli_escape_string($conn, ucwords($_POST["uname"])) : null;
 
   $email = $_POST["email"];
   $password = isset($_POST["password"]) ? $_POST["password"] : "password123";
@@ -1205,7 +1211,7 @@ function update_profile()
   $mname = $_POST["mname"] ? ucwords($_POST["mname"]) : null;
   $lname = ucwords($_POST["lname"]);
   $email = $_POST["email"];
-  $uname = $_POST["uname"];
+  $uname = isset($_POST["uname"]) ? $_POST["uname"] : null;
 
   if (intval($profile["error"]) == 0) {
     $uploadFile = date("mdY-his") . "_" . basename($profile['name']);

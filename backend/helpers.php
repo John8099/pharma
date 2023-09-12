@@ -231,6 +231,9 @@ function update($table, $data, $columnWHere, $columnVal)
         if ($value == "set_null") {
           array_push($set, "$column = NULL");
         }
+        if ($value == "set_zero") {
+          array_push($set, "$column = 0");
+        }
       }
 
       if (count($set) > 0) {
@@ -278,6 +281,10 @@ function insert($table, $data)
         if ($value) {
           array_push($columns, "`$column`");
           array_push($values, "'" . mysqli_escape_string($conn, $value) . "'");
+        }
+
+        if ($value == "set_zero") {
+          array_push($set, "$column = 0");
         }
       }
 

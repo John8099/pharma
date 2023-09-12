@@ -2150,7 +2150,7 @@ pre[class*="language-"]:before {
   border: none;
   position: absolute;
   top: 0;
-  left: 12px;
+  left: 50px;
 }
 
 .pcoded-header .dropdown .dropdown-menu {

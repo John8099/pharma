@@ -44,6 +44,7 @@ if (!$isLogin) {
                           <tr>
                             <th>Name</th>
                             <th>Description</th>
+                            <th>Status</th>
                             <th>Action</th>
                           </tr>
                         </thead>
@@ -52,10 +53,15 @@ if (!$isLogin) {
                           $brandData = getTableData("brands");
 
                           foreach ($brandData as $brand) :
+                            $status = $brand->status == "1" ? "Active" : "Inactive";
                           ?>
                             <tr>
                               <td class=" align-middle"><?= $brand->brand_name ?></td>
                               <td class=" align-middle"><?= $brand->brand_description ?></td>
+                              <td class=" align-middle">
+                                <span class="status text-<?= $brand->status == "1" ? "success" : "danger" ?>">•</span>
+                                <?= ucfirst($status) ?>
+                              </td>
                               <td class=" align-middle">
                                 <a href="#editBrand<?= $brand->id ?>" class="h5 text-info m-2" data-toggle="modal">
                                   <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
@@ -84,16 +90,26 @@ if (!$isLogin) {
                                     <div class="modal-body">
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
-                                        <div class="col-sm-10">
+                                        <label class="col-sm-3 col-form-label">Name <span class="text-danger">*</span></label>
+                                        <div class="col-sm-9">
                                           <input type="text" name="name" class="form-control" value="<?= $brand->brand_name ?>" required>
                                         </div>
                                       </div>
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Description</label>
-                                        <div class="col-sm-10">
+                                        <label class="col-sm-3 col-form-label">Description</label>
+                                        <div class="col-sm-9">
                                           <textarea name="description" class="form-control" cols="30" rows="10"><?= nl2br($brand->brand_description) ?></textarea>
+                                        </div>
+                                      </div>
+
+                                      <div class="form-group row">
+                                        <label class="col-sm-3 col-form-label">is Active</label>
+                                        <div class="col-sm-9">
+                                          <label class="switch">
+                                            <input type="checkbox" name="isActive" <?= $brand->status == "1" ? "checked" : "" ?>>
+                                            <span class="slider round"></span>
+                                          </label>
                                         </div>
                                       </div>
 
@@ -140,16 +156,26 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
+              <label class="col-sm-3 col-form-label">Name <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
                 <input type="text" name="name" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Description</label>
-              <div class="col-sm-10">
+              <label class="col-sm-3 col-form-label">Description</label>
+              <div class="col-sm-9">
                 <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">is Active</label>
+              <div class="col-sm-9">
+                <label class="switch">
+                  <input type="checkbox" name="isActive" checked>
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
 
@@ -215,7 +241,10 @@ if (!$isLogin) {
             "width": "20%"
           },
           {
-            "width": "40%"
+            "width": "30%"
+          },
+          {
+            "width": "10%"
           },
           {
             "width": "5%"

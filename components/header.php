@@ -17,6 +17,10 @@
   <link rel="stylesheet" href="<?= $SERVER_NAME ?>/assets/css/aos.css">
   <link rel="stylesheet" href="<?= $SERVER_NAME ?>/assets/css/style.css">
 
+  
+  <!-- fontawesome icon -->
+  <link rel="stylesheet" href="<?= $SERVER_NAME ?>/admin/assets/fonts/fontawesome/css/fontawesome-all.min.css">
+
 </head>
 
 
