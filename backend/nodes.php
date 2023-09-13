@@ -31,8 +31,11 @@ if (isset($_GET['action'])) {
       case "addUser":
         addUser();
         break;
+      case "update_profile":
+        update_profile();
+        break;
       case "update-user":
-        updateUser();
+        update_profile();
         break;
       case "check_email":
         checkEmailIfExistR();
@@ -64,8 +67,8 @@ if (isset($_GET['action'])) {
       case "remove_to_cart":
         remove_to_cart();
         break;
-      case "change_qty":
-        change_qty();
+      case "update_cart":
+        update_cart();
         break;
       case "admin_checkout":
         admin_checkout();
@@ -97,6 +100,24 @@ if (isset($_GET['action'])) {
       case "save_checkout":
         save_checkout();
         break;
+      case "lock_screen":
+        lock_screen();
+        break;
+      case "checkout":
+        checkout();
+        break;
+      case "cancel_order":
+        cancel_order();
+        break;
+      case "change_order_status":
+        change_order_status();
+        break;
+      case "claim_online_order":
+        claim_online_order();
+        break;
+      case "decline_order":
+        decline_order();
+        break;
       default:
         null;
         break;
@@ -105,6 +126,301 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function decline_order()
+{
+  global $conn, $_POST;
+
+  $order_id = $_POST['order_id'];
+  $note = $_POST['note'];
+
+  $orderData = array(
+    "note" => "Declined reason: $note",
+    "status" => "declined"
+  );
+
+  $update = update("order_tbl", $orderData, "id", $order_id);
+
+  if ($update) {
+    $response["success"] = true;
+    $response["message"] = "Successfully declined order.";
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
+}
+
+function claim_online_order()
+{
+  global $conn, $_POST, $_SESSION;
+
+  $order_id = $_POST["order_id"];
+
+  $orderDetailsData = getTableWithWhere("order_details", "order_id='$order_id'");
+
+  $subTotal = $_POST["subTotal"];
+  $discount = $_POST["discount"];
+  $total = $_POST["total"];
+  $amount = $_POST["amount"];
+  $change = $_POST["change"];
+
+  $totalQuantitySold = count($orderDetailsData);
+
+  $paymentData = array(
+    "order_id" => $order_id,
+    "paid_amount" => "$amount",
+    "customer_change" => "$change"
+  );
+
+  $paymentIn = insert("payment", $paymentData);
+
+  $invoiceData = array(
+    "payment_id" => $paymentIn,
+    "order_id" => $order_id,
+    "user_id" => $_SESSION["userId"]
+  );
+
+  $invoiceIn = insert("invoice", $invoiceData);
+
+  $salesData = array(
+    "invoice_id" => $invoiceIn,
+    "total_quantity_sold" => $totalQuantitySold
+  );
+
+  $salesIn = insert("sales", $salesData);
+
+  $orderData = array(
+    "subtotal" => $subTotal,
+    "discount" => $discount,
+    "overall_total" => $total,
+    "status" => "claimed"
+  );
+
+  $updateOrder = update("order_tbl", $orderData, "id", $order_id);
+
+  if (mysqli_error($conn)) {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  } else {
+    $response["success"] = true;
+    $response["message"] = "Item(s) set claimed";
+    $response["invoice_id"] = $invoiceIn;
+  }
+
+  returnResponse($response);
+}
+
+function change_order_status()
+{
+  global $_POST;
+
+  $order_id = $_POST["order_id"];
+  $status = $_POST["status"];
+
+  $update = update("order_tbl", array("status" => "$status"), "id", $order_id);
+
+  if ($update) {
+    $response["success"] = true;
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Error while updating order status<br>Please try again later.";
+  }
+
+  returnResponse($response);
+}
+
+function cancel_order()
+{
+  global $conn, $_POST;
+
+  $order_id = $_POST["order_id"];
+
+  $orderData = array(
+    "status" => "canceled",
+    "note" => "User Canceled"
+  );
+
+  $orderUp = update("order_tbl", $orderData, "id", $order_id);
+
+  if ($orderUp) {
+    $orderDetails = getTableWithWhere("order_details", "order_id='$order_id'");
+    foreach ($orderDetails as $detail) {
+      $inventory = getSingleDataWithWhere("inventory_general", "id='$detail->inventory_general_id'");
+
+      $newQuantity = intval($inventory->quantity) + intval($detail->quantity);
+
+      $updateInData = array(
+        "quantity" => "$newQuantity"
+      );
+
+      update("inventory_general", $updateInData, "id", $inventory->id);
+    }
+    update("cart", array("status" => "canceled"), "order_id", $order_id);
+  }
+
+  if (mysqli_error($conn)) {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  } else {
+    $response["success"] = true;
+    $response["message"] = "Order successfully canceled";
+  }
+
+  returnResponse($response);
+}
+
+function checkout()
+{
+  global $conn, $_SESSION, $_FILES;
+
+  $user_id = $_SESSION["userId"];
+  $prescription = $_FILES["prescription_img"];
+  $orderNumber = generateSystemId("order_tbl", "ORD");
+
+  $orderData = array(
+    "order_number" => $orderNumber,
+    "user_id" => $user_id,
+    "subtotal" => "",
+    "discount" => "0.00",
+    "overall_total" => "",
+    "type" => "online",
+    "status" => "pending",
+    "prescription" => ""
+  );
+
+  $uploadedImg = uploadImg($prescription, "../media/prescription");
+  $orderData["prescription"] = $uploadedImg->success ? $uploadedImg->file_name : "";
+
+  $orderSubtotal = 0.00;
+  $overallTotal = 0.00;
+
+  $cartData = getTableWithWhere("cart", "user_id ='$user_id' and status='pending' and checkout_date IS NULL");
+
+  // Create total
+  foreach ($cartData as $cart) {
+    $inventoryQStr = mysqli_query(
+      $conn,
+      "SELECT 
+      ig.id AS 'inventory_id',
+      ig.medicine_id,
+      (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+      FROM inventory_general ig
+      LEFT JOIN medicine_profile mp
+      ON mp.id = ig.medicine_id
+      WHERE ig.id = '$cart->id'
+      "
+    );
+    $inventory = mysqli_fetch_object($inventoryQStr);
+
+    if (mysqli_num_rows($inventoryQStr) > 0) {
+      $orderSubtotal += (intval($inventory->price) * intval($cart->quantity));
+      $overallTotal += (intval($inventory->price) * intval($cart->quantity));
+    }
+  }
+
+  $orderData["subtotal"] = $orderSubtotal;
+  $orderData["overall_total"] = $overallTotal;
+
+  $orderIn = insert("order_tbl", $orderData);
+
+  if ($orderIn) {
+    // Insert order details
+    foreach ($cartData as $cart) {
+      $inventoryQStr = mysqli_query(
+        $conn,
+        "SELECT 
+        ig.id AS 'inventory_id',
+        ig.medicine_id,
+        ig.quantity,
+        (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+        FROM inventory_general ig
+        LEFT JOIN medicine_profile mp
+        ON mp.id = ig.medicine_id
+        WHERE ig.id = '$cart->id'
+      "
+      );
+
+      if (mysqli_num_rows($inventoryQStr) > 0) {
+        $inventory = mysqli_fetch_object($inventoryQStr);
+
+        $subTotal = (intval($inventory->price) * intval($cart->quantity));
+
+        $orderDetailsData = array(
+          "order_id" => $orderIn,
+          "order_subtotal" => "$subTotal",
+          "quantity" => "$cart->quantity",
+          "inventory_general_id" => $inventory->inventory_id
+        );
+
+        $orderDetailsIn = insert("order_details", $orderDetailsData);
+
+        if ($orderDetailsIn) {
+          $newQuantity = intval($inventory->quantity) - intval($cart->quantity);
+
+          $updateInData = array(
+            "quantity" => "$newQuantity"
+          );
+
+          $updateIn = update("inventory_general", $updateInData, "id", $inventory->inventory_id);
+
+          if ($updateIn) {
+            $dateNow = date("Y-m-d");
+            $updateCartData = array(
+              "order_id" => $orderIn,
+              "checkout_date" => $dateNow
+            );
+            update("cart", $updateCartData, "id", $cart->id);
+          }
+        }
+      }
+    }
+
+    $response["success"] = true;
+    $response["message"] = "Your order is now being process!<br>Please present the order number upon claiming the order.<br><strong>Order number</strong> is be located in your order page.<br>Thank you!";
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
+}
+
+function getPageCount($searchVal = "", $limit)
+{
+  global $conn;
+  $query = null;
+  $qStr = ("SELECT 
+            ig.id AS 'inventory_id',
+            ig.medicine_id,
+            mp.medicine_name,
+            mp.generic_name,
+            ig.product_number,
+            (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
+            (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
+            FROM inventory_general ig
+            LEFT JOIN medicine_profile mp
+            ON mp.id = ig.medicine_id
+          " . " WHERE mp.medicine_name LIKE '%$searchVal%'");
+
+  $query = mysqli_query($conn, $qStr);
+
+  return ceil(mysqli_num_rows($query) / $limit);
+}
+
+function lock_screen()
+{
+  global $_SESSION;
+  $user = getUserById($_SESSION['userId']);
+
+  session_unset();
+  session_destroy();
+
+  session_start();
+  $_SESSION["email"] = $user->email;
+  header("location: ../admin/views/lock-screen");
 }
 
 function save_checkout()
@@ -126,7 +442,8 @@ function save_checkout()
     "subtotal" => $subTotal,
     "discount" => $discount,
     "overall_total" => $total,
-    "type" => "walk_in"
+    "type" => "walk_in",
+    "status" => "claimed"
   );
 
   $orderIn = insert("order_tbl", $orderTableData);
@@ -386,38 +703,36 @@ function admin_checkout()
   returnResponse($response);
 }
 
-function change_qty()
+function update_cart()
 {
   global $conn, $_POST, $_SESSION;
 
   if (isset($_SESSION["userId"])) {
-    $action = $_POST["action"];
-    $cart_id = $_POST["cart_id"];
+    $cartDbData = getTableWithWhere("cart", "user_id ='$_SESSION[userId]' and status='pending'");
 
-    $cartData = getTableDataById("carts", "cart_id", $cart_id);
+    $hasError = false;
+    foreach ($cartDbData as $cart) {
+      $cartQuantity = $_POST["cartQty$cart->id"];
 
-    if ($cartData->medicine_id) {
-      try {
-        $medicineData = getTableDataById("medicines", "medicine_id", $cartData->medicine_id);
-        $newMedicineQty = $action == "add" ? intval($medicineData->quantity) - 1 : intval($medicineData->quantity) + 1;
-        $newCartQty = $action == "add" ? intval($cartData->quantity) + 1 : intval($cartData->quantity) - 1;
+      $cartData = array("quantity" => $cartQuantity);
 
-        update("medicines", array("quantity" => $newMedicineQty), "medicine_id", $cartData->medicine_id);
-        update("carts", array("quantity" => $newCartQty), "cart_id", $cartData->cart_id);
+      $updateCart = update("cart", $cartData, "id", $cart->id);
 
-        $response["success"] = true;
-      } catch (Exception $e) {
-        $response["success"] = false;
-        $response["message"] = $e->getMessage();
-      }
+      $hasError = $updateCart && !$hasError ? false : true;
+    }
+
+    if (!$hasError) {
+      $response["success"] = true;
+      $response["message"] = "Cart updated successfully";
     } else {
       $response["success"] = false;
-      $response["message"] = mysqli_error($conn);
+      $response["message"] = ("Other cart items successfully update but encountered an error<br>Error: " . mysqli_error($conn));
     }
   } else {
     $response["success"] = false;
-    $response["message"] = "Internal server error.<br>Please contact administrator";
+    $response["message"] = "Error while updating cart<br>Please try again later.";
   }
+
 
   returnResponse($response);
 }
@@ -452,32 +767,32 @@ function add_to_cart()
 {
   global $conn, $_POST, $_SESSION;
 
-  $quantity_to_add = $_POST["quantity_to_add"];
-  $medicine_id = $_POST["medicine_id"];
+  $inventory_id = $_POST["inventory_id"];
+  $quantity = $_POST["quantity"];
   $userId = $_SESSION["userId"];
 
   if (isset($_SESSION["userId"])) {
-    $cartIdIfExist = getCartDataIdIfExist($medicine_id, $userId);
+    $cartId = getCartDataIdIfExist($inventory_id, $userId);
 
     $cartData = array(
       "user_id" => $userId,
-      "medicine_id" => $medicine_id,
-      "quantity" => $quantity_to_add
+      "inventory_id" => $inventory_id,
+      "quantity" => $quantity
     );
 
-    if ($cartIdIfExist) {
-      $dbCartData = getTableData("carts", "cart_id", $cartIdIfExist);
-      $newCartQuantity = intval($dbCartData[0]->quantity) + intval($quantity_to_add);
+    if ($cartId) {
+      $dbCartData = getTableData("cart", "id", $cartId);
+      $newCartQuantity = intval($dbCartData[0]->quantity) + intval($quantity);
 
-      $comm = update("carts", array("quantity" => $newCartQuantity), "cart_id", $cartIdIfExist);
+      $comm = update("cart", array("quantity" => $newCartQuantity), "id", $cartId);
     } else {
-      $comm = insert("carts", $cartData);
+      $comm = insert("cart", $cartData);
     }
 
     if ($comm) {
-      update_quantity($medicine_id, $quantity_to_add);
+      // update_quantity($medicine_id, $quantity_to_add);
       $response["success"] = true;
-      $response["message"] = "Successfully added to cart.";
+      $response["message"] = "($quantity) Item(s) added to cart.";
     } else {
       $response["success"] = false;
       $response["message"] = mysqli_error($conn);
@@ -611,6 +926,7 @@ function save_brand()
 
   $name = ucwords($_POST["name"]);
   $description = "";
+  $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
 
@@ -623,7 +939,8 @@ function save_brand()
   if (!isBrandExist($name, $brandId)) {
     $brandData = array(
       "brand_name" => $name,
-      "brand_description" => $description
+      "brand_description" => $description,
+      "status" => $status
     );
 
     $procBrand = null;
@@ -661,6 +978,7 @@ function save_category()
   $categoryId = isset($_POST["categoryId"]) ? $_POST["categoryId"] : null;
   $name = ucwords($_POST["name"]);
   $description = "";
+  $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
 
@@ -673,7 +991,8 @@ function save_category()
   if (!isCategoryExist($name, $categoryId)) {
     $categoryData = array(
       "category_name" => $name,
-      "description" => $description
+      "description" => $description,
+      "status" => $status
     );
 
     $procCategory = null;
@@ -706,6 +1025,7 @@ function save_supplier()
   $name = ucwords($_POST["name"]);
   $address = ucwords($_POST["address"]);
   $contact = ucwords($_POST["contact"]);
+  $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
 
@@ -713,7 +1033,8 @@ function save_supplier()
     $supplierData = array(
       "supplier_name" => $name,
       "address" => $address,
-      "contact" => $contact
+      "contact" => $contact,
+      "status" => $status
     );
 
     $procSupplier = null;
@@ -745,7 +1066,7 @@ function addUser()
   $fname = mysqli_escape_string($conn, ucwords($_POST["fname"]));
   $mname = mysqli_escape_string($conn, ucwords($_POST["mname"]));
   $lname = mysqli_escape_string($conn, ucwords($_POST["lname"]));
-  $uname = mysqli_escape_string($conn, ucwords($_POST["uname"]));
+  $uname = isset($_POST["uname"]) ? mysqli_escape_string($conn, ucwords($_POST["uname"])) : null;
 
   $email = $_POST["email"];
   $password = isset($_POST["password"]) ? $_POST["password"] : "password123";
@@ -793,25 +1114,37 @@ function changePassword()
   global $conn, $_POST;
 
   $userId = $_POST["userId"];
-  $password = $_POST["nPassword"];
 
-  $update = update(
-    "users",
-    array(
-      "password" => md5($password),
-      "isNew" => "set_null"
-    ),
-    "id",
-    $userId
-  );
+  $old = $_POST["old_password"];
+  $new = $_POST["new_password"];
 
-  if ($update) {
-    $response["success"] = true;
-    $response["userId"] = $userId;
-    $response["message"] = "Password successfully change";
-  } else {
+  $user = getUserById($userId);
+
+  if ($old == $new) {
     $response["success"] = false;
-    $response["message"] = mysqli_error($conn);
+    $response["message"] = "Old password and New password should not be the same.";
+  } else if (!password_verify($old, $user->password)) {
+    $response["success"] = false;
+    $response["message"] = "Old password does not match!";
+  } else {
+    $update = update(
+      "users",
+      array(
+        "password" => password_hash($new, PASSWORD_ARGON2I),
+        "isNew" => "set_null"
+      ),
+      "id",
+      $userId
+    );
+
+    if ($update) {
+      $response["success"] = true;
+      $response["userId"] = $userId;
+      $response["message"] = "Password successfully change";
+    } else {
+      $response["success"] = false;
+      $response["message"] = mysqli_error($conn);
+    }
   }
 
   returnResponse($response);
@@ -865,17 +1198,24 @@ function checkEmailIfExistF($email, $id = null)
   ) > 0 ? true : false;
 }
 
-function updateUser()
+function update_profile()
 {
-  global $conn, $_POST, $_FILES;
+  global $conn, $_POST, $_FILES, $_SESSION;
 
-  $profile = $_FILES["profile"];
-  $userId = $_POST['id'];
   $uploadedFile = "";
+
+  $set_null = $_POST["set_null"];
+  $profile = $_FILES["image"];
+
+  $fname = ucwords($_POST["fname"]);
+  $mname = $_POST["mname"] ? ucwords($_POST["mname"]) : null;
+  $lname = ucwords($_POST["lname"]);
+  $email = $_POST["email"];
+  $uname = isset($_POST["uname"]) ? $_POST["uname"] : null;
 
   if (intval($profile["error"]) == 0) {
     $uploadFile = date("mdY-his") . "_" . basename($profile['name']);
-    $target_dir = "../media";
+    $target_dir = "../media/users";
 
     if (!is_dir($target_dir)) {
       mkdir($target_dir, 0777, true);
@@ -886,190 +1226,23 @@ function updateUser()
     } else {
       $response["success"] = false;
       $response["message"] = "Error uploading profile.<br>Please try again later.";
+      exit();
     }
-    exit();
   }
 
-  $personalData = array(
-    "first_name" => ucwords($_POST["fname"]),
-    "middle_name" => ucwords($_POST["mname"]),
-    "last_name" => ucwords($_POST["lname"]),
-    "course_id" => $_POST["course"],
-    "year" => ucwords($_POST["year"]),
-    "section" => ucwords($_POST["section"]),
-    "school" => ucwords($_POST["school"]),
-    "place_of_birth" => ucwords($_POST["pob"]),
-    "date_of_birth" => $_POST["dob"],
-    "gender" => ucwords($_POST["gender"]),
-    "address" => ucwords($_POST["address"]),
-    "mobile_number" => $_POST["mobileNumber"],
-    "email" => $_POST["email"],
-    "blood_type" => ucwords($_POST["bloodType"]),
-    "body_built" => ucwords($_POST["bodyBuilt"]),
-    "height" => $_POST["height"],
-    "weight" => $_POST["weight"],
-    "ethnic_group" => ucwords($_POST["ethnicGroup"]),
-    "religion" => ucwords($_POST["religion"]),
-    "citizenship" => ucwords($_POST["citizenship"]),
-    "identification_mark" => $_POST["identificationMark"],
-    "hair_color" => ucwords($_POST["hairColor"]),
-    "eye_color" => ucwords($_POST["eyeColor"]),
-    "civil_status" => ucwords($_POST["civil"]),
-    "avatar" => "$uploadedFile"
+  $userProfileData = array(
+    "uname" => $uname,
+    "fname" => $fname,
+    "mname" => $mname,
+    "lname" => $lname,
+    "email" => $email,
+    "avatar" => $set_null == "Yes" ? "set_null" : $uploadedFile
   );
 
-  $updatePersonalData = update("users", $personalData, "id", $userId);
-  if ($updatePersonalData) {
-    // Civil Data
-    if ($_POST["civil"] == "Married") {
-      $civilData = array(
-        "name_of_spouse" => ucwords($_POST["spouseName"]),
-        "address" => ucwords($_POST["spouseAddress"]),
-        "contact" => $_POST["spouseContact"],
-        "occupation" => ucwords($_POST["spouseOccupation"]),
-        "company_name" => ucwords($_POST["spouseCompany"])
-      );
-
-      if (isset($_POST['civil_id'])) {
-        update("civil", $civilData, "user_id", $userId);
-      } else {
-        $civilData["user_id"] = $userId;
-        insert("civil", $civilData);
-      }
-    } else {
-      $civilDataDB = getTableData("civil", "user_id", $userId);
-
-      if ($civilDataDB) {
-        delete("civil", "civil_id", $userId);
-      }
-    }
-
-    // Children Data
-    if (count($_POST["childrenName"]) > 1) {
-
-      for ($i = 0; $i < count($_POST["childrenName"]); $i++) {
-        $childrenData = array(
-          "name" => ucwords($_POST["childrenName"][$i]),
-          "date_of_birth" => $_POST["childrenDOB"][$i],
-          "place_birth" => $_POST["childrenPOB"][$i],
-          "grade_or_year" => $_POST["childrenGradeOrYearLevel"][$i],
-          "school" => ucwords($_POST["childrenSchool"][$i])
-        );
-
-        if ($_POST["childrenID"][$i] != "0") {
-          update("childrens", $childrenData, "children_id", $_POST["childrenID"][$i]);
-        } else {
-          $childrenData["user_id"] = $userId;
-          insert("childrens", $childrenData);
-        }
-      }
-    } else {
-      $childrenData = array(
-        "name" => ucwords($_POST["childrenName"][0]),
-        "date_of_birth" => $_POST["childrenDOB"][0],
-        "place_birth" => $_POST["childrenPOB"][0],
-        "grade_or_year" => $_POST["childrenGradeOrYearLevel"][0],
-        "school" => ucwords($_POST["childrenSchool"][0])
-      );
-
-      if ($_POST["childrenID"][0] != "0") {
-        update("childrens", $childrenData, "children_id", $_POST["childrenID"][0]);
-      } else {
-        $childrenData["user_id"] = $userId;
-        insert("childrens", $childrenData);
-      }
-    }
-
-    // Family Data
-    $familyData = array(
-      "father_name" => ucwords($_POST["fatherName"]),
-      "father_date_of_birth" => $_POST["fatherDOB"],
-      "father_place_of_birth" => ucwords($_POST["fatherPOB"]),
-      "father_address" => ucwords($_POST["fatherAddress"]),
-      "father_contact" => $_POST["fatherContact"],
-      "father_occupation" => ucwords($_POST["fatherOccupation"]),
-      "father_company_name" => ucwords($_POST["fatherCompany"]),
-      "mother_name" => ucwords($_POST["motherName"]),
-      "mother_date_of_birth" => $_POST["motherDOB"],
-      "mother_place_of_birth" => ucwords($_POST["motherPOB"]),
-      "mother_address" => ucwords($_POST["motherAddress"]),
-      "mother_contact" => $_POST["motherContact"],
-      "mother_occupation" => ucwords($_POST["motherOccupation"]),
-      "mother_company_name" => ucwords($_POST["motherCompany"]),
-    );
-
-    update("family", $familyData, "user_id", $userId);
-
-    // Siblings Data
-    if (count($_POST["siblingName"]) > 1) {
-      for ($i = 0; $i < count($_POST["siblingName"]); $i++) {
-        $siblingData = array(
-          "name" => ucwords($_POST["siblingName"][$i]),
-          "date_of_birth" => $_POST["siblingDOB"][$i],
-          "occupation" => ucwords($_POST["siblingOccupation"][$i]),
-          "company" => ucwords($_POST["siblingCompany"][$i]),
-        );
-
-        if ($_POST["siblingID"][$i] != "0") {
-          update("siblings", $siblingData, "sibling_id", $_POST["siblingID"][$i]);
-        } else {
-          $siblingData["user_id"] = $userId;
-          insert("siblings", $siblingData);
-        }
-      }
-    } else {
-      $siblingData = array(
-        "name" => ucwords($_POST["siblingName"][0]),
-        "date_of_birth" => $_POST["siblingDOB"][0],
-        "occupation" => ucwords($_POST["siblingOccupation"][0]),
-        "company" => ucwords($_POST["siblingCompany"][0]),
-      );
-
-      if ($_POST["siblingID"][0] != "0") {
-        update("siblings", $siblingData, "sibling_id", $_POST["siblingID"][0]);
-      } else {
-        $siblingData["user_id"] = $userId;
-        insert("siblings", $siblingData);
-      }
-    }
-
-    // Education Data
-    if (count($_POST["educationLevel"]) > 1) {
-      for ($i = 0; $i < count($_POST["educationLevel"]); $i++) {
-        $educationData = array(
-          "education_level" => ucwords($_POST["educationLevel"][$i]),
-          "course_taken" => ucwords($_POST["educationCourse"][$i]),
-          "name_of_school" => ucwords($_POST["educationSchoolName"][$i]),
-          "address" => ucwords($_POST["educationAddress"][$i]),
-          "year_completed" => $_POST["yearCompleted"][$i],
-        );
-
-        if ($_POST["educationID"][$i] != "0") {
-          update("education", $educationData, "education_id", $_POST["educationID"][$i]);
-        } else {
-          $educationData["user_id"] = $userId;
-          insert("education", $educationData);
-        }
-      }
-    } else {
-      $educationData = array(
-        "education_level" => ucwords($_POST["educationLevel"][0]),
-        "course_taken" => ucwords($_POST["educationCourse"][0]),
-        "name_of_school" => ucwords($_POST["educationSchoolName"][0]),
-        "address" => ucwords($_POST["educationAddress"][0]),
-        "year_completed" => $_POST["yearCompleted"][0],
-      );
-
-      if ($_POST["educationID"][0] != "0") {
-        update("education", $educationData, "education_id", $_POST["educationID"][0]);
-      } else {
-        $educationData["user_id"] = $userId;
-        insert("education", $educationData);
-      }
-    }
-
+  $updateUser = update("users", $userProfileData, "id", $_SESSION["userId"]);
+  if ($updateUser) {
     $response["success"] = true;
-    $response["message"] = "User has been updated successfully";
+    $response["message"] = "Profile updated successfully";
   } else {
     $response["success"] = false;
     $response["message"] = mysqli_error($conn);
@@ -1103,6 +1276,10 @@ function login()
 
         if ($role == "admin") {
           $response["isNew"] = $user->isNew;
+
+          if (isset($_SESSION["email"])) {
+            unset($_SESSION["email"]);
+          }
         }
       } else {
         $response["success"] = false;

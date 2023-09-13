@@ -1516,3 +1516,11 @@ a:hover {
   height: 30px;
   object-fit: cover;
 }
+
+img {
+  object-fit: contain;
+}
+
+.swal2-container.swal2-backdrop-show {
+  z-index: 1999;
+}

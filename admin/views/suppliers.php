@@ -45,6 +45,7 @@ if (!$isLogin) {
                             <th>Name</th>
                             <th>Address</th>
                             <th>Contact</th>
+                            <th>Status</th>
                             <th>Action</th>
                           </tr>
                         </thead>
@@ -53,11 +54,16 @@ if (!$isLogin) {
                           $supplierData = getTableData("supplier");
 
                           foreach ($supplierData as $supplier) :
+                            $status = $supplier->status == "1" ? "Active" : "Inactive";
                           ?>
                             <tr>
                               <td class="align-middle"><?= $supplier->supplier_name ?></td>
                               <td class="align-middle"><?= $supplier->address ?></td>
                               <td class="align-middle"><?= $supplier->contact ?></td>
+                              <td class="align-middle">
+                                <span class="status text-<?= $supplier->status == "1" ? "success" : "danger" ?>">•</span>
+                                <?= ucfirst($status) ?>
+                              </td>
                               <td class="align-middle">
                                 <a href="#editMan<?= $supplier->id ?>" class="h5 text-info m-2" data-toggle="modal">
                                   <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
@@ -86,23 +92,33 @@ if (!$isLogin) {
                                     <div class="modal-body">
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
-                                        <div class="col-sm-10">
+                                        <label class="col-sm-3 col-form-label">Name <span class="text-danger">*</span></label>
+                                        <div class="col-sm-9">
                                           <input type="text" name="name" value="<?= $supplier->supplier_name ?>" class="form-control" required>
                                         </div>
                                       </div>
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Address <span class="text-danger">*</span></label>
-                                        <div class="col-sm-10">
+                                        <label class="col-sm-3 col-form-label">Address <span class="text-danger">*</span></label>
+                                        <div class="col-sm-9">
                                           <input type="text" name="address" value="<?= $supplier->address ?>" class="form-control" required>
                                         </div>
                                       </div>
 
                                       <div class="form-group row">
-                                        <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
-                                        <div class="col-sm-10">
+                                        <label class="col-sm-3 col-form-label">Contact <span class="text-danger">*</span></label>
+                                        <div class="col-sm-9">
                                           <input type="text" name="contact" value="<?= $supplier->contact ?>" class="form-control" required>
+                                        </div>
+                                      </div>
+
+                                      <div class="form-group row">
+                                        <label class="col-sm-3 col-form-label">is Active</label>
+                                        <div class="col-sm-9">
+                                          <label class="switch">
+                                            <input type="checkbox" name="isActive" <?= $supplier->status == "1" ? "checked" : "" ?>>
+                                            <span class="slider round"></span>
+                                          </label>
                                         </div>
                                       </div>
 
@@ -149,23 +165,33 @@ if (!$isLogin) {
           <div class="modal-body">
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
+              <label class="col-sm-3 col-form-label">Name <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
                 <input type="text" name="name" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Address <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
+              <label class="col-sm-3 col-form-label">Address <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
                 <input type="text" name="address" class="form-control" required>
               </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
+              <label class="col-sm-3 col-form-label">Contact <span class="text-danger">*</span></label>
+              <div class="col-sm-9">
                 <input type="text" name="contact" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">is Active</label>
+              <div class="col-sm-9">
+                <label class="switch">
+                  <input type="checkbox" name="isActive" checked>
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
 
@@ -228,18 +254,19 @@ if (!$isLogin) {
           }
         },
         "columns": [{
-            "width": "40%"
+            "width": "35%"
           },
           {
-            "width": "40%"
+            "width": "35%"
           },
+          null,
           null,
           null
         ],
         buttons: [{
           extend: 'searchBuilder',
           config: {
-            columns: [0, 1, 2]
+            columns: [0, 1, 2, 3]
           }
         }],
         dom: 'Bfrtip',

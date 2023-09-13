@@ -45,18 +45,18 @@ function getCartCount($userId)
   return mysqli_num_rows($query) > 0 ? mysqli_num_rows($query) : 0;
 }
 
-function getCartDataIdIfExist($medicineId, $userId)
+function getCartDataIdIfExist($inventoryId, $userId)
 {
   global $conn;
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM carts WHERE user_id='$userId' and medicine_id='$medicineId'"
+    "SELECT * FROM cart WHERE user_id='$userId' and inventory_id='$inventoryId'"
   );
 
   if (mysqli_num_rows($query) > 0) {
     $cartData = mysqli_fetch_object($query);
-    return $cartData->cart_id;
+    return $cartData->id;
   }
 
   return null;
@@ -231,6 +231,9 @@ function update($table, $data, $columnWHere, $columnVal)
         if ($value == "set_null") {
           array_push($set, "$column = NULL");
         }
+        if ($value == "set_zero") {
+          array_push($set, "$column = 0");
+        }
       }
 
       if (count($set) > 0) {
@@ -278,6 +281,10 @@ function insert($table, $data)
         if ($value) {
           array_push($columns, "`$column`");
           array_push($values, "'" . mysqli_escape_string($conn, $value) . "'");
+        }
+
+        if ($value == "set_zero") {
+          array_push($set, "$column = 0");
         }
       }
 
@@ -373,13 +380,38 @@ function getFullName($userId, $format = "") // format = with_middle
 function getAvatar($userId)
 {
   global $SERVER_NAME;
-  $user = getUserById($userId);
+  if ($userId) {
+    $user = getUserById($userId);
 
-  if ($user->avatar) {
-    return "$SERVER_NAME/media/$user->avatar";
+    if ($user->avatar) {
+      return "$SERVER_NAME/media/users/$user->avatar";
+    }
   }
 
   return "$SERVER_NAME/public/default.png";
+}
+
+function getPrescriptionImg($id = null)
+{
+  global $SERVER_NAME, $conn;
+
+  $defaultPrescription = "";
+
+  if ($id) {
+    $medicineQuery = mysqli_query(
+      $conn,
+      "SELECT * FROM order_tbl WHERE id='$id'"
+    );
+
+    if (mysqli_num_rows($medicineQuery) > 0) {
+      $medicine = mysqli_fetch_object($medicineQuery);
+      if ($medicine->prescription) {
+        return "$SERVER_NAME/media/prescription/$medicine->prescription";
+      }
+      return $defaultPrescription;
+    }
+  }
+  return "$defaultPrescription";
 }
 
 function getMedicineImage($itemId = null)

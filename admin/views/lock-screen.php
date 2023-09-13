@@ -1,8 +1,14 @@
-<?php include("../backend/nodes.php") ?>
+<?php
+include("../../backend/nodes.php");
+if (!$_SESSION["email"]) {
+  header("location: ../");
+}
+$user = getSingleDataWithWhere("users", "email='$_SESSION[email]'");
+?>
 <!DOCTYPE html>
 <html lang="en">
 
-<?php include("./components/header.php") ?>
+<?php include("../components/header.php") ?>
 
 <body>
 
@@ -12,35 +18,39 @@
         <div class="row align-items-center">
           <div class="col-md-6">
             <div class="card-body">
-              <form method="POST" id="form-sign-in">
-                <h4 class="mb-3 f-w-400">Sign in</h4>
-                <input type="text" value="admin" name="role" hidden readonly>
+              <?php if ($user) : ?>
+                <form method="POST" id="form-sign-in">
+                  <input type="text" name="userId" value="<?= $user->id ?>" hidden readonly>
+                  <input type="text" name="role" value="<?= $user->role ?>" hidden readonly>
 
-                <div class="input-group mb-2">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="feather icon-mail"></i></span>
+                  <div class="row">
+                    <div class="col-md-12 d-flex justify-content-center">
+                      <div class="w-50">
+                        <img src="<?= getAvatar($user->id) ?>" class="img-thumbnail rounded-circle ">
+                      </div>
+                    </div>
                   </div>
-                  <input type="email" name="email" class="form-control" placeholder="Email address" required />
-                </div>
-                <div class="input-group mb-3">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text"><i class="feather icon-lock"></i></span>
+                  <input type="email" name="email" value="<?= $user->email ?>" hidden readonly />
+                  <div class="input-group mb-3 mt-4">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text"><i class="feather icon-lock"></i></span>
+                    </div>
+                    <input type="password" class="form-control inputPassword" name="password" placeholder="Password" required>
                   </div>
-                  <input type="password" name="password" id="inputPass" class="form-control" placeholder="Password" required />
-                </div>
 
-                <div class="form-group text-left mt-2">
-                  <div class="checkbox checkbox-primary d-inline">
-                    <input type="checkbox" id="showPass" />
-                    <label for="showPass" class="cr">
-                      Show Password
-                    </label>
+                  <div class="form-group text-left mt-2">
+                    <div class="checkbox checkbox-primary d-inline">
+                      <input type="checkbox" id="showPass" />
+                      <label for="showPass" class="cr">
+                        Show Password
+                      </label>
+                    </div>
                   </div>
-                </div>
 
-                <button type="submit" class="btn btn-primary mb-4">Sign In</button>
+                  <button type="submit" class="btn btn-primary mb-4">Sign In</button>
 
-              </form>
+                </form>
+              <?php endif; ?>
             </div>
           </div>
           <div class="col-md-6 d-none d-md-block">
@@ -51,7 +61,7 @@
     </div>
   </div>
 
-  <?php include("./components/scripts.php") ?>
+  <?php include("../components/scripts.php") ?>
 
   <script>
     $("#form-sign-in").on("submit", function(e) {
@@ -103,9 +113,9 @@
 
     $("#showPass").on("click", function() {
       if ($(this).prop("checked") == true) {
-        $("#inputPass").prop("type", "text")
+        $(".inputPassword").prop("type", "text")
       } else {
-        $("#inputPass").prop("type", "password")
+        $(".inputPassword").prop("type", "password")
       }
     })
   </script>

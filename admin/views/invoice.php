@@ -46,6 +46,8 @@ if (!$isLogin) {
                             <th>Subtotal</th>
                             <th>Discount</th>
                             <th>Total</th>
+                            <th>Cash</th>
+                            <th>Change</th>
                             <th>Date</th>
                           </tr>
                         </thead>
@@ -54,8 +56,8 @@ if (!$isLogin) {
                           $invoice = getTableData("invoice");
                           foreach ($invoice as $in) :
                             $order = getSingleDataWithWhere("order_tbl", "id='$in->order_id'");
+                            $payment = getSingleDataWithWhere("payment", "order_id='$in->order_id'");
                             $sales = getSingleDataWithWhere("sales", "invoice_id='$in->id'");
-
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
@@ -70,6 +72,8 @@ if (!$isLogin) {
                               <td><?= "₱ " . number_format($order->subtotal, 2, '.', ',') ?></td>
                               <td><?= "₱ " . number_format($order->discount, 2, '.', ',') ?></td>
                               <td><?= "₱ " . number_format($order->overall_total, 2, '.', ',') ?></td>
+                              <td><?= "₱ " . number_format($payment->paid_amount, 2, '.', ',') ?></td>
+                              <td><?= "₱ " . number_format($payment->customer_change, 2, '.', ',') ?></td>
                               <td><?= date("Y-m-d", strtotime($in->date_created)) ?></td>
                             </tr>
                           <?php endforeach; ?>

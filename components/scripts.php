@@ -6,4 +6,7 @@
 <script src="<?= $SERVER_NAME ?>/assets/js/jquery.magnific-popup.min.js"></script>
 <script src="<?= $SERVER_NAME ?>/assets/js/aos.js"></script>
 
+<script src="<?= $SERVER_NAME ?>/admin/assets/plugins/sweetalert/sweetalert2.all.min.js"></script>
+
 <script src="<?= $SERVER_NAME ?>/assets/js/main.js"></script>
+<script src="<?= $SERVER_NAME ?>/admin/assets/js/custom.js"></script>

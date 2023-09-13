@@ -28,8 +28,45 @@ if (!$isLogin) {
 
               <div class="row">
                 <div class="col-md-12">
+                  <?php $order = getSingleDataWithWhere("order_tbl", "id='$_GET[id]'"); ?>
                   <div class="card">
                     <div class="card-header p-2 ml-2 mt-2">
+                      <h4 class="card-title">
+                        Status:
+                        <?php
+                        $badgeColor = "";
+
+                        switch ($order->status) {
+                          case "pending":
+                            $badgeColor = "warning";
+                            break;
+                          case "preparing":
+                            $badgeColor = "primary";
+                            break;
+                          case "to claim":
+                            $badgeColor = "info";
+                            break;
+                          case "claimed":
+                            $badgeColor = "success";
+                            break;
+                          case "canceled":
+                          case "declined":
+                            $badgeColor = "danger";
+                            break;
+                          default:
+                            $badgeColor = "secondary";
+                            null;
+                        }
+                        ?>
+                        <span class="badge badge-<?= $badgeColor ?>">
+                          <?= ucfirst($order->status) ?>
+                        </span>
+                      </h4>
+                      <?php if ($order->note) : ?>
+                        <h4>Note:
+                          <span><?= nl2br($order->note) ?></span>
+                        </h4>
+                      <?php endif; ?>
                       <button type="button" onclick="return window.history.back()" class="btn btn-secondary btn-sm float-right">
                         Go Back
                       </button>
@@ -41,7 +78,9 @@ if (!$isLogin) {
                             <thead>
                               <tr>
                                 <th>Order #</th>
+                                <th>Prescription</th>
                                 <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
+                                <th>Dosage</th>
                                 <th>Price</th>
                                 <th>Quantity</th>
                                 <th>Subtotal</th>
@@ -63,6 +102,7 @@ if (!$isLogin) {
                                     ig.medicine_id,
                                     mp.medicine_name,
                                     mp.generic_name,
+                                    mp.dosage,
                                     ig.product_number,
                                     (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
                                     (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
@@ -77,14 +117,24 @@ if (!$isLogin) {
                                 $imgSrc = getMedicineImage($inventory->medicine_id);
                                 $exploded =  explode("/", $imgSrc);
                                 $alt = $exploded[count($exploded) - 1];
+
+                                $prescriptionSrc = getPrescriptionImg($order->id);
+                                $explodedPres =  explode("/", $prescriptionSrc);
+                                $altPres = $explodedPres[count($explodedPres) - 1];
                               ?>
                                 <tr>
                                   <td><?= $order->order_number ?></td>
+                                  <td class="align-middle">
+                                    <?php if ($prescriptionSrc) : ?>
+                                      <img onclick="handleOpenModalImg('divModalPrescription<?= $inventory->inventory_id ?>')" src="<?= $prescriptionSrc ?>" class="rounded modalImg" width="60px">
+                                    <?php endif; ?>
+                                  </td>
                                   <td>
-                                    <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage<?= $inventory->inventory_id ?>')">
+                                    <button type="button" class="btn btn-link btn-lg p-0 m-0 " onclick="handleOpenModalImg('divModalImage<?= $inventory->inventory_id ?>')">
                                       <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                     </button>
                                   </td>
+                                  <td><?= $inventory->dosage . "mg" ?></td>
                                   <td><?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></td>
                                   <td><?= $detail->quantity ?></td>
                                   <td><?= "₱ " . number_format($detail->order_subtotal, 2, '.', ',') ?></td>
@@ -95,6 +145,15 @@ if (!$isLogin) {
                                   <img class='div-modal-content' src="<?= $imgSrc  ?>">
                                   <div id="imgCaption"><?= $alt ?></div>
                                 </div>
+
+                                <?php if ($prescriptionSrc) : ?>
+                                  <div id='divModalPrescription<?= $inventory->inventory_id ?>' class='div-modal pt-5'>
+                                    <span class='close' onclick='handleClose(`divModalPrescription<?= $inventory->inventory_id ?>`)'>&times;</span>
+                                    <img class='div-modal-content' src="<?= $prescriptionSrc  ?>">
+                                    <div id="imgCaption"><?= $altPres ?></div>
+                                  </div>
+                                <?php endif ?>
+
                               <?php endforeach; ?>
 
                             </tbody>
@@ -105,38 +164,47 @@ if (!$isLogin) {
 
                       <div class="row justify-content-end">
                         <div class="col-md-4">
+
                           <div class="row">
                             <div class="col-6">
-                              <ul class="list-group list-group-flush text-dark">
-                                <li class="list-group-item">
-                                  <h4>
-                                    Total
-                                  </h4>
-                                </li>
-                              </ul>
+                              <h4>
+                                Total
+                              </h4>
                             </div>
                             <div class="col-6">
-                              <ul class="list-group list-group-flush text-dark">
-                                <li class="list-group-item">
-                                  <h4>
-                                    <?= "₱ " . number_format($orderTotal, 2, '.', ',') ?>
-                                  </h4>
-                                </li>
-                              </ul>
+                              <h4>
+                                <?= "₱ " . number_format($orderTotal, 2, '.', ',') ?>
+                              </h4>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <?php
-                    $order = getSingleDataWithWhere("order_tbl", "id='$_GET[id]'");
-                    ?>
-                    <?php if ($order->status != "claimed") : ?>
-                      <div class="card-footer d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary btn-sm">Set Preparing</button>
-                        <button type="button" class="btn btn-info btn-sm">Set To Claim</button>
-                      </div>
-                    <?php endif; ?>
+                    <div class="card-footer d-flex justify-content-end p-2">
+                      <?php
+                      $arrayIn = array("pending", "preparing", "to claim");
+                      if (in_array($order->status, $arrayIn)) :
+                        if ($order->status == "to claim") :
+                      ?>
+                          <button type="button" onclick="handleClaimOrder()" class="btn btn-primary btn-sm m-2">
+                            Process Claim
+                          </button>
+                        <?php else : ?>
+                          <?php if ($order->status == "pending") : ?>
+                            <button type="button" onclick="openModalReason('<?= $order->id ?>')" class="btn btn-danger btn-sm">
+                              Decline
+                            </button>
+                          <?php endif; ?>
+                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'preparing')" class="btn btn-primary btn-sm">
+                            Set Preparing
+                          </button>
+                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'to claim')" class="btn btn-info btn-sm">
+                            Set to Claim
+                          </button>
+                        <?php endif; ?>
+                      <?php endif; ?>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -147,8 +215,252 @@ if (!$isLogin) {
       </div>
     </div>
 
+    <div class="modal fade" id="modalCheckOut" tabindex="-1" role="dialog" aria-labelledby="Checkout" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-secondary">
+              Checkout
+            </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form id="checkoutForm" method="POST">
+            <input type="text" value="<?= $_GET["id"] ?>" name="order_id" readonly hidden>
+            <div class="modal-body">
+              <div class="form-group row">
+                <label class="col-sm-2 col-form-label">Subtotal</label>
+                <div class="col-sm-10">
+                  <input type="number" name="subTotal" id="inputSubTotal" value="<?= number_format($orderTotal, 2, '.', ',') ?>" step=".01" class="form-control" readonly required>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label class="col-sm-2 col-form-label">Discount</label>
+                <div class="col-sm-10">
+                  <input type="number" name="discount" id="inputDiscount" value="0.00" step=".01" class="form-control" readonly required>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label class="col-sm-2 col-form-label">Total</label>
+                <div class="col-sm-10">
+                  <input type="number" name="total" id="inputTotal" value="<?= number_format($orderTotal, 2, '.', ',') ?>" step=".01" class="form-control" readonly required>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label class="col-sm-2 col-form-label">Amount </label>
+                <div class="col-sm-10">
+                  <input type="number" name="amount" id="inputAmount" step=".01" class="form-control" required>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label class="col-sm-2 col-form-label">Change</label>
+                <div class="col-sm-10">
+                  <input type="number" name="change" id="inputChange" value="0.00" step=".01" class="form-control" readonly required>
+                </div>
+              </div>
+
+            </div>
+            <div class="modal-footer">
+              <button type="button" id="btnClear" class="btn btn-danger btn-sm m-2 d-none">
+                Clear Discount
+              </button>
+
+              <button type="button" id="btnDiscount" class="btn btn-warning btn-sm m-2">
+                Add Discount
+              </button>
+
+              <button type="submit" id="btnProceed" class="btn btn-primary btn-sm m2 disabled" disabled>Proceed</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="modalReason" tabindex="-1" role="dialog" aria-labelledby="New Brand" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-secondary">
+              Reason form
+            </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form id="uploadReason" method="POST">
+            <input type="text" value="<?= $order->id ?>" name="order_id" hidden>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Reason</label>
+                <textarea name="note" class="form-control" cols="30" rows="10"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+
     <?php include("../components/scripts.php") ?>
     <script>
+      $("#uploadReason").on("submit", function(e) {
+        e.preventDefault();
+        swal.showLoading();
+
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=decline_order",
+          $(this).serialize(),
+          (data, status) => {
+            const resp = JSON.parse(data)
+            swal.fire({
+              title: resp.success ? 'Success!' : "Error!",
+              html: resp.message,
+              icon: resp.success ? 'success' : 'error',
+            }).then(() => resp.success ? window.location.reload() : undefined)
+
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
+        });
+      })
+
+      function openModalReason(orderId) {
+        $("#modalReason").modal("show")
+      }
+
+      $("#checkoutForm").on("submit", function(e) {
+        e.preventDefault()
+        swal.showLoading();
+
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=claim_online_order",
+          $(this).serialize(),
+          (data, status) => {
+            const resp = JSON.parse(data)
+            swal.fire({
+              title: resp.success ? 'Success!' : "Error!",
+              html: resp.message,
+              icon: resp.success ? 'success' : 'error',
+            }).then(() => resp.success ? window.location.href = `print-receipt?id=${resp.invoice_id}` : undefined)
+
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
+        });
+      })
+
+      $("#modalCheckOut").on("hidden.bs.modal", function(e) {
+        $("#inputAmount").val("");
+        $("#inputChange").val("0.00")
+      })
+
+      function updateData() {
+        const subtotal = $("#inputSubTotal").val();
+        const discount = $("#inputDiscount").val();
+        const total = $("#inputTotal").val();
+        const amount = $("#inputAmount").val();
+        const change = $("#inputChange").val();
+
+        const newDiscount = (Number(subtotal) * .20).toFixed(2);
+
+        $("#inputDiscount").val(newDiscount)
+        $("#inputTotal").val(subtotal - newDiscount)
+
+        $("#inputChange").change()
+      }
+
+      function handleClaimOrder() {
+        $("#modalCheckOut").modal("show")
+      }
+
+      $("#btnDiscount").on("click", function() {
+        $(this).addClass("d-none")
+        $("#btnClear").removeClass("d-none")
+
+        const subtotal = Number($("#inputSubTotal").val())
+        const discount = (Number($("#inputSubTotal").val()) * .20).toFixed(2);
+
+        $("#inputDiscount").val(discount)
+        $("#inputTotal").val((subtotal - discount).toFixed(2))
+
+        updateData()
+      })
+
+      $("#btnClear").on("click", function() {
+        $(this).addClass("d-none")
+        $("#btnDiscount").removeClass("d-none")
+
+        $("#inputDiscount").val("0.00")
+        $("#inputTotal").val($("#inputSubTotal").val())
+
+        $("#inputChange").change()
+      })
+
+      $("#inputAmount").on("input", function() {
+        $("#inputChange").change()
+      })
+
+      $("#inputChange").on("change", function() {
+        const amount = Number($("#inputAmount").val())
+        const total = Number($("#inputTotal").val())
+
+        if (amount > total) {
+          $("#btnProceed").removeClass("disabled")
+          $("#btnProceed").prop("disabled", false)
+
+          const change = (amount - total)
+          if (change <= 0) {
+            $(this).val("0.00")
+          } else {
+            $(this).val(change.toFixed(2))
+          }
+        } else {
+          $("#btnProceed").addClass("disabled")
+          $("#btnProceed").prop("disabled", true)
+        }
+
+      })
+
+      function handleChangeOrderStatus(orderId, status) {
+        swal.showLoading()
+        $.post(
+          "<?= $SERVER_NAME ?>/backend/nodes?action=change_order_status", {
+            order_id: orderId,
+            status: status
+          },
+          (data, status) => {
+            const resp = JSON.parse(data)
+            swal.fire({
+              title: resp.success ? 'Success!' : "Error!",
+              html: resp.message,
+              icon: resp.success ? 'success' : 'error',
+            }).then(() => resp.success ? window.location.reload() : undefined)
+
+          }).fail(function(e) {
+          swal.fire({
+            title: 'Error!',
+            text: e.statusText,
+            icon: 'error',
+          })
+        });
+      }
+
       $(document).ready(function() {
         const tableId = "#customerOrderDetails";
         var table = $(tableId).DataTable({

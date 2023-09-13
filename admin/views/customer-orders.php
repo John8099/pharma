@@ -43,42 +43,50 @@ if (!$isLogin) {
                         </thead>
                         <tbody>
                           <?php
-                          $orders = getTableWithWhere("order_tbl"
-                            /** , "type='online'" */
-                          );
+                          $orders = getTableWithWhere("order_tbl", "user_id IS NOT NULL and type='online' ORDER BY FIELD(status, 'pending', 'preparing', 'to claim', 'claimed', 'declined', 'canceled') ASC");
                           foreach ($orders as $order) :
                             $orderDetails = getTableData("order_details", "order_id", $order->id);
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
-                              <td><?= getUserById($order->user_id) ?></td>
+                              <td><?= getFullName($order->user_id) ?></td>
                               <td><?= count($orderDetails) ?></td>
                               <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                               <td>
                                 <?php
-                                $badge = "";
+                                $badgeColor = "";
+
                                 switch ($order->status) {
-                                  case "claimed":
-                                    $badge = "badge-soft-success";
+                                  case "pending":
+                                    $badgeColor = "warning";
                                     break;
                                   case "preparing":
-                                    $badge = "badge-soft-primary";
+                                    $badgeColor = "primary";
                                     break;
                                   case "to claim":
-                                    $badge = "badge-soft-info";
+                                    $badgeColor = "info";
                                     break;
-                                  case "pending":
-                                    $badge = "badge-soft-danger";
+                                  case "claimed":
+                                    $badgeColor = "success";
                                     break;
+                                  case "canceled":
+                                  case "declined":
+                                    $badgeColor = "danger";
+                                    break;
+                                  default:
+                                    $badgeColor = "secondary";
+                                    null;
                                 }
                                 ?>
-                                <span class="badge <?= $badge ?> mb-0">
-                                  <?= ucfirst($order->status) ?>
+                                <span class="badge badge-<?= $badgeColor ?> px-3 py-1">
+                                  <h6 class="mb-0 <?= $order->status != "pending" ? "text-white" : "" ?>">
+                                    <?= ucfirst($order->status) ?>
+                                  </h6>
                                 </span>
                               </td>
 
                               <td>
-                                <button type="button" onclick="return window.location.href = 'customer-order-details?id=<?= $order->id ?>'" class="btn btn-link btn-sm">
+                                <button type="button" onclick="return window.location.href = 'customer-order-details?id=<?= $order->id ?>'" class="btn btn-secondary btn-sm m-1">
                                   View Details
                                 </button>
                               </td>
@@ -105,7 +113,7 @@ if (!$isLogin) {
         var table = $(tableId).DataTable({
           paging: true,
           lengthChange: false,
-          ordering: true,
+          ordering: false,
           info: true,
           autoWidth: false,
           responsive: true,
@@ -114,6 +122,25 @@ if (!$isLogin) {
               button: 'Filter',
             }
           },
+          columns: [{
+              "width": "10%"
+            },
+            {
+              "width": "20%"
+            },
+            {
+              "width": "10%"
+            },
+            {
+              "width": "10%"
+            },
+            {
+              "width": "10%"
+            },
+            {
+              "width": "5%"
+            },
+          ],
           buttons: [{
             extend: 'searchBuilder',
             config: {
