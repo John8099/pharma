@@ -113,7 +113,7 @@
             </div>
           </div>
           <div class="col-md-6 d-none d-md-block">
-            <img src="<?= $SERVER_NAME ?>/admin/assets/images/auth-bg.jpg" alt="" class="img-fluid" />
+            <img src="<?= $SERVER_NAME ?>/public/logo2.jpg" alt="" class="img-fluid" />
           </div>
         </div>
       </div>

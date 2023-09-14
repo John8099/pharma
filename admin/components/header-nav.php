@@ -2,10 +2,10 @@
  <header class="navbar pcoded-header navbar-expand-lg navbar-light headerpos-fixed">
    <div class="m-header">
      <a class="mobile-menu" id="mobile-collapse1" href="#!"><span></span></a>
-     <a href="index.html" class="ml-3">
+     <a href="dashboard" class="ml-3">
 
        <h3 class="text-white">
-         Pharma
+         Farmacia
        </h3>
      </a>
    </div>
@@ -95,7 +95,7 @@
        <li>
          <div class="dropdown drp-user">
            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-             <img src="<?= getAvatar($user->id) ?>" class="img-radius" alt="User-Profile-Image" style="width: 45px">
+             <img src="<?= getAvatar($user->id) ?>" class="img-radius" alt="User-Profile-Image" style="width: 35px">
            </a>
            <div class="dropdown-menu dropdown-menu-right profile-notification">
              <div class="pro-head">

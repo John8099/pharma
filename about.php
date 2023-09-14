@@ -16,6 +16,7 @@ include("./backend/nodes.php");
         <div class="row justify-content-center align-items-center" style="height: 85vh;">
           <div class="col-lg-7 mx-auto align-self-center">
             <div class="text-center text-white">
+              <img src="./public/logo-removebg-preview.png">
               <h1>About Farmacia de Central</h1>
               <p>At Farmacia de Central, we are dedicated to providing exceptional pharmaceutical services and healthcare solutions to our community. With a commitment to your health and well-being.</p>
             </div>

@@ -3,8 +3,8 @@
     <div class="navbar-wrapper ">
       <div class="navbar-brand header-logo p-0">
         <a href="<?= $SERVER_NAME ?>/admin/views/dashboard" class="b-brand">
-          <img src="<?= $SERVER_NAME ?>/public/logo-text.png" class="logo images" style="width: 200px">
-          <img src="<?= $SERVER_NAME ?>/public/logo.png" class="logo-thumb images" style="width: 45px">
+          <img src="<?= $SERVER_NAME ?>/public/logo-removebg-preview-3.png" class="logo images" style="height: 50px;">
+          <img src="<?= $SERVER_NAME ?>/public/logo-removebg-3.png" class="logo-thumb images" style="width: 45px">
         </a>
         <a class="mobile-menu" id="mobile-collapse" href="#!"><span></span></a>
       </div>

@@ -3,9 +3,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Pharma</title>
+  <title>Farmacia de Central</title>
 
-  <link rel="shortcut icon" sizes="16x16 24x24 32x32 64x64" href="<?= $SERVER_NAME ?>/public/logo.png" type="image/x-icon">
+  <link rel="shortcut icon" sizes="16x16 24x24 32x32 64x64" href="<?= $SERVER_NAME ?>/public/logo-removebg-3.png" type="image/x-icon">
 
   <!-- fontawesome icon -->
   <link rel="stylesheet" href="<?= $SERVER_NAME ?>/admin/assets/fonts/fontawesome/css/fontawesome-all.min.css">
