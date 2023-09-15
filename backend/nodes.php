@@ -1066,7 +1066,7 @@ function addUser()
       "lname" => $lname,
       "uname" => $uname,
       "email" => $email,
-      "password" => password_hash($password, PASSWORD_ARGON2I),
+      "password" => password_hash($password, PASSWORD_DEFAULT),
       "role" => $role,
       "isNew" => "1"
     );
@@ -1114,7 +1114,7 @@ function changePassword()
     $update = update(
       "users",
       array(
-        "password" => password_hash($new, PASSWORD_ARGON2I),
+        "password" => password_hash($new, PASSWORD_DEFAULT),
         "isNew" => "set_null"
       ),
       "id",

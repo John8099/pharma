@@ -108,7 +108,7 @@ if (!$isLogin) {
     <h4 style="margin: 10px;">RETAIL INVOICE </h4>
     <div class="bill-details">
       <?php
-      $invoiceData = getSingleDataWithWhere("invoice", "order_id", $_GET["id"]);
+      $invoiceData = getSingleDataWithWhere("invoice", "id = $_GET[id]");
 
       $cashier = getUserById($invoiceData->user_id);
       ?>

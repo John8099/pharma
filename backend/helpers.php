@@ -4,8 +4,8 @@ $dateNow = date("Y-m-d H:i:s");
 
 $separator = "!I_I!";
 
-$ORIGIN = "http://$_SERVER[SERVER_NAME]";
-$PATH = "/pharma";
+$ORIGIN = "$_SERVER[REQUEST_SCHEME]://$_SERVER[SERVER_NAME]";
+$PATH = ("/" . explode("/", $_SERVER["REQUEST_URI"])[1]);
 
 $SERVER_NAME = "";
 $whitelist = array(

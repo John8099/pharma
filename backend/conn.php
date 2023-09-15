@@ -6,10 +6,10 @@ if ($_SERVER['HTTP_HOST'] == "localhost") {
   // $db = "pharma_bak";
   $db = "pharma";
 } else {
-  $host = "";
-  $user = "";
-  $password = "";
-  $db = "";
+  $host = "localhost";
+  $user = "id21263608_ciollesliboon";
+  $password = "Liboon444!";
+  $db = "id21263608_pharma";
 }
 
 $response = array(

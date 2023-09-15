@@ -22,6 +22,7 @@
 <script src="https://cdn.datatables.net/datetime/1.4.1/js/dataTables.dateTime.min.js"></script>
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script> -->
 
+<script src="<?= $SERVER_NAME ?>/assets/vendors/pull-to-refresh/index.umd.min.js"></script>
 <script src="<?= $SERVER_NAME ?>/admin/assets/js/custom.js"></script>
 
 <script src="<?= $SERVER_NAME ?>/admin/assets/plugins/choices.js/choices.min.js"></script>

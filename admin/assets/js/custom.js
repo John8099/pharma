@@ -92,3 +92,23 @@ window.previewFile = function (input, imgDisplayId, divClearId, divBrowseId) {
     $(divBrowseId).addClass("d-none").removeClass("d-flex");
   }
 };
+
+/* global PullToRefresh */
+
+if ($(".auth-wrapper").length) {
+  PullToRefresh.init({
+    mainElement: ".auth-wrapper",
+    onRefresh: function () {
+      window.location.reload();
+    },
+  });
+}
+
+if ($(".site-wrap").length) {
+  PullToRefresh.init({
+    mainElement: ".site-wrap",
+    onRefresh: function () {
+      window.location.reload();
+    },
+  });
+}
