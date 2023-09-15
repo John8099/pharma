@@ -61,15 +61,19 @@ if (!$isLogin) {
                         <span class="badge badge-<?= $badgeColor ?>">
                           <?= ucfirst($order->status) ?>
                         </span>
+                        <br>
+                        Order number: <?= $order->order_number ?>
+
+                        <button type="button" onclick="return window.history.back()" class="btn btn-secondary btn-sm float-right">
+                          Go Back
+                        </button>
                       </h4>
                       <?php if ($order->note) : ?>
                         <h4>Note:
                           <span><?= nl2br($order->note) ?></span>
                         </h4>
                       <?php endif; ?>
-                      <button type="button" onclick="return window.history.back()" class="btn btn-secondary btn-sm float-right">
-                        Go Back
-                      </button>
+
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -77,7 +81,6 @@ if (!$isLogin) {
                           <table id="customerOrderDetails" class="table table-hover">
                             <thead>
                               <tr>
-                                <th>Order #</th>
                                 <th>Prescription</th>
                                 <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
                                 <th>Dosage</th>
@@ -123,7 +126,6 @@ if (!$isLogin) {
                                 $altPres = $explodedPres[count($explodedPres) - 1];
                               ?>
                                 <tr>
-                                  <td><?= $order->order_number ?></td>
                                   <td class="align-middle">
                                     <?php if ($prescriptionSrc) : ?>
                                       <img onclick="handleOpenModalImg('divModalPrescription<?= $inventory->inventory_id ?>')" src="<?= $prescriptionSrc ?>" class="rounded modalImg" width="60px">

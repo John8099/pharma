@@ -152,8 +152,10 @@ if (!$isLogin) {
                   <select class="selectpicker form-control" name="category_id" id="select_category" data-container="body" data-live-search="true" title="-- select category --" required>
                     <?php
                     $categoryData = getTableWithWhere("category", "status=1");
-                    foreach ($categoryData as $category) {
-                      echo "<option value='$category->id'>$category->category_name</option>";
+                    if (count($categoryData) > 0) {
+                      foreach ($categoryData as $category) {
+                        echo "<option value='$category->id'>$category->category_name</option>";
+                      }
                     }
                     ?>
                   </select>
@@ -235,6 +237,16 @@ if (!$isLogin) {
               </div>
             </div>
 
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">is Active</label>
+              <div class="col-sm-9">
+                <label class="switch">
+                  <input type="checkbox" name="isActive" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-primary">Save</button>
@@ -272,6 +284,16 @@ if (!$isLogin) {
               <label class="col-sm-2 col-form-label">Description</label>
               <div class="col-sm-10">
                 <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">is Active</label>
+              <div class="col-sm-9">
+                <label class="switch">
+                  <input type="checkbox" name="isActive" checked>
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
 

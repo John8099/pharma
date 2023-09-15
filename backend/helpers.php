@@ -223,16 +223,16 @@ function update($table, $data, $columnWHere, $columnVal)
     if (count($data) > 0) {
       foreach ($data as $column => $value) {
         if ($value) {
-          array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
+
+          if ($value == "set_null") {
+            array_push($set, "$column = NULL");
+          } else if ($value == "set_zero") {
+            array_push($set, "$column = '0'");
+          } else {
+            array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
+          }
         } else if ($column == "quantity" && $table == "medicines") {
           array_push($set, "$column = '" . mysqli_escape_string($conn, $value) . "'");
-        }
-
-        if ($value == "set_null") {
-          array_push($set, "$column = NULL");
-        }
-        if ($value == "set_zero") {
-          array_push($set, "$column = 0");
         }
       }
 
@@ -279,12 +279,17 @@ function insert($table, $data)
     if (count($data) > 0) {
       foreach ($data as $column => $value) {
         if ($value) {
-          array_push($columns, "`$column`");
-          array_push($values, "'" . mysqli_escape_string($conn, $value) . "'");
-        }
 
-        if ($value == "set_zero") {
-          array_push($set, "$column = 0");
+          if ($value == "set_zero") {
+            array_push($columns, "`$column`");
+            array_push($values, "'0'");
+          } else if ($value == "set_null") {
+            array_push($columns, "`$column`");
+            array_push($columns, "NULL");
+          } else {
+            array_push($columns, "`$column`");
+            array_push($values, "'" . mysqli_escape_string($conn, $value) . "'");
+          }
         }
       }
 

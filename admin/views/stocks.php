@@ -44,6 +44,7 @@ if (!$isLogin) {
                           <tr>
                             <th>Product #</th>
                             <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
+                            <td>Dosage</td>
                             <th>Price</th>
                             <th>Supplier Name</th>
                             <th>Quantity</th>
@@ -63,6 +64,7 @@ if (!$isLogin) {
                               ig.product_number,
                               mp.medicine_name,
                               mp.generic_name,
+                              mp.dosage,
                               (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
                               ig.price_id,
                               (SELECT supplier_name FROM supplier s WHERE s.id = ig.supplier_id) AS 'supplier_name',
@@ -90,6 +92,7 @@ if (!$isLogin) {
                                   <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                 </button>
                               </td>
+                              <td class="align-middle dosage"><?= $inventory->dosage . "mg" ?></td>
                               <td class="align-middle"><?= "₱ " . number_format($price, 2, '.', ',') ?></td>
                               <td class="align-middle"><?= $inventory->supplier_name ?></td>
                               <td class="align-middle"><?= $inventory->quantity ?></td>
@@ -371,6 +374,16 @@ if (!$isLogin) {
               </div>
             </div>
 
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">is Active</label>
+              <div class="col-sm-9">
+                <label class="switch">
+                  <input type="checkbox" name="isActive" checked>
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button type="submit" class="btn btn-primary">Save</button>
@@ -409,6 +422,16 @@ if (!$isLogin) {
               <label class="col-sm-2 col-form-label">Description</label>
               <div class="col-sm-10">
                 <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">is Active</label>
+              <div class="col-sm-9">
+                <label class="switch">
+                  <input type="checkbox" name="isActive" checked>
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
 
@@ -456,6 +479,16 @@ if (!$isLogin) {
               <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
               <div class="col-sm-10">
                 <input type="text" name="contact" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label class="col-sm-3 col-form-label">is Active</label>
+              <div class="col-sm-9">
+                <label class="switch">
+                  <input type="checkbox" name="isActive" checked>
+                  <span class="slider round"></span>
+                </label>
               </div>
             </div>
 

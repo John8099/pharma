@@ -864,11 +864,7 @@ function medicine_save()
 
   $action = $_POST["action"];
 
-  if ($_POST["med_desc"] == "" && $action == "add") {
-    $med_desc = ucfirst(nl2br($_POST["med_desc"]));
-  } elseif ($_POST["med_desc"] == "" && $action == "edit") {
-    $med_desc = "set_null";
-  }
+  $med_desc = $_POST["med_desc"] == "" ? "set_null" : ucfirst($_POST["med_desc"]);
 
   if (!isMedicineExist(strtolower($name), strtolower($generic_name), $brand_id, strtolower($dose), $category_id, $medicine_id)) {
 
@@ -925,16 +921,10 @@ function save_brand()
   $type = isset($_POST["type"]) ? $_POST["type"] : null;
 
   $name = ucwords($_POST["name"]);
-  $description = "";
+  $description = $_POST["description"] == "" ? "set_null" : ucfirst($_POST["description"]);
   $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
-
-  if ($_POST["description"] == "" && $action == "add") {
-    $description = ucfirst(nl2br($_POST["description"]));
-  } elseif ($_POST["description"] == "" && $action == "edit") {
-    $description = "set_null";
-  }
 
   if (!isBrandExist($name, $brandId)) {
     $brandData = array(
@@ -977,16 +967,10 @@ function save_category()
 
   $categoryId = isset($_POST["categoryId"]) ? $_POST["categoryId"] : null;
   $name = ucwords($_POST["name"]);
-  $description = "";
   $status = isset($_POST["isActive"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
-
-  if ($_POST["description"] == "" && $action == "add") {
-    $description = ucfirst(nl2br($_POST["description"]));
-  } elseif ($_POST["description"] == "" && $action == "edit") {
-    $description = "set_null";
-  }
+  $description = $_POST["description"] == "" ? "set_null" : ucfirst($_POST["description"]);
 
   if (!isCategoryExist($name, $categoryId)) {
     $categoryData = array(
