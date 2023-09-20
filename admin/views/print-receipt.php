@@ -108,7 +108,12 @@ if (!$isLogin) {
     <h4 style="margin: 10px;">RETAIL INVOICE </h4>
     <div class="bill-details">
       <?php
+
       $invoiceData = getSingleDataWithWhere("invoice", "id = $_GET[id]");
+
+      $invoiceId = $invoiceData->id;
+      $orderId = $invoiceData->order_id;
+      $paymentId = $invoiceData->payment_id;
 
       $cashier = getUserById($invoiceData->user_id);
       ?>
@@ -138,9 +143,9 @@ if (!$isLogin) {
       </thead>
       <tbody>
         <?php
-        $orderData = getSingleDataWithWhere("order_tbl", "id=$invoiceData->order_id");
+        $orderData = getSingleDataWithWhere("order_tbl", "id=$orderId");
 
-        $orderDetails = getTableData("order_details", "order_id", $orderData->id);
+        $orderDetails = getTableData("order_details", "order_id", $orderId);
         foreach ($orderDetails as $detail) :
           $inventory = getSingleDataWithWhere("inventory_general", "id='$detail->inventory_general_id'");
           $medicine = getSingleDataWithWhere("medicine_profile", "id='$inventory->medicine_id'");
@@ -175,7 +180,7 @@ if (!$isLogin) {
         </tr>
 
         <?php
-        $paymentData = getSingleDataWithWhere("payment", "order_id", $orderData->id);
+        $paymentData = getSingleDataWithWhere("payment", "id=$paymentId");
         ?>
         <tr class="net-amount">
           <td></td>
@@ -199,7 +204,6 @@ if (!$isLogin) {
     <h4 style="margin: 10px;">Thank You ! Please visit again</h4>
 
   </div>
-  
 </body>
 <script>
   window.print()

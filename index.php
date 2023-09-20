@@ -18,7 +18,7 @@ include("./backend/nodes.php");
           <div class="col-lg-7 mx-auto order-lg-2 align-self-center">
             <div class="site-block-cover-content text-center">
               <h2 class="sub-title">Effective Medicine, New Medicine Everyday</h2>
-              <h1>Welcome To Pharma</h1>
+              <h1>Welcome To Farmacia</h1>
               <p>
                 <a href="<?= "$SERVER_NAME/store" ?>" class="btn btn-primary px-5 py-3">Shop Now</a>
               </p>

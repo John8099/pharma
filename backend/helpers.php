@@ -51,7 +51,7 @@ function getCartDataIdIfExist($inventoryId, $userId)
 
   $query = mysqli_query(
     $conn,
-    "SELECT * FROM cart WHERE user_id='$userId' and inventory_id='$inventoryId'"
+    "SELECT * FROM cart WHERE user_id='$userId' and inventory_id='$inventoryId' and checkout_date IS NULL"
   );
 
   if (mysqli_num_rows($query) > 0) {
