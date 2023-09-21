@@ -285,7 +285,7 @@ function insert($table, $data)
             array_push($values, "'0'");
           } else if ($value == "set_null") {
             array_push($columns, "`$column`");
-            array_push($columns, "NULL");
+            array_push($values, "NULL");
           } else {
             array_push($columns, "`$column`");
             array_push($values, "'" . mysqli_escape_string($conn, $value) . "'");

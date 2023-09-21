@@ -884,6 +884,8 @@ function medicine_save()
     $comm = null;
 
     if ($action == "add") {
+      $medicineData["image"] = $uploadedImg->file_name;
+
       $comm = insert("medicine_profile", $medicineData);
     } else if ($action == "edit") {
       $medicineData["image"] = $isCleared == "Yes" ? "set_null" : $uploadedImg->file_name;
