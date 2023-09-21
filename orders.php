@@ -109,7 +109,7 @@ if (!$isLogin) {
                           FROM inventory_general ig
                           LEFT JOIN medicine_profile mp
                           ON mp.id = ig.medicine_id
-                          WHERE ig.id = '$cart->id'
+                          WHERE ig.id = '$cart->inventory_id'
                       "
                       );
                       $inventory = mysqli_fetch_object($inventoryQStr);

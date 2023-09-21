@@ -370,6 +370,7 @@ if (!$isLogin) {
       $("#modalCheckOut").on("hidden.bs.modal", function(e) {
         $("#inputAmount").val("");
         $("#inputChange").val("0.00")
+        $("#btnProceed").prop("disabled", true)
       })
 
       function updateData() {

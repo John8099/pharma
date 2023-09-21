@@ -310,7 +310,7 @@ function checkout()
       FROM inventory_general ig
       LEFT JOIN medicine_profile mp
       ON mp.id = ig.medicine_id
-      WHERE ig.id = '$cart->id'
+      WHERE ig.id = '$cart->inventory_id'
       "
     );
     $inventory = mysqli_fetch_object($inventoryQStr);
@@ -339,7 +339,7 @@ function checkout()
         FROM inventory_general ig
         LEFT JOIN medicine_profile mp
         ON mp.id = ig.medicine_id
-        WHERE ig.id = '$cart->id'
+        WHERE ig.id = '$cart->inventory_id'
       "
       );
 
@@ -434,70 +434,75 @@ function save_checkout()
   $amount = $_POST["amount"];
   $change = $_POST["change"];
 
-  $totalQuantitySold = 0;
+  if (intval($amount) > intval($total)) {
+    $totalQuantitySold = 0;
 
-  $orderTableData = array(
-    "order_number" => generateSystemId("order_tbl", "ORD"),
-    "user_id" => NULL,
-    "subtotal" => $subTotal,
-    "discount" => $discount,
-    "overall_total" => $total,
-    "type" => "walk_in",
-    "status" => "claimed"
-  );
-
-  $orderIn = insert("order_tbl", $orderTableData);
-
-  foreach ($productData->data as $product) {
-    $inventory = getSingleDataWithWhere("inventory_general", "product_number = '$product->product_number'");
-
-    $orderDetailsData = array(
-      "order_id" => $orderIn,
-      "order_subtotal" => "$product->orderTotal",
-      "quantity" => "$product->quantity",
-      "inventory_general_id" => $inventory->id
+    $orderTableData = array(
+      "order_number" => generateSystemId("order_tbl", "ORD"),
+      "user_id" => NULL,
+      "subtotal" => $subTotal,
+      "discount" => $discount,
+      "overall_total" => $total,
+      "type" => "walk_in",
+      "status" => "claimed"
     );
 
-    $orderDetailsIn = insert("order_details", $orderDetailsData);
+    $orderIn = insert("order_tbl", $orderTableData);
 
-    if ($orderDetailsIn) {
-      $totalQuantitySold += intval($product->quantity);
-      $newQuantity = intval($inventory->quantity) - intval($product->quantity);
+    foreach ($productData->data as $product) {
+      $inventory = getSingleDataWithWhere("inventory_general", "product_number = '$product->product_number'");
 
-      $updateInData = array(
-        "quantity" => "$newQuantity"
+      $orderDetailsData = array(
+        "order_id" => $orderIn,
+        "order_subtotal" => "$product->orderTotal",
+        "quantity" => "$product->quantity",
+        "inventory_general_id" => $inventory->id
       );
 
-      $updateIn = update("inventory_general", $updateInData, "id", $inventory->id);
+      $orderDetailsIn = insert("order_details", $orderDetailsData);
+
+      if ($orderDetailsIn) {
+        $totalQuantitySold += intval($product->quantity);
+        $newQuantity = intval($inventory->quantity) - intval($product->quantity);
+
+        $updateInData = array(
+          "quantity" => "$newQuantity"
+        );
+
+        $updateIn = update("inventory_general", $updateInData, "id", $inventory->id);
+      }
     }
+
+    $paymentData = array(
+      "order_id" => $orderIn,
+      "paid_amount" => "$amount",
+      "customer_change" => "$change"
+    );
+
+    $paymentIn = insert("payment", $paymentData);
+
+    $invoiceData = array(
+      "payment_id" => $paymentIn,
+      "order_id" => $orderIn,
+      "user_id" => $_SESSION["userId"]
+    );
+
+    $invoiceIn = insert("invoice", $invoiceData);
+
+    $salesData = array(
+      "invoice_id" => $invoiceIn,
+      "total_quantity_sold" => $totalQuantitySold
+    );
+
+    $salesIn = insert("sales", $salesData);
+
+    $response["success"] = true;
+    $response["message"] = "Item(s) successfully added to invoice";
+    $response["invoice_id"] = $invoiceIn;
+  } else {
+    $response["success"] = false;
+    $response["message"] = "Amount should not be less than to total.";
   }
-
-  $paymentData = array(
-    "order_id" => $orderIn,
-    "paid_amount" => "$amount",
-    "customer_change" => "$change"
-  );
-
-  $paymentIn = insert("payment", $paymentData);
-
-  $invoiceData = array(
-    "payment_id" => $paymentIn,
-    "order_id" => $orderIn,
-    "user_id" => $_SESSION["userId"]
-  );
-
-  $invoiceIn = insert("invoice", $invoiceData);
-
-  $salesData = array(
-    "invoice_id" => $invoiceIn,
-    "total_quantity_sold" => $totalQuantitySold
-  );
-
-  $salesIn = insert("sales", $salesData);
-
-  $response["success"] = true;
-  $response["message"] = "Item(s) successfully added to invoice";
-  $response["invoice_id"] = $invoiceIn;
 
   returnResponse($response);
 }
@@ -708,7 +713,7 @@ function update_cart()
   global $conn, $_POST, $_SESSION;
 
   if (isset($_SESSION["userId"])) {
-    $cartDbData = getTableWithWhere("cart", "user_id ='$_SESSION[userId]' and status='pending'");
+    $cartDbData = getTableWithWhere("cart", "user_id ='$_SESSION[userId]' and status='pending' and checkout_date IS NULL");
 
     $hasError = false;
     foreach ($cartDbData as $cart) {
