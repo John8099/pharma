@@ -423,7 +423,7 @@ if (!$isLogin) {
         const amount = Number($("#inputAmount").val())
         const total = Number($("#inputTotal").val())
 
-        if (amount > total) {
+        if (amount >= total) {
           $("#btnProceed").removeClass("disabled")
           $("#btnProceed").prop("disabled", false)
 

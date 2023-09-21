@@ -434,7 +434,7 @@ function save_checkout()
   $amount = $_POST["amount"];
   $change = $_POST["change"];
 
-  if (intval($amount) > intval($total)) {
+  if (intval($amount) >= intval($total)) {
     $totalQuantitySold = 0;
 
     $orderTableData = array(
