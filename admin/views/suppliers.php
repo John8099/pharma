@@ -1,5 +1,6 @@
 <?php
 include("../../backend/nodes.php");
+include("../components/modals.php");
 if (!$isLogin) {
   header("location: ../");
 }
@@ -75,62 +76,7 @@ if (!$isLogin) {
                               </td>
                             </tr>
 
-                            <div class="modal fade" id="editMan<?= $supplier->id ?>" tabindex="-1" role="dialog" aria-labelledby="Edit Supplier" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                              <div class="modal-dialog modal-dialog-centered" role="document">
-                                <div class="modal-content">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title text-secondary">
-                                      Edit Supplier
-                                    </h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
-                                  </div>
-                                  <form method="POST">
-                                    <input type="text" name="action" value="edit" hidden readonly>
-                                    <input type="text" name="supplierId" value="<?= $supplier->id ?>" hidden readonly>
-                                    <div class="modal-body">
-
-                                      <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Name <span class="text-danger">*</span></label>
-                                        <div class="col-sm-9">
-                                          <input type="text" name="name" value="<?= $supplier->supplier_name ?>" class="form-control" required>
-                                        </div>
-                                      </div>
-
-                                      <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Address <span class="text-danger">*</span></label>
-                                        <div class="col-sm-9">
-                                          <input type="text" name="address" value="<?= $supplier->address ?>" class="form-control" required>
-                                        </div>
-                                      </div>
-
-                                      <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Contact <span class="text-danger">*</span></label>
-                                        <div class="col-sm-9">
-                                          <input type="text" name="contact" value="<?= $supplier->contact ?>" class="form-control" required>
-                                        </div>
-                                      </div>
-
-                                      <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">is Active</label>
-                                        <div class="col-sm-9">
-                                          <label class="switch">
-                                            <input type="checkbox" name="isActive" <?= $supplier->status == "1" ? "checked" : "" ?>>
-                                            <span class="slider round"></span>
-                                          </label>
-                                        </div>
-                                      </div>
-
-                                    </div>
-                                    <div class="modal-footer">
-                                      <button type="button" onclick="handleEditSupplier($(this))" class="btn btn-primary">Save</button>
-                                    </div>
-                                  </form>
-
-                                </div>
-                              </div>
-                            </div>
+                            <?= editSupplierModal($supplier); ?>
                           <?php endforeach; ?>
 
                         </tbody>
@@ -149,61 +95,7 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addSupplier" tabindex="-1" role="dialog" aria-labelledby="New Supplier" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-secondary">
-            New Supplier
-          </h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form id="addSupplierForm" method="POST">
-          <input type="text" name="action" value="add" hidden readonly>
-          <div class="modal-body">
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">Name <span class="text-danger">*</span></label>
-              <div class="col-sm-9">
-                <input type="text" name="name" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">Address <span class="text-danger">*</span></label>
-              <div class="col-sm-9">
-                <input type="text" name="address" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">Contact <span class="text-danger">*</span></label>
-              <div class="col-sm-9">
-                <input type="text" name="contact" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">is Active</label>
-              <div class="col-sm-9">
-                <label class="switch">
-                  <input type="checkbox" name="isActive" checked>
-                  <span class="slider round"></span>
-                </label>
-              </div>
-            </div>
-
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
+  <?= addSupplierModal(); ?>
 
   <?php include("../components/scripts.php") ?>
   <script>
