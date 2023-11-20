@@ -40,7 +40,7 @@ if (!$isLogin) {
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="adminTable" class="table table-hover">
+                      <table id="adminTable" class="table table-hover table-bordered table-striped ">
                         <thead>
                           <tr>
                             <th>Avatar</th>
@@ -83,10 +83,10 @@ if (!$isLogin) {
                                   <?php endif; ?>
                                 </td>
                                 <!-- <td>
-                                  <a href="#" class="h5 text-info m-2" title="Edit" data-toggle="tooltip">
+                                  <a href="javascript:void()" class="h5 text-info m-2" title="Edit" data-toggle="tooltip">
                                     <i class="fa fa-cog"></i>
                                   </a>
-                                  <a href="#" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                  <a href="javascript:void()" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
                                     <i class="fa fa-times-circle"></i>
                                   </a>
                                 </td> -->

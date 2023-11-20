@@ -29,7 +29,7 @@ $links = array(
     )
   ),
   array(
-    "title" => "Category",
+    "title" => "Therapeutic Category",
     "config" => array(
       "icon" => "fa fa-briefcase-medical",
       "url" => "$SERVER_NAME/admin/views/category"
@@ -89,6 +89,13 @@ $links = array(
     "config" => array(
       "icon" => "fa fa-receipt",
       "url" => "$SERVER_NAME/admin/views/sales"
+    )
+  ),
+  array(
+    "title" => "Returned Stocks",
+    "config" => array(
+      "icon" => "fas fa-shipping-fast",
+      "url" => "$SERVER_NAME/admin/views/returned-stocks"
     )
   ),
 

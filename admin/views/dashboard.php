@@ -44,7 +44,7 @@ if (!$isLogin) {
                       <div class="row align-items-center m-b-25">
                         <div class="col">
                           <h6 class="m-b-5 text-white">Total Sales</h6>
-                          <h3 class="m-b-0 text-white"><?= "₱ " .  number_format($tProfit->profit, 2, '.', ',') ?></h3>
+                          <h3 class="m-b-0 text-white"><?=  number_format($tProfit->profit, 2, '.', ',') ?></h3>
                         </div>
                         <div class="col-auto">
                           <i class="fas fa-money-bill-alt text-c-red f-18"></i>
@@ -72,7 +72,7 @@ if (!$isLogin) {
                       <div class="row align-items-center m-b-25">
                         <div class="col">
                           <h6 class="m-b-5 text-white">Online Sales</h6>
-                          <h3 class="m-b-0 text-white"><?= "₱ " .  number_format($oProfit->profit, 2, '.', ',') ?></h3>
+                          <h3 class="m-b-0 text-white"><?=  number_format($oProfit->profit, 2, '.', ',') ?></h3>
                         </div>
                         <div class="col-auto">
                           <i class="fas fa-database text-c-blue f-18"></i>
@@ -95,7 +95,7 @@ if (!$isLogin) {
                         ?>
                         <div class="col">
                           <h6 class="m-b-5 text-white">Over the counter Sales</h6>
-                          <h3 class="m-b-0 text-white"><?= "₱ " . number_format($profit->profit, 2, '.', ',') ?></h3>
+                          <h3 class="m-b-0 text-white"><?= number_format($profit->profit, 2, '.', ',') ?></h3>
                         </div>
                         <div class="col-auto">
                           <i class="fas fa-dollar-sign text-c-green f-18"></i>

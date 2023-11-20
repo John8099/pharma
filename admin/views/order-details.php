@@ -37,7 +37,7 @@ if (!$isLogin) {
                     <div class="card-body">
                       <div class="row">
                         <div class="col-md-12">
-                          <table id="orderDetails" class="table table-hover">
+                          <table id="orderDetails" class="table table-hover table-bordered table-striped ">
                             <thead>
                               <tr>
                                 <th>Order #</th>
@@ -68,7 +68,7 @@ if (!$isLogin) {
                                   FROM inventory_general ig
                                   LEFT JOIN medicine_profile mp
                                   ON mp.id = ig.medicine_id
-                                  WHERE ig.id = '$detail->inventory_general_id'
+                                  WHERE ig.id = '$detail->inventory_general_id' and ig.is_returned <> '1'
                               "
                                 );
                                 $inventory = mysqli_fetch_object($medicineQ);
@@ -84,9 +84,9 @@ if (!$isLogin) {
                                       <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                     </button>
                                   </td>
-                                  <td><?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></td>
+                                  <td><?= number_format($inventory->price, 2, '.', ',') ?></td>
                                   <td><?= $detail->quantity ?></td>
-                                  <td><?= "₱ " . number_format($detail->order_subtotal, 2, '.', ',') ?></td>
+                                  <td><?= number_format($detail->order_subtotal, 2, '.', ',') ?></td>
                                   <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                                 </tr>
                                 <div id='divModalImage<?= $inventory->inventory_id ?>' class='div-modal pt-5'>
@@ -111,22 +111,23 @@ if (!$isLogin) {
         </div>
       </div>
     </div>
+  </div>
 
-    <?php include("../components/scripts.php") ?>
-    <script>
-      $(document).ready(function() {
-        const tableId = "#orderDetails";
-        var table = $(tableId).DataTable({
-          paging: false,
-          lengthChange: false,
-          ordering: false,
-          info: false,
-          autoWidth: false,
-          responsive: true,
-        });
-
+  <?php include("../components/scripts.php") ?>
+  <script>
+    $(document).ready(function() {
+      const tableId = "#orderDetails";
+      var table = $(tableId).DataTable({
+        paging: false,
+        lengthChange: false,
+        ordering: false,
+        info: false,
+        autoWidth: false,
+        responsive: true,
       });
-    </script>
+
+    });
+  </script>
 </body>
 
 </html>

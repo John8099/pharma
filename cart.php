@@ -29,7 +29,7 @@ if (!$isLogin) {
     <?php include("./components/header-nav.php") ?>
 
     <div class="site-section">
-      <div class="container">
+      <div class="container-fluid">
         <div class="row mb-5">
           <form class="col-md-12" method="POST" id="form-update-cart">
             <div class="site-blocks-table">
@@ -40,42 +40,53 @@ if (!$isLogin) {
                     <th class="product-name">Product</th>
                     <th class="product-price">Dosage</th>
                     <th class="product-price">Price</th>
-                    <th class="product-quantity">Quantity</th>
+                    <th class="product-quantity">Item(s)</th>
                     <th class="product-total">Total</th>
                     <th class="product-remove">Remove</th>
                   </tr>
                 </thead>
                 <tbody>
                   <?php
+                  $hasPrescriptionRequired = "false";
                   $overAllTotal = 0.00;
+                  $discountedTotal = 0.00;
                   $cartData = [];
                   if ($user) :
                     $cartData = getTableWithWhere("cart", "user_id ='$user->id' and status='pending' and checkout_date IS NULL");
+
                     if (count($cartData) > 0) :
                       foreach ($cartData as $cart) :
                         $inventoryQStr = mysqli_query(
                           $conn,
                           "SELECT 
-                        ig.id AS 'inventory_id',
-                        ig.medicine_id,
-                        mp.medicine_name,
-                        mp.generic_name,
-                        ig.product_number,
-                        mp.description,
-                        mp.dosage,
-                        ig.quantity,
-                        ig.expiration_date,
-                        (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
-                        (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price',
-                        (SELECT category_name FROM category c WHERE c.id = mp.category_id) AS 'category'
-                        FROM inventory_general ig
-                        LEFT JOIN medicine_profile mp
-                        ON mp.id = ig.medicine_id
-                        WHERE ig.id = '$cart->inventory_id'
-                        "
+                          ig.id AS 'inventory_id',
+                          ig.medicine_id,
+                          mp.medicine_name,
+                          mp.generic_name,
+                          ig.product_number,
+                          mp.description,
+                          mp.dosage,
+                          ig.quantity,
+                          ig.expiration_date,
+                          (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
+                          (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price',
+                          (SELECT category_name FROM category c WHERE c.id = mp.category_id) AS 'category',
+                          (SELECT prescription_required FROM category c WHERE c.id = mp.category_id) AS 'prescription_required'
+                          FROM inventory_general ig
+                          LEFT JOIN medicine_profile mp
+                          ON mp.id = ig.medicine_id
+                          WHERE ig.id = '$cart->inventory_id'
+                          "
                         );
                         $inventory = mysqli_fetch_object($inventoryQStr);
                         $overAllTotal += (intval($inventory->price) * intval($cart->quantity));
+                        $discountedTotal += getDiscounted($inventory->inventory_id, $inventory->price) * intval($cart->quantity);
+
+                        if ($hasPrescriptionRequired == "false") {
+                          if ($inventory->prescription_required == "1") {
+                            $hasPrescriptionRequired = "true";
+                          }
+                        }
                   ?>
                         <tr>
                           <td class="product-thumbnail">
@@ -84,9 +95,13 @@ if (!$isLogin) {
                           <td class="product-name">
                             <h2 class="h5 text-black"><?= $inventory->medicine_name ?></h2>
                           </td>
-                          <td><?= $inventory->dosage . "mg" ?></td>
-                          <td> <?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></td>
+                          <td><?= $inventory->dosage ?></td>
+                          <td class="text-left">
+                            Regular: <?= "₱ " . number_format($inventory->price, 2, '.', ',') ?> <br>
+                            Discounted: <?= "₱ " . getDiscounted($inventory->inventory_id, $inventory->price) ?>
+                          </td>
                           <td>
+                            <input type="text" class="cart_id" value="<?= $cart->id ?>" hidden readonly>
                             <div class="input-group mb-3 m-auto" style="max-width: 120px;">
                               <div class="input-group-prepend">
                                 <button class="btn btn-outline-primary js-btn-minus" type="button">&minus;</button>
@@ -97,7 +112,17 @@ if (!$isLogin) {
                               </div>
                             </div>
                           </td>
-                          <td> <?= "₱ " . number_format((intval($inventory->price) * intval($cart->quantity)), 2, '.', ',') ?></td>
+                          <td class="text-left prices">
+                            Regular:
+                            <span class="regular">
+                              <?= "₱ " . number_format((intval($inventory->price) * intval($cart->quantity)), 2, '.', ',') ?>
+                            </span>
+                            <br>
+                            Discounted:
+                            <span class="discounted">
+                              <?= "₱ " . number_format((getDiscounted($inventory->inventory_id, $inventory->price) * intval($cart->quantity)), 2, '.', ',') ?>
+                            </span>
+                          </td>
                           <td>
                             <button type="button" onclick="return deleteData('cart', 'id', '<?= $cart->id ?>')" class="btn btn-primary height-auto btn-sm">
                               X
@@ -116,9 +141,9 @@ if (!$isLogin) {
             <div class="row">
               <div class="col-md-6">
                 <div class="row mb-5">
-                  <div class="col-md-6 mb-3 mb-md-0">
+                  <!-- <div class="col-md-6 mb-3 mb-md-0">
                     <button type="submit" class="btn btn-primary btn-md btn-block" <?= $isDisabled ?>>Update Cart</button>
-                  </div>
+                  </div> -->
                   <div class="col-md-6">
                     <button type="button" class="btn btn-outline-primary btn-md btn-block" onclick="window.location.href='<?= $SERVER_NAME ?>/store'">Continue Shopping</button>
                   </div>
@@ -133,21 +158,34 @@ if (!$isLogin) {
                         <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
                       </div>
                     </div>
-                    <div class="row mb-5">
+                    <div class="row">
                       <div class="col-md-6">
-                        <span class="text-black">Total</span>
+                        <span class="text-black">Regular Total</span>
                       </div>
                       <div class="col-md-6 text-right">
                         <strong class="text-black">
-                          <?= "₱ " . number_format($overAllTotal, 2, '.', ',') ?>
+                          <span id="regularTotal">
+                            <?= "₱ " . number_format($overAllTotal, 2, '.', ',') ?>
+                          </span>
+                        </strong>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <span class="text-black">Discounted Total</span>
+                      </div>
+                      <div class="col-md-6 text-right">
+                        <strong class="text-black">
+                          <span id="discountedTotal">
+                            <?= "₱ " . number_format($discountedTotal, 2, '.', ',') ?>
+                          </span>
                         </strong>
                       </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row mt-5">
                       <div class="col-md-12">
-
-                        <button type="button" class="btn btn-primary btn-lg btn-block" onclick="handleCheckout()" <?= $isDisabled ?>>
+                        <button type="button" class="btn btn-primary btn-lg btn-block" onclick="handleCheckout('<?= $hasPrescriptionRequired ?>')" <?= $isDisabled ?>>
                           Checkout
                         </button>
                       </div>
@@ -277,8 +315,30 @@ if (!$isLogin) {
     });
   })
 
-  function handleCheckout() {
-    $("#uploadPrescription").modal("show")
+  function handleCheckout(isPrescriptionRequired) {
+    if (isPrescriptionRequired === "true") {
+      $("#uploadPrescription").modal("show")
+      console.log(isPrescriptionRequired)
+    } else {
+      swal.showLoading()
+      $.get(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=checkout",
+        (data, status) => {
+          const resp = JSON.parse(data)
+          swal.fire({
+            title: resp.success ? "Success!" : 'Error!',
+            html: resp.message,
+            icon: resp.success ? "success" : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
+    }
   }
 
   function handleRemoveFromCart(cartId) {
@@ -296,47 +356,104 @@ if (!$isLogin) {
 
   $(".js-btn-minus").on("click", function(e) {
     e.preventDefault();
+    swal.showLoading()
     const inputNum = $(this).closest(".input-group").find(".form-control");
     const inputVal = inputNum.val();
     const minVal = inputNum[0].min;
 
+    let newVal = 0;
+
     if (inputVal != minVal) {
-      inputNum.val(
-        parseInt(
-          $(this).closest(".input-group").find(".form-control").val()
-        ) - 1
-      );
+      inputNum.val(parseInt(inputVal) - 1)
+      newVal = inputNum.val()
     } else {
-      inputNum.val(parseInt(minVal));
+      inputNum.val(parseInt(minVal))
+      newVal = inputNum.val()
     }
+
+    updatePrices($(this), newVal)
   });
 
   $(".js-btn-plus").on("click", function(e) {
     e.preventDefault();
+    swal.showLoading()
     const inputNum = $(this).closest(".input-group").find(".form-control");
     const inputVal = inputNum.val();
     const maxVal = inputNum[0].max;
 
+    let newVal = 0;
+
     if (inputVal != maxVal) {
-      inputNum.val(parseInt(inputVal) + 1);
+      inputNum.val(parseInt(inputVal) + 1)
+      newVal = inputNum.val()
     } else {
-      inputNum.val(parseInt(maxVal));
+      inputNum.val(parseInt(maxVal))
+      newVal = inputNum.val()
     }
+
+    updatePrices($(this), newVal)
   });
 
   $(".inputQuantity").on("input", function(e) {
+    swal.showLoading()
     const inputVal = $(this).val()
     const maxVal = $(this)[0].max;
     const minVal = $(this)[0].min;
 
+    let newVal = 0;
+
     if (Number(maxVal) < Number(inputVal)) {
       $(this).val(parseInt(maxVal))
+      newVal = parseInt(maxVal)
     }
 
     if (Number(minVal) > Number(inputVal)) {
       $(this).val(parseInt(minVal))
+      newVal = parseInt(minVal)
     }
+
+    updatePrices($(this), newVal)
   })
+
+  function updatePrices(el, quantity) {
+    const pricesEl = el.parents().siblings().closest(".prices");
+    const cartId = el.parents().siblings().closest(".cart_id");
+
+    const regularTotalEl = $("#regularTotal")
+    const discountedTotalEl = $("#discountedTotal")
+
+    const regular = pricesEl.find(".regular");
+    const discounted = pricesEl.find(".discounted");
+
+    console.log(quantity)
+    $.post(
+      "<?= $SERVER_NAME ?>/backend/nodes?action=update_cart", {
+        cart_id: cartId.val(),
+        quantity: quantity
+      },
+      (data, status) => {
+        const resp = JSON.parse(data)
+        if (!resp.success) {
+          swal.fire({
+            title: 'Error!',
+            text: resp.message,
+            icon: 'error',
+          }).then(() => !resp.success ? window.location.reload() : undefined)
+        } else {
+          window.location.reload()
+        }
+
+
+      }).fail(function(e) {
+      swal.fire({
+        title: 'Error!',
+        text: e.statusText,
+        icon: 'error',
+      })
+    });
+
+    swal.close()
+  }
 </script>
 
 </html>

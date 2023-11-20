@@ -37,9 +37,13 @@
               FROM inventory_general ig
               LEFT JOIN medicine_profile mp
               ON mp.id = ig.medicine_id
-              WHERE mp.medicine_name LIKE '%$_GET[medicine]%'
+              WHERE 
+              (mp.medicine_name LIKE '%$_GET[medicine]%' OR mp.generic_name LIKE '%$_GET[medicine]%') and 
+              ig.is_returned <> '1'
+              ORDER BY mp.medicine_name ASC
               LIMIT $limit
               OFFSET $offset
+              
               ";
           } else {
             $inventoryQStr = "SELECT 
@@ -53,6 +57,8 @@
               FROM inventory_general ig
               LEFT JOIN medicine_profile mp
               ON mp.id = ig.medicine_id
+              WHERE ig.is_returned <> '1'
+              ORDER BY mp.medicine_name ASC
               LIMIT $limit
               OFFSET $offset
               ";
@@ -61,9 +67,9 @@
           if (mysqli_num_rows($inventoryQ) > 0) :
             while ($inventory = mysqli_fetch_object($inventoryQ)) :
           ?>
-              <div class="col-sm-6 col-lg-4 text-center item mb-4">
+              <div class="col-sm-4 col-lg-3 text-center item mb-4">
                 <a href="./shop-single?id=<?= $inventory->inventory_id ?>">
-                  <img src="<?= getMedicineImage($inventory->medicine_id) ?>" style="width: 270px; height: 370px;" alt="Image">
+                  <img src="<?= getMedicineImage($inventory->medicine_id) ?>" style="width: 200px; height: 300px;" alt="Image">
                 </a>
                 <h3 class="text-dark">
                   <a href="./shop-single?id=<?= $inventory->inventory_id ?>">
@@ -72,6 +78,7 @@
                 </h3>
                 <p class="price"><?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></p>
               </div>
+
           <?php endwhile;
           endif;
           ?>

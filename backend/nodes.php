@@ -118,6 +118,15 @@ if (isset($_GET['action'])) {
       case "decline_order":
         decline_order();
         break;
+      case "return_to_supplier":
+        return_to_supplier();
+        break;
+      case "return_to_stocks":
+        return_to_stocks();
+        break;
+      case "get_stocks":
+        get_stocks();
+        break;
       default:
         null;
         break;
@@ -126,6 +135,100 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function getDiscounted($inventoryId, $price)
+{
+  $inventory = getSingleDataWithWhere("inventory_general", "id='$inventoryId'");
+
+  if ($inventory->is_discountable == "1") {
+    $discount = intval($price) * 0.20;
+
+    return number_format($price - $discount, 2, '.', ',');
+  }
+
+  return number_format($price, 2, '.', ',');
+}
+
+function get_stocks()
+{
+  global $_GET;
+
+  $returned_id = $_GET["returned_id"];
+  $inventory_id = $_GET["inventory_id"];
+
+  try {
+    $stockData = getSingleDataWithWhere("inventory_general", "id='$inventory_id'");
+
+    $medicineData = getSingleDataWithWhere("medicine_profile", "id='$stockData->medicine_id'");
+    $brandData = getSingleDataWithWhere("brands", "id='$medicineData->brand_id'");
+
+    $supplierData = getSingleDataWithWhere("supplier", "id='$stockData->supplier_id'");
+
+    $priceData = getSingleDataWithWhere("price", "id='$stockData->price_id'");
+
+    $medicineName = "$medicineData->medicine_name/ $brandData->brand_name/ $medicineData->generic_name";
+
+    $responseData = array(
+      "return_id" => "$returned_id",
+      "medicine_id" => "$stockData->medicine_id",
+      "medicine_name" => "$medicineName",
+      "supplier_id" => "$stockData->supplier_id",
+      "supplier_name" => "$supplierData->supplier_name",
+      "purchase_price" => "$priceData->purchased_price",
+      "mark_up" => "$priceData->markup",
+      "price" => "$priceData->price",
+      "quantity" => "$stockData->quantity",
+      "date_received" => date("Y-m-d"),
+      "is_vatable" => $stockData->is_vatable == "0" ? false : true,
+      "is_discountable" => $stockData->is_discountable == "0" ? false : true
+    );
+
+    $response["success"] = true;
+    $response["data"] = $responseData;
+  } catch (Exception $e) {
+    $response["success"] = false;
+    $response["data"] = $e->getMessage();
+  }
+
+  returnResponse($response);
+}
+
+function return_to_stocks()
+{
+  global $conn, $_POST;
+
+  $returned_id = $_POST["returned_id"];
+  $quantity = $_POST["quantity"];
+
+  $returnedData = getSingleDataWithWhere("returned", "id = '$returned_id'");
+
+  $inventoryData = getTableData("inventory_general", "id", $returnedData->id);
+}
+
+function return_to_supplier()
+{
+  global $conn, $_POST;
+
+  $inventoryId = $_POST["inventory_id"];
+
+  $returnData = array(
+    "inventory_id" => $inventoryId
+  );
+
+  $inReturn = insert("returned", $returnData);
+
+  if ($inReturn) {
+    $upDataInventoryTable = update("inventory_general", array("is_returned" => "1"), "id", $inventoryId);
+
+    $response["success"] = true;
+    $response["message"] = "Successfully returned to supplier.";
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
 }
 
 function decline_order()
@@ -277,8 +380,9 @@ function checkout()
   global $conn, $_SESSION, $_FILES;
 
   $user_id = $_SESSION["userId"];
-  $prescription = $_FILES["prescription_img"];
   $orderNumber = generateSystemId("order_tbl", "ORD");
+  $prescription = isset($_FILES["prescription_img"]) ? $_FILES["prescription_img"] : null;
+
 
   $orderData = array(
     "order_number" => $orderNumber,
@@ -291,8 +395,12 @@ function checkout()
     "prescription" => ""
   );
 
-  $uploadedImg = uploadImg($prescription, "../media/prescription");
-  $orderData["prescription"] = $uploadedImg->success ? $uploadedImg->file_name : "";
+  if ($prescription) {
+    $uploadedImg = uploadImg($prescription, "../media/prescription");
+    $orderData["prescription"] = $uploadedImg->success ? $uploadedImg->file_name : "";
+  } else {
+    $orderData["prescription"] = "set_null";
+  }
 
   $orderSubtotal = 0.00;
   $overallTotal = 0.00;
@@ -511,20 +619,31 @@ function save_stock()
 {
   global $conn, $_POST;
 
+  $returnedId = isset($_POST["returned_id"]) ? $_POST["returned_id"] : null;
+
   $medicine_id = $_POST["medicine_id"];
   $supplier_id = $_POST["supplier_id"];
   $price = $_POST["price"];
+  $purchased_price = $_POST["purchased_price"];
+  $mark_up = $_POST["mark_up"];
   $quantity = $_POST["quantity"];
   $received_date = $_POST["received_date"];
   $expiration_date = $_POST["expiration_date"];
   $serial_number = $_POST["serial_number"];
 
+  $isVatable =  isset($_POST["isVatable"]) ? "1" : "set_zero";
+  $isDiscountable =  isset($_POST["isDiscountable"]) ? "1" : "set_zero";
+
   $priceData = array(
+    "purchased_price" => $purchased_price,
+    "markup" => $mark_up,
     "price" => $price,
     "status" => "active"
   );
 
   $price_id = insert("price", $priceData);
+
+  $productNumber = generateSystemId("inventory_general", "PROD");
 
   if ($price_id) {
     $stockData = array(
@@ -535,12 +654,23 @@ function save_stock()
       "date_received" => $received_date,
       "expiration_date" => $expiration_date,
       "serial_number" => $serial_number,
-      "product_number" => generateSystemId("inventory_general", "PROD")
+      "product_number" => $productNumber,
+      "is_vatable" => $isVatable,
+      "is_discountable" => $isDiscountable
     );
 
     $inStock = insert("inventory_general", $stockData);
 
     if ($inStock) {
+
+      if ($returnedId) {
+        $returnData = array(
+          "product_number" => $productNumber,
+          "date_replaced" => date("Y-m-d")
+        );
+        $upReturnData = update("returned", $returnData, "id", $returnedId);
+      }
+
       $response["success"] = true;
       $response["message"] = "Stock successfully added.";
     } else {
@@ -603,6 +733,31 @@ function save_purchase()
   if ($procPurchase) {
     $response["success"] = true;
     $response["message"] = "Purchase order successfully added.";
+
+    $supplierData = getTableDataById("supplier", "id", $supplier_id);
+
+    $query = mysqli_query(
+      $conn,
+      "SELECT 
+      mp.medicine_name,
+      mp.generic_name,
+      (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name'
+      FROM medicine_profile mp
+      WHERE mp.id = '$medicine_id'
+        "
+    );
+
+    $medicineData = mysqli_fetch_object($query);
+
+    $response["data"] = array(
+      "supplierId" => $supplier_id,
+      "supplierName" => $supplierData->supplier_name,
+      "medicineId" => $medicine_id,
+      "medicineName" =>  "$medicineData->medicine_name/ $medicineData->brand_name/ $medicineData->generic_name",
+      "paymentAmount" => $payment_amount,
+      "paymentDate" => $payment_date,
+      "quantity" => $quantity
+    );
   } else {
     $response["success"] = false;
     $response["message"] = mysqli_error($conn);
@@ -710,37 +865,56 @@ function admin_checkout()
 
 function update_cart()
 {
-  global $conn, $_POST, $_SESSION;
+  global $conn, $_POST;
 
-  if (isset($_SESSION["userId"])) {
-    $cartDbData = getTableWithWhere("cart", "user_id ='$_SESSION[userId]' and status='pending' and checkout_date IS NULL");
+  $cart_id = $_POST["cart_id"];
+  $quantity = $_POST["quantity"];
 
-    $hasError = false;
-    foreach ($cartDbData as $cart) {
-      $cartQuantity = $_POST["cartQty$cart->id"];
+  $upCart = update("cart", array("quantity" => $quantity), "id", $cart_id);
 
-      $cartData = array("quantity" => $cartQuantity);
-
-      $updateCart = update("cart", $cartData, "id", $cart->id);
-
-      $hasError = $updateCart && !$hasError ? false : true;
-    }
-
-    if (!$hasError) {
-      $response["success"] = true;
-      $response["message"] = "Cart updated successfully";
-    } else {
-      $response["success"] = false;
-      $response["message"] = ("Other cart items successfully update but encountered an error<br>Error: " . mysqli_error($conn));
-    }
+  if ($upCart) {
+    $response["success"] = true;
   } else {
     $response["success"] = false;
-    $response["message"] = "Error while updating cart<br>Please try again later.";
   }
 
 
   returnResponse($response);
 }
+
+// function update_cart()
+// {
+//   global $conn, $_POST, $_SESSION;
+
+//   if (isset($_SESSION["userId"])) {
+//     $cartDbData = getTableWithWhere("cart", "user_id ='$_SESSION[userId]' and status='pending' and checkout_date IS NULL");
+
+//     $hasError = false;
+//     foreach ($cartDbData as $cart) {
+//       $cartQuantity = $_POST["cartQty$cart->id"];
+
+//       $cartData = array("quantity" => $cartQuantity);
+
+//       $updateCart = update("cart", $cartData, "id", $cart->id);
+
+//       $hasError = $updateCart && !$hasError ? false : true;
+//     }
+
+//     if (!$hasError) {
+//       $response["success"] = true;
+//       $response["message"] = "Cart updated successfully";
+//     } else {
+//       $response["success"] = false;
+//       $response["message"] = ("Other cart items successfully update but encountered an error<br>Error: " . mysqli_error($conn));
+//     }
+//   } else {
+//     $response["success"] = false;
+//     $response["message"] = "Error while updating cart<br>Please try again later.";
+//   }
+
+
+//   returnResponse($response);
+// }
 
 function remove_to_cart()
 {
@@ -975,6 +1149,7 @@ function save_category()
   $categoryId = isset($_POST["categoryId"]) ? $_POST["categoryId"] : null;
   $name = ucwords($_POST["name"]);
   $status = isset($_POST["isActive"]) ? "1" : "set_zero";
+  $prescriptionRequired = isset($_POST["prescriptionRequired"]) ? "1" : "set_zero";
 
   $action = $_POST["action"];
   $description = $_POST["description"] == "" ? "set_null" : ucfirst($_POST["description"]);
@@ -983,7 +1158,8 @@ function save_category()
     $categoryData = array(
       "category_name" => $name,
       "description" => $description,
-      "status" => $status
+      "status" => $status,
+      "prescription_required" => $prescriptionRequired
     );
 
     $procCategory = null;

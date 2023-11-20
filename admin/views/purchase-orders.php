@@ -40,7 +40,7 @@ if (!$isLogin) {
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="purchasedTable" class="table table-hover">
+                      <table id="purchasedTable" class="table table-hover table-bordered table-striped ">
                         <thead>
                           <tr>
                             <th>Supplier Name</th>
@@ -71,7 +71,7 @@ if (!$isLogin) {
                             FROM purchase_order po
                             LEFT JOIN medicine_profile mp
                             ON mp.id = po.medicine_id
-                            WHERE po.supplier_id IS NOT NULL and po.medicine_id IS NOT NULL
+                            WHERE po.medicine_id IS NOT NULL
                               "
                           );
                           while ($purchased = mysqli_fetch_object($query)) :
@@ -80,7 +80,7 @@ if (!$isLogin) {
                             $alt = $exploded[count($exploded) - 1];
                           ?>
                             <tr>
-                              <td class="align-middle"><?= $purchased->supplier_name ?></td>
+                              <td class="align-middle"><?= !$purchased->supplier_name ? "<em class='text-muted'>N/A</em>" : $purchased->supplier_name ?></td>
                               <td class="align-middle"><?= getFullName($purchased->created_by) ?></td>
                               <td class="align-middle">
                                 <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage<?= $purchased->medicine_id ?>')">
@@ -88,7 +88,7 @@ if (!$isLogin) {
                                 </button>
                               </td>
                               <td class="align-middle"><?= $purchased->creation_date ?></td>
-                              <td class="align-middle"><?= "₱ " . number_format($purchased->payment_amount, 2, '.', ',') ?></td>
+                              <td class="align-middle"><?= number_format($purchased->payment_amount, 2, '.', ',') ?></td>
                               <td class="align-middle"><?= $purchased->payment_date ?></td>
                               <td class="align-middle"><?= $purchased->quantity ?></td>
                             </tr>
@@ -202,222 +202,21 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addMed" tabindex="-1" role="dialog" aria-labelledby="New Medicine" aria-hidden="true" data-backdrop="static" data-keyboard="false" style="overflow-y: scroll;">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-secondary">
-            New Medicine
-          </h5>
-          <button type="button" class="close" onclick="closeMedModal('med')">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form method="POST" id="addMedForm" enctype="multipart/form-data">
-          <input type="text" value="add" name="action" hidden readonly>
-          <div class="modal-body">
-            <div class="row">
-
-              <div class="col-md-12 mb-1">
-                <div class="form-group">
-                  <img src="<?= getMedicineImage() ?>" class="rounded mx-auto d-block" style="width: 150px; height: 150px;" id="modalAdd-display">
-                </div>
-                <div class="mt-3" style="display: flex; justify-content: center;" id="modalAdd-browse">
-                  <button type="button" class="btn btn-primary btn-sm" onclick="return changeImage('#formInput-add')">
-                    Browse
-                  </button>
-                </div>
-                <div class="mt-3" style="display: flex; justify-content: center;" id="modalAdd-clear">
-                  <button type="button" class="btn btn-danger btn-sm" onclick="return clearImg('#modalAdd-display', '#modalAdd-clear', '#modalAdd-browse')">
-                    Clear
-                  </button>
-                </div>
-                <div class="mt-3" style="display: none;">
-                  <input class="form-control form-control-sm" type="file" accept="image/*" onchange="return previewFile(this, '#modalAdd-display', '#modalAdd-clear', '#modalAdd-browse')" id="formInput-add" name="medicine_img">
-                </div>
-              </div>
-
-              <div class="col-md-12 mb-1">
-                <div class="form-group">
-                  <label>Name <span class="text-danger">*</span></label>
-                  <input type="text" name="name" class="form-control" required>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label> Category <span class="text-danger">*</span> </label>
-                  <button type="button" id="btnAddCategory" class="btn btn-sm btn-primary mr-0" style="float: right;">New</button>
-
-                  <select class="selectpicker form-control" name="category_id" id="select_category" data-container="body" data-live-search="true" title="-- select category --" required>
-                    <?php
-                    $categoryData = getTableWithWhere("category", "status=1");
-                    foreach ($categoryData as $category) {
-                      echo "<option value='$category->id'>$category->category_name</option>";
-                    }
-                    ?>
-                  </select>
-                </div>
-              </div>
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Dose <span class="text-danger">*</span></label>
-                  <input type="text" name="dose" class="form-control" required>
-                </div>
-              </div>
-
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Generic name <span class="text-danger">*</span></label>
-                  <input type="text" name="generic_name" class="form-control" required>
-                </div>
-              </div>
-              <div class="col-md-6 mb-1">
-                <div class="form-group">
-                  <label>Brand name <span class="text-danger">*</span></label>
-                  <button id="btnAddBrand" type="button" class="btn btn-sm btn-primary mr-0" style="float: right;">New</button>
-                  <select name="brand_id" id="select_brand" data-live-search="true" class="selectpicker form-control" title="-- select brand --" required>
-                    <?php
-                    $brandData = getTableWithWhere("brands", "status=1");
-                    foreach ($brandData as $brand) {
-                      echo "<option value='$brand->id'>$brand->brand_name</option>";
-                    }
-                    ?>
-                  </select>
-                </div>
-              </div>
-
-              <div class="col-md-12 mb-1">
-                <div class="form-group">
-                  <label>Description</label>
-                  <textarea class="form-control" name="med_desc" rows="5"></textarea>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" id="btnAdd" class="btn btn-primary">Submit</button>
-            <button type="reset" class="btn btn-warning">Reset</button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="addCategory" tabindex="-1" role="dialog" aria-labelledby="New Category" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-secondary">
-            New Category
-          </h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form id="addCategoryForm" method="POST">
-          <input type="text" name="action" value="add" hidden readonly>
-          <input type="text" name="type" value="add_select" hidden readonly>
-          <div class="modal-body">
-
-            <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
-                <input type="text" name="name" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Description</label>
-              <div class="col-sm-10">
-                <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">is Active</label>
-              <div class="col-sm-9">
-                <label class="switch">
-                  <input type="checkbox" name="isActive" checked>
-                  <span class="slider round"></span>
-                </label>
-              </div>
-            </div>
-
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
+  <!-- Modal Add Stocks -->
+  <?= addStockWithId() ?>
+  <!-- Modal Add Medicine -->
+  <?= addMedicineModal("closeMedModal(`med`)") ?>
+  <!-- Modal Category -->
+  <?= addCategoryModal() ?>
+  <!-- Modal Brand  -->
   <?= addBrandModal(); ?>
-
-  <div class="modal fade" id="addSupplier" tabindex="-1" role="dialog" aria-labelledby="New Supplier" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-secondary">
-            New Supplier
-          </h5>
-          <button type="button" class="close" onclick="closeMedModal('sup')" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form id="addSupplierForm" method="POST">
-          <input type="text" name="action" value="add" hidden readonly>
-          <div class="modal-body">
-
-            <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Name <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
-                <input type="text" name="name" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Address <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
-                <input type="text" name="address" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-2 col-form-label">Contact <span class="text-danger">*</span></label>
-              <div class="col-sm-10">
-                <input type="text" name="contact" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">is Active</label>
-              <div class="col-sm-9">
-                <label class="switch">
-                  <input type="checkbox" name="isActive" checked>
-                  <span class="slider round"></span>
-                </label>
-              </div>
-            </div>
-
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-
+  <!-- Modal Supplier -->
+  <?= addSupplierModal("onclick='closeMedModal(`sup`)'"); ?>
   <?php include("../components/scripts.php") ?>
   <script>
     const closeModal = (modalId) => $(modalId).modal("hide")
 
-    // $("#addPurchased").modal("show")
+    // $("#addStock").modal("show")
 
     $("#modalAdd-clear").hide()
 
@@ -670,10 +469,11 @@ if (!$isLogin) {
       e.preventDefault()
     })
 
-    function handleSavePurchase(serializeData) {
+    $("#addStockForm").on("submit", function(e) {
+      e.preventDefault();
       $.post(
-        "<?= $SERVER_NAME ?>/backend/nodes?action=save_purchase",
-        serializeData,
+        "<?= $SERVER_NAME ?>/backend/nodes?action=save_stock",
+        $(this).serialize(),
         (data, status) => {
           const resp = JSON.parse(data)
           swal.fire({
@@ -689,7 +489,69 @@ if (!$isLogin) {
           icon: 'error',
         })
       });
+    });
+
+    function handleSavePurchase(serializeData) {
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=save_purchase",
+        serializeData,
+        (data, status) => {
+          const resp = JSON.parse(data)
+          swal.fire({
+            title: resp.success ? "Success!" : 'Error!',
+            html: resp.message,
+            icon: resp.success ? "success" : 'error',
+          }).then(() => {
+            if (resp.success) {
+              $("#addPurchaseForm").get(0).reset();
+              $('#addPurchased').modal('hide')
+
+              const data = resp.data;
+
+              const medicineIdEl = $("#medicineId");
+              const medicineNameEl = $("#medicineName");
+              const supplierIdEl = $("#supplierId");
+              const supplierNameEl = $("#supplierName");
+              const purchasePriceEl = $("#purchasePrice");
+              const quantityEl = $("#quantity");
+              const receiveDateEl = $("#receiveDate");
+              const markUpEl = $("#markUp");
+
+              const priceEl = $("#price");
+
+              const purchasedPrice = Number(data.paymentAmount) / Number(data.quantity);
+
+              medicineIdEl.val(data.medicineId);
+              medicineNameEl.val(data.medicineName);
+              supplierIdEl.val(data.supplierId);
+              supplierNameEl.val(data.supplierName);
+              purchasePriceEl.val(purchasedPrice.toFixed(2));
+              priceEl.val((purchasedPrice * Number(`1.${markUpEl.val()}`)).toFixed(2));
+              quantityEl.val(data.quantity);
+              receiveDateEl.val(data.paymentDate);
+
+            }
+          })
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
     }
+
+    $('#addPurchased').on('hidden.bs.modal', function() {
+      $('#addStock').modal('show')
+    })
+
+    $("#markUp").on("input", function(e) {
+      const purchasePriceEl = $("#purchasePrice");
+      const priceEl = $("#price");
+
+      priceEl.val((Number(purchasePriceEl.val()) * Number(`1.${$(this).val()}`)).toFixed(2));
+    })
 
     $(document).ready(function() {
       const tableId = "#purchasedTable";

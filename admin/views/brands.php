@@ -40,7 +40,7 @@ if (!$isLogin) {
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="brandTable" class="table table-hover">
+                      <table id="brandTable" class="table table-hover table-bordered table-striped ">
                         <thead>
                           <tr>
                             <th>Name</th>
@@ -68,7 +68,7 @@ if (!$isLogin) {
                                   <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
                                 </a>
 
-                                <a href="#" onclick="return deleteData('brands', 'id', '<?= $brand->id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                <a href="javascript:void()" onclick="return deleteData('brands', 'id', '<?= $brand->id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
                                   <i class="fa fa-times-circle"></i>
                                 </a>
                               </td>

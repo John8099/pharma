@@ -63,7 +63,9 @@ include("./backend/nodes.php");
               FROM inventory_general ig
               LEFT JOIN medicine_profile mp
               ON mp.id = ig.medicine_id
-              WHERE ig.id = '$popular->inventory_general_id'
+              WHERE 
+              ig.id = '$popular->inventory_general_id' and
+              ig.is_returned <> '1'
               "
               );
               if (mysqli_num_rows($inventoryQStr) > 0) :
@@ -104,6 +106,7 @@ include("./backend/nodes.php");
       FROM inventory_general ig
       LEFT JOIN medicine_profile mp
       ON mp.id = ig.medicine_id
+      WHERE ig.is_returned <> '1'
       ORDER BY ig.id DESC
       LIMIT 12
     "

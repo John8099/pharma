@@ -1,5 +1,6 @@
 <?php
 include("../../backend/nodes.php");
+include("../components/modals.php");
 if (!$isLogin) {
   header("location: ../");
 }
@@ -34,16 +35,17 @@ if (!$isLogin) {
                       <div class="w-100 d-flex justify-content-end">
 
                         <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addCategory">
-                          New Category
+                          New Therapeutic Category
                         </button>
                       </div>
                     </div>
                     <div class="card-body table-border-style">
-                      <table id="categoryTable" class="table table-hover">
+                      <table id="categoryTable" class="table table-hover table-bordered table-striped ">
                         <thead>
                           <tr>
-                            <th>Name</th>
+                            <th>Dosage Form</th>
                             <th>Description</th>
+                            <th>Prescription Required</th>
                             <th>Status</th>
                             <th>Action</th>
                           </tr>
@@ -54,10 +56,15 @@ if (!$isLogin) {
 
                           foreach ($categoryData as $category) :
                             $status = $category->status == "1" ? "Active" : "Inactive";
+                            $prescriptionStatus = $category->prescription_required == "1" ? "Yes" : "No";
                           ?>
                             <tr>
                               <td class=" align-middle"><?= $category->category_name ?></td>
                               <td class=" align-middle"><?= $category->description ?></td>
+                              <td class=" align-middle">
+                                <span class="status text-<?= $category->prescription_required == "1" ? "success" : "danger" ?>">•</span>
+                                <?= ucfirst($prescriptionStatus) ?>
+                              </td>
                               <td class=" align-middle">
                                 <span class="status text-<?= $category->status == "1" ? "success" : "danger" ?>">•</span>
                                 <?= ucfirst($status) ?>
@@ -67,61 +74,13 @@ if (!$isLogin) {
                                   <i class="fa fa-cog" title="Edit" data-toggle="tooltip"></i>
                                 </a>
 
-                                <a href="#" onclick="return deleteData('category', 'id', '<?= $category->id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
+                                <a href="javascript:void()" onclick="return deleteData('category', 'id', '<?= $category->id ?>')" class="h5 text-danger m-2" title="Delete" data-toggle="tooltip">
                                   <i class="fa fa-times-circle"></i>
                                 </a>
                               </td>
                             </tr>
 
-                            <div class="modal fade" id="editCategory<?= $category->id ?>" tabindex="-1" role="dialog" aria-labelledby="New Category" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                              <div class="modal-dialog modal-dialog-centered" role="document">
-                                <div class="modal-content">
-                                  <div class="modal-header">
-                                    <h5 class="modal-title text-secondary">
-                                      Edit Category
-                                    </h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                      <span aria-hidden="true">&times;</span>
-                                    </button>
-                                  </div>
-                                  <form method="POST">
-                                    <input type="text" name="action" value="edit" hidden readonly>
-                                    <input type="text" name="categoryId" value="<?= $category->id  ?>" hidden readonly>
-                                    <div class="modal-body">
-
-                                      <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Name<span class="text-danger">*</span></label>
-                                        <div class="col-sm-9">
-                                          <input type="text" name="name" class="form-control" value="<?= $category->category_name ?>" required>
-                                        </div>
-                                      </div>
-
-                                      <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">Description</label>
-                                        <div class="col-sm-9">
-                                          <textarea name="description" class="form-control" cols="30" rows="10"><?= nl2br($category->description) ?></textarea>
-                                        </div>
-                                      </div>
-
-                                      <div class="form-group row">
-                                        <label class="col-sm-3 col-form-label">is Active</label>
-                                        <div class="col-sm-9">
-                                          <label class="switch">
-                                            <input type="checkbox" name="isActive" <?= $category->status == "1" ? "checked" : "" ?>>
-                                            <span class="slider round"></span>
-                                          </label>
-                                        </div>
-                                      </div>
-
-                                    </div>
-                                    <div class="modal-footer">
-                                      <button type="button" onclick="handleEditCategory($(this))" class="btn btn-primary">Save</button>
-                                    </div>
-                                  </form>
-
-                                </div>
-                              </div>
-                            </div>
+                            <?= editCategoryModal($category) ?>
                           <?php endforeach; ?>
 
                         </tbody>
@@ -140,54 +99,7 @@ if (!$isLogin) {
     </div>
   </div>
 
-  <div class="modal fade" id="addCategory" tabindex="-1" role="dialog" aria-labelledby="New Category" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-secondary">
-            New Category
-          </h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form id="addCategoryForm" method="POST">
-          <input type="text" name="action" value="add" hidden readonly>
-          <div class="modal-body">
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">Name<span class="text-danger">*</span></label>
-              <div class="col-sm-9">
-                <input type="text" name="name" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">Description</label>
-              <div class="col-sm-9">
-                <textarea name="description" class="form-control" cols="30" rows="10"></textarea>
-              </div>
-            </div>
-
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label">is Active</label>
-              <div class="col-sm-9">
-                <label class="switch">
-                  <input type="checkbox" name="isActive" checked>
-                  <span class="slider round"></span>
-                </label>
-              </div>
-            </div>
-
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
+  <?= addCategoryModal() ?>
 
   <?php include("../components/scripts.php") ?>
   <script>
@@ -237,23 +149,14 @@ if (!$isLogin) {
             button: 'Filter',
           }
         },
-        "columns": [{
-            "width": "20%"
-          },
-          {
-            "width": "30%"
-          },
-          {
-            "width": "10%"
-          },
-          {
-            "width": "5%"
-          },
-        ],
+        columnDefs: [{
+          "targets": [4],
+          "orderable": false
+        }],
         buttons: [{
           extend: 'searchBuilder',
           config: {
-            columns: [0, 1, 2]
+            columns: [0, 1, 2, 3]
           }
         }],
         dom: 'Bfrtip',

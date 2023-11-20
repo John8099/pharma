@@ -30,7 +30,7 @@ if (!$isLogin) {
                 <div class="col-sm-12">
                   <div class="card">
                     <div class="card-body">
-                      <table id="salesTable" class="table table-hover table-border-style">
+                      <table id="salesTable" class="table table-hover table-bordered table-striped ">
                         <thead>
                           <tr>
                             <th>Order #</th>
@@ -60,7 +60,7 @@ if (!$isLogin) {
                                 </button>
                               </td>
                               <td><?= $order->type == "walk_in" ? "Over the counter" : "Online" ?></td>
-                              <td><?= "₱ " . number_format($order->overall_total, 2, '.', ',') ?></td>
+                              <td><?= number_format($order->overall_total, 2, '.', ',') ?></td>
                               <td><?= date("Y-m-d", strtotime($sale->sales_date)) ?></td>
                             </tr>
                           <?php endforeach; ?>
@@ -77,36 +77,39 @@ if (!$isLogin) {
         </div>
       </div>
     </div>
+  </div>
 
-    <?php include("../components/scripts.php") ?>
-    <script>
-      $(document).ready(function() {
-        const tableId = "#salesTable";
-        var table = $(tableId).DataTable({
-          paging: true,
-          lengthChange: false,
-          ordering: true,
-          info: true,
-          autoWidth: false,
-          responsive: true,
-          language: {
-            searchBuilder: {
-              button: 'Filter',
-            }
-          },
-          buttons: [{
+  <?php include("../components/scripts.php") ?>
+  <script>
+    $(document).ready(function() {
+      const tableId = "#salesTable";
+      var table = $(tableId).DataTable({
+        paging: true,
+        lengthChange: false,
+        ordering: true,
+        info: true,
+        autoWidth: false,
+        responsive: true,
+        language: {
+          searchBuilder: {
+            button: 'Filter',
+          }
+        },
+        buttons: [{
             extend: 'searchBuilder',
             config: {
-              columns: [0, 1, 2, 3, 4]
+              columns: [0, 1, 2, 3, 4, 6]
             }
-          }],
-          dom: 'Bfrtip',
-        });
-
-        table.buttons().container()
-          .appendTo(`${tableId}_wrapper .col-md-6:eq(0)`);
+          },
+          "print"
+        ],
+        dom: 'Bfrtip',
       });
-    </script>
+
+      table.buttons().container()
+        .appendTo(`${tableId}_wrapper .col-md-6:eq(0)`);
+    });
+  </script>
 </body>
 
 </html>

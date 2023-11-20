@@ -78,7 +78,7 @@ if (!$isLogin) {
                     <div class="card-body">
                       <div class="row">
                         <div class="col-md-12">
-                          <table id="customerOrderDetails" class="table table-hover">
+                          <table id="customerOrderDetails" class="table table-hover table-bordered table-striped ">
                             <thead>
                               <tr>
                                 <th>Prescription</th>
@@ -112,7 +112,7 @@ if (!$isLogin) {
                                   FROM inventory_general ig
                                   LEFT JOIN medicine_profile mp
                                   ON mp.id = ig.medicine_id
-                                  WHERE ig.id = '$detail->inventory_general_id'
+                                  WHERE ig.id = '$detail->inventory_general_id' and ig.is_returned <> '1'
                               "
                                 );
                                 $inventory = mysqli_fetch_object($medicineQ);
@@ -136,10 +136,10 @@ if (!$isLogin) {
                                       <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
                                     </button>
                                   </td>
-                                  <td><?= $inventory->dosage . "mg" ?></td>
-                                  <td><?= "₱ " . number_format($inventory->price, 2, '.', ',') ?></td>
+                                  <td><?= $inventory->dosage ?></td>
+                                  <td><?= number_format($inventory->price, 2, '.', ',') ?></td>
                                   <td><?= $detail->quantity ?></td>
-                                  <td><?= "₱ " . number_format($detail->order_subtotal, 2, '.', ',') ?></td>
+                                  <td><?= number_format($detail->order_subtotal, 2, '.', ',') ?></td>
                                   <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                                 </tr>
                                 <div id='divModalImage<?= $inventory->inventory_id ?>' class='div-modal pt-5'>
@@ -175,7 +175,7 @@ if (!$isLogin) {
                             </div>
                             <div class="col-6">
                               <h4>
-                                <?= "₱ " . number_format($orderTotal, 2, '.', ',') ?>
+                                <?= number_format($orderTotal, 2, '.', ',') ?>
                               </h4>
                             </div>
                           </div>
@@ -196,13 +196,14 @@ if (!$isLogin) {
                             <button type="button" onclick="openModalReason('<?= $order->id ?>')" class="btn btn-danger btn-sm">
                               Decline
                             </button>
+                            <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'preparing')" class="btn btn-primary btn-sm">
+                              Set Preparing
+                            </button>
+                          <?php elseif ($order->status == "preparing") : ?>
+                            <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'to claim')" class="btn btn-info btn-sm">
+                              Set to Claim
+                            </button>
                           <?php endif; ?>
-                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'preparing')" class="btn btn-primary btn-sm">
-                            Set Preparing
-                          </button>
-                          <button type="button" onclick="handleChangeOrderStatus('<?= $order->id ?>', 'to claim')" class="btn btn-info btn-sm">
-                            Set to Claim
-                          </button>
                         <?php endif; ?>
                       <?php endif; ?>
                     </div>
@@ -311,172 +312,173 @@ if (!$isLogin) {
         </div>
       </div>
     </div>
+  </div>
 
 
-    <?php include("../components/scripts.php") ?>
-    <script>
-      $("#uploadReason").on("submit", function(e) {
-        e.preventDefault();
-        swal.showLoading();
+  <?php include("../components/scripts.php") ?>
+  <script>
+    $("#uploadReason").on("submit", function(e) {
+      e.preventDefault();
+      swal.showLoading();
 
-        $.post(
-          "<?= $SERVER_NAME ?>/backend/nodes?action=decline_order",
-          $(this).serialize(),
-          (data, status) => {
-            const resp = JSON.parse(data)
-            swal.fire({
-              title: resp.success ? 'Success!' : "Error!",
-              html: resp.message,
-              icon: resp.success ? 'success' : 'error',
-            }).then(() => resp.success ? window.location.reload() : undefined)
-
-          }).fail(function(e) {
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=decline_order",
+        $(this).serialize(),
+        (data, status) => {
+          const resp = JSON.parse(data)
           swal.fire({
-            title: 'Error!',
-            text: e.statusText,
-            icon: 'error',
-          })
-        });
-      })
+            title: resp.success ? 'Success!' : "Error!",
+            html: resp.message,
+            icon: resp.success ? 'success' : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
 
-      function openModalReason(orderId) {
-        $("#modalReason").modal("show")
-      }
-
-      $("#checkoutForm").on("submit", function(e) {
-        e.preventDefault()
-        swal.showLoading();
-
-        $.post(
-          "<?= $SERVER_NAME ?>/backend/nodes?action=claim_online_order",
-          $(this).serialize(),
-          (data, status) => {
-            const resp = JSON.parse(data)
-            swal.fire({
-              title: resp.success ? 'Success!' : "Error!",
-              html: resp.message,
-              icon: resp.success ? 'success' : 'error',
-            }).then(() => resp.success ? window.location.href = `print-receipt?id=${resp.invoice_id}` : undefined)
-
-          }).fail(function(e) {
-          swal.fire({
-            title: 'Error!',
-            text: e.statusText,
-            icon: 'error',
-          })
-        });
-      })
-
-      $("#modalCheckOut").on("hidden.bs.modal", function(e) {
-        $("#inputAmount").val("");
-        $("#inputChange").val("0.00")
-        $("#btnProceed").prop("disabled", true)
-      })
-
-      function updateData() {
-        const subtotal = $("#inputSubTotal").val();
-        const discount = $("#inputDiscount").val();
-        const total = $("#inputTotal").val();
-        const amount = $("#inputAmount").val();
-        const change = $("#inputChange").val();
-
-        const newDiscount = (Number(subtotal) * .20).toFixed(2);
-
-        $("#inputDiscount").val(newDiscount)
-        $("#inputTotal").val(subtotal - newDiscount)
-
-        $("#inputChange").change()
-      }
-
-      function handleClaimOrder() {
-        $("#modalCheckOut").modal("show")
-      }
-
-      $("#btnDiscount").on("click", function() {
-        $(this).addClass("d-none")
-        $("#btnClear").removeClass("d-none")
-
-        const subtotal = Number($("#inputSubTotal").val())
-        const discount = (Number($("#inputSubTotal").val()) * .20).toFixed(2);
-
-        $("#inputDiscount").val(discount)
-        $("#inputTotal").val((subtotal - discount).toFixed(2))
-
-        updateData()
-      })
-
-      $("#btnClear").on("click", function() {
-        $(this).addClass("d-none")
-        $("#btnDiscount").removeClass("d-none")
-
-        $("#inputDiscount").val("0.00")
-        $("#inputTotal").val($("#inputSubTotal").val())
-
-        $("#inputChange").change()
-      })
-
-      $("#inputAmount").on("input", function() {
-        $("#inputChange").change()
-      })
-
-      $("#inputChange").on("change", function() {
-        const amount = Number($("#inputAmount").val())
-        const total = Number($("#inputTotal").val())
-
-        if (amount >= total) {
-          $("#btnProceed").removeClass("disabled")
-          $("#btnProceed").prop("disabled", false)
-
-          const change = (amount - total)
-          if (change <= 0) {
-            $(this).val("0.00")
-          } else {
-            $(this).val(change.toFixed(2))
-          }
-        } else {
-          $("#btnProceed").addClass("disabled")
-          $("#btnProceed").prop("disabled", true)
-        }
-
-      })
-
-      function handleChangeOrderStatus(orderId, status) {
-        swal.showLoading()
-        $.post(
-          "<?= $SERVER_NAME ?>/backend/nodes?action=change_order_status", {
-            order_id: orderId,
-            status: status
-          },
-          (data, status) => {
-            const resp = JSON.parse(data)
-            swal.fire({
-              title: resp.success ? 'Success!' : "Error!",
-              html: resp.message,
-              icon: resp.success ? 'success' : 'error',
-            }).then(() => resp.success ? window.location.reload() : undefined)
-
-          }).fail(function(e) {
-          swal.fire({
-            title: 'Error!',
-            text: e.statusText,
-            icon: 'error',
-          })
-        });
-      }
-
-      $(document).ready(function() {
-        const tableId = "#customerOrderDetails";
-        var table = $(tableId).DataTable({
-          paging: false,
-          lengthChange: false,
-          ordering: false,
-          info: false,
-          autoWidth: false,
-          responsive: true,
-        });
-
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
       });
-    </script>
+    })
+
+    function openModalReason(orderId) {
+      $("#modalReason").modal("show")
+    }
+
+    $("#checkoutForm").on("submit", function(e) {
+      e.preventDefault()
+      swal.showLoading();
+
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=claim_online_order",
+        $(this).serialize(),
+        (data, status) => {
+          const resp = JSON.parse(data)
+          swal.fire({
+            title: resp.success ? 'Success!' : "Error!",
+            html: resp.message,
+            icon: resp.success ? 'success' : 'error',
+          }).then(() => resp.success ? window.location.href = `print-receipt?id=${resp.invoice_id}` : undefined)
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
+    })
+
+    $("#modalCheckOut").on("hidden.bs.modal", function(e) {
+      $("#inputAmount").val("");
+      $("#inputChange").val("0.00")
+      $("#btnProceed").prop("disabled", true)
+    })
+
+    function updateData() {
+      const subtotal = $("#inputSubTotal").val();
+      const discount = $("#inputDiscount").val();
+      const total = $("#inputTotal").val();
+      const amount = $("#inputAmount").val();
+      const change = $("#inputChange").val();
+
+      const newDiscount = (Number(subtotal) * .20).toFixed(2);
+
+      $("#inputDiscount").val(newDiscount)
+      $("#inputTotal").val(subtotal - newDiscount)
+
+      $("#inputChange").change()
+    }
+
+    function handleClaimOrder() {
+      $("#modalCheckOut").modal("show")
+    }
+
+    $("#btnDiscount").on("click", function() {
+      $(this).addClass("d-none")
+      $("#btnClear").removeClass("d-none")
+
+      const subtotal = Number($("#inputSubTotal").val())
+      const discount = (Number($("#inputSubTotal").val()) * .20).toFixed(2);
+
+      $("#inputDiscount").val(discount)
+      $("#inputTotal").val((subtotal - discount).toFixed(2))
+
+      updateData()
+    })
+
+    $("#btnClear").on("click", function() {
+      $(this).addClass("d-none")
+      $("#btnDiscount").removeClass("d-none")
+
+      $("#inputDiscount").val("0.00")
+      $("#inputTotal").val($("#inputSubTotal").val())
+
+      $("#inputChange").change()
+    })
+
+    $("#inputAmount").on("input", function() {
+      $("#inputChange").change()
+    })
+
+    $("#inputChange").on("change", function() {
+      const amount = Number($("#inputAmount").val())
+      const total = Number($("#inputTotal").val())
+
+      if (amount >= total) {
+        $("#btnProceed").removeClass("disabled")
+        $("#btnProceed").prop("disabled", false)
+
+        const change = (amount - total)
+        if (change <= 0) {
+          $(this).val("0.00")
+        } else {
+          $(this).val(change.toFixed(2))
+        }
+      } else {
+        $("#btnProceed").addClass("disabled")
+        $("#btnProceed").prop("disabled", true)
+      }
+
+    })
+
+    function handleChangeOrderStatus(orderId, status) {
+      swal.showLoading()
+      $.post(
+        "<?= $SERVER_NAME ?>/backend/nodes?action=change_order_status", {
+          order_id: orderId,
+          status: status
+        },
+        (data, status) => {
+          const resp = JSON.parse(data)
+          swal.fire({
+            title: resp.success ? 'Success!' : "Error!",
+            html: resp.message,
+            icon: resp.success ? 'success' : 'error',
+          }).then(() => resp.success ? window.location.reload() : undefined)
+
+        }).fail(function(e) {
+        swal.fire({
+          title: 'Error!',
+          text: e.statusText,
+          icon: 'error',
+        })
+      });
+    }
+
+    $(document).ready(function() {
+      const tableId = "#customerOrderDetails";
+      var table = $(tableId).DataTable({
+        paging: false,
+        lengthChange: false,
+        ordering: false,
+        info: false,
+        autoWidth: false,
+        responsive: true,
+      });
+
+    });
+  </script>
 </body>
 
 </html>

@@ -35,7 +35,7 @@ if (!$isLogin) {
                       </button>
                     </div>
                     <div class="card-body">
-                      <table id="invoiceTable" class="table table-hover">
+                      <table id="invoiceTable" class="table table-hover table-bordered table-striped ">
                         <thead>
                           <tr>
                             <th>Order #</th>
@@ -69,11 +69,11 @@ if (!$isLogin) {
                                   <?= $sales->total_quantity_sold ?>
                                 </button>
                               </td>
-                              <td><?= "₱ " . number_format($order->subtotal, 2, '.', ',') ?></td>
-                              <td><?= "₱ " . number_format($order->discount, 2, '.', ',') ?></td>
-                              <td><?= "₱ " . number_format($order->overall_total, 2, '.', ',') ?></td>
-                              <td><?= "₱ " . number_format($payment->paid_amount, 2, '.', ',') ?></td>
-                              <td><?= "₱ " . number_format($payment->customer_change, 2, '.', ',') ?></td>
+                              <td><?= number_format($order->subtotal, 2, '.', ',') ?></td>
+                              <td><?= number_format($order->discount, 2, '.', ',') ?></td>
+                              <td><?= number_format($order->overall_total, 2, '.', ',') ?></td>
+                              <td><?= number_format($payment->paid_amount, 2, '.', ',') ?></td>
+                              <td><?= number_format($payment->customer_change, 2, '.', ',') ?></td>
                               <td><?= date("Y-m-d", strtotime($in->date_created)) ?></td>
                             </tr>
                           <?php endforeach; ?>
@@ -89,36 +89,37 @@ if (!$isLogin) {
         </div>
       </div>
     </div>
+  </div>
 
-    <?php include("../components/scripts.php") ?>
-    <script>
-      $(document).ready(function() {
-        const tableId = "#invoiceTable";
-        var table = $(tableId).DataTable({
-          paging: true,
-          lengthChange: false,
-          ordering: true,
-          info: true,
-          autoWidth: false,
-          responsive: true,
-          language: {
-            searchBuilder: {
-              button: 'Filter',
-            }
-          },
-          buttons: [{
-            extend: 'searchBuilder',
-            config: {
-              columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-            }
-          }],
-          dom: 'Bfrtip',
-        });
-
-        table.buttons().container()
-          .appendTo(`${tableId}_wrapper .col-md-6:eq(0)`);
+  <?php include("../components/scripts.php") ?>
+  <script>
+    $(document).ready(function() {
+      const tableId = "#invoiceTable";
+      var table = $(tableId).DataTable({
+        paging: true,
+        lengthChange: false,
+        ordering: true,
+        info: true,
+        autoWidth: false,
+        responsive: true,
+        language: {
+          searchBuilder: {
+            button: 'Filter',
+          }
+        },
+        buttons: [{
+          extend: 'searchBuilder',
+          config: {
+            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+          }
+        }],
+        dom: 'Bfrtip',
       });
-    </script>
+
+      table.buttons().container()
+        .appendTo(`${tableId}_wrapper .col-md-6:eq(0)`);
+    });
+  </script>
 </body>
 
 </html>
