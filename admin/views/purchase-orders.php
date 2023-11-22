@@ -63,6 +63,7 @@ if (!$isLogin) {
                             created_by,
                             mp.medicine_name,
                             mp.generic_name,
+                            mp.dosage,
                             (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
                             creation_date,
                             payment_amount,
@@ -84,7 +85,7 @@ if (!$isLogin) {
                               <td class="align-middle"><?= getFullName($purchased->created_by) ?></td>
                               <td class="align-middle">
                                 <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage<?= $purchased->medicine_id ?>')">
-                                  <?= "$purchased->medicine_name/ $purchased->brand_name/ $purchased->generic_name" ?>
+                                  <?= "$purchased->medicine_name/ $purchased->brand_name/ $purchased->generic_name ($purchased->dosage)" ?>
                                 </button>
                               </td>
                               <td class="align-middle"><?= $purchased->creation_date ?></td>
@@ -161,7 +162,7 @@ if (!$isLogin) {
                         $brand = $brandData[0]->brand_name;
                       }
                       echo "<option value='$medicine->id'>
-                      $medicine->medicine_name/ " . ($brand ? "$brand/ " : "") . "$medicine->generic_name
+                      $medicine->medicine_name/ " . ($brand ? "$brand/ " : "") . "$medicine->generic_name ($medicine->dosage)
                       </option>";
                     }
                     ?>
@@ -530,6 +531,8 @@ if (!$isLogin) {
               quantityEl.val(data.quantity);
               receiveDateEl.val(data.paymentDate);
 
+              $('#addStock').modal('show')
+              $("#addStock").addClass("overflow-auto")
             }
           })
 
@@ -541,10 +544,6 @@ if (!$isLogin) {
         })
       });
     }
-
-    $('#addPurchased').on('hidden.bs.modal', function() {
-      $('#addStock').modal('show')
-    })
 
     $("#markUp").on("input", function(e) {
       const purchasePriceEl = $("#purchasePrice");

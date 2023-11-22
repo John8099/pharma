@@ -62,6 +62,7 @@ if (!$isLogin) {
                                     ig.medicine_id,
                                     mp.medicine_name,
                                     mp.generic_name,
+                                    mp.dosage,
                                     ig.product_number,
                                     (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
                                     (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
@@ -81,7 +82,7 @@ if (!$isLogin) {
                                   <td><?= $order->order_number ?></td>
                                   <td>
                                     <button type="button" class="btn btn-link btn-lg p-0 m-0" onclick="handleOpenModalImg('divModalImage<?= $inventory->inventory_id ?>')">
-                                      <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name" ?>
+                                      <?= "$inventory->medicine_name/ $inventory->brand_name/ $inventory->generic_name ($inventory->dosage)" ?>
                                     </button>
                                   </td>
                                   <td><?= number_format($inventory->price, 2, '.', ',') ?></td>

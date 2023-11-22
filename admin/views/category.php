@@ -43,7 +43,7 @@ if (!$isLogin) {
                       <table id="categoryTable" class="table table-hover table-bordered table-striped ">
                         <thead>
                           <tr>
-                            <th>Dosage Form</th>
+                            <th>Therapeutic Name</th>
                             <th>Description</th>
                             <th>Prescription Required</th>
                             <th>Status</th>

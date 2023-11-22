@@ -273,7 +273,15 @@ if (!$isLogin) {
                   <option value="regular">Regular</option>
                   <option value="pwd">PWD</option>
                   <option value="senior citizen">Senior Citizen</option>
+                  <option value="employee">Employee</option>
                 </select>
+              </div>
+            </div>
+
+            <div class="form-group row d-none" id="discountPercent">
+              <label class="col-sm-3 col-form-label">Discount %</label>
+              <div class="col-sm-9">
+                <input type="number" id="inputDiscount" class="form-control" required>
               </div>
             </div>
 
@@ -406,9 +414,44 @@ if (!$isLogin) {
       })
     }
 
+    $("#inputDiscount").on("input", function(e) {
+      let discountPercent = Number(e.target.value);
+
+      if (discountPercent > 99) {
+        discountPercent = 99;
+        $(this).val("99")
+      }
+
+      const subTotal = $("#subTotal").text().replace("₱ ", "").trim();
+      const discount = calculatePrice(discountPercent, subTotal)
+
+      if (Number(discount)) {
+        $("#inputTotal").val((Number(subTotal) - Number(discount)).toFixed(2));
+      } else {
+        $("#inputTotal").val(subTotal)
+      }
+      handleTriggerChange()
+
+      console.log(discount)
+    })
+
+    function calculatePrice(percent, price) {
+
+      let percentStr = "";
+      if (percent < 10) {
+        percentStr = ("0.0" + percent)
+      } else if (percent >= 10 && percent < 100) {
+        percentStr = ("0." + percent)
+      } else {
+        percent = "1"
+      }
+
+      return (Math.round((Number(price) * Number(percentStr) + Number.EPSILON) * 100) / 100).toFixed(2);
+
+    }
+
     $("#btnCheckout").on("click", function() {
       const subTotal = $("#subTotal").text().replace("₱ ", "").trim();
-
 
       $("#inputTotal").val(subTotal)
 
@@ -417,13 +460,25 @@ if (!$isLogin) {
 
     $("#inputDiscountType").on("change", function(e) {
       const discountType = e.target.value;
+      const discount = $("#discount").text().replace("₱ ", "").trim();
+      const subTotal = $("#subTotal").text().replace("₱ ", "").trim();
 
-      if (discountType !== "regular") {
-        const discount = $("#discount").text().replace("₱ ", "").trim();
-        $("#inputTotal").val(discount)
-      } else {
-        const subTotal = $("#subTotal").text().replace("₱ ", "").trim();
-        $("#inputTotal").val(subTotal)
+      $("#discountPercent").addClass("d-none");
+      switch (discountType) {
+        case "pwd":
+        case "senior citizen":
+          $("#inputTotal").val(discount)
+          break;
+        case "regular":
+          $("#inputTotal").val(subTotal)
+          break;
+        case "employee":
+          $("#inputTotal").val(subTotal)
+          $("#discountPercent").removeClass("d-none");
+          break;
+        default:
+          null;
+          break;
       }
 
       handleTriggerChange()

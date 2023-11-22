@@ -119,11 +119,12 @@ if (!$isLogin) {
                                 if (($dateNow >= $startData) && ($dateNow <= $expiryDate)) {
                                   $willExpire = true;
                                 }
-
+                                if ($willExpire) :
                                 ?>
-                                <a href="javascript:void()" onclick="handleReturnToSupplier('<?= $inventory->inventory_id ?>')" class="h5 m-2" <?= $willExpire ? "" : "disabled" ?>>
-                                  <i class="fa fa-undo" title="Mark return to supplier" data-toggle="tooltip"></i>
-                                </a>
+                                  <a href="javascript:void()" onclick="handleReturnToSupplier('<?= $inventory->inventory_id ?>')" class="h5 m-2">
+                                    <i class="fa fa-undo" title="Mark return to supplier" data-toggle="tooltip"></i>
+                                  </a>
+                                <?php endif; ?>
                               </td>
                               <!-- <td class="align-middle">
                                 <a href="javascript:void()" onclick="handleAddQuantity('<?= $inventory->inventory_id ?>')" class="h5 text-success m-2">

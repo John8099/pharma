@@ -126,7 +126,7 @@ function addStockModal()
     }
     array_push(
       $medicineOption,
-      "<option value='$medicine->id'>$medicine->medicine_name/ " . ($brand ? "$brand/ " : "") . "$medicine->generic_name </option>"
+      "<option value='$medicine->id'>$medicine->medicine_name/ " . ($brand ? "$brand/ " : "") . "$medicine->generic_name ($medicine->dosage)</option>"
     );
   }
 
@@ -645,7 +645,7 @@ function addCategoryModal()
           <div class='modal-body'>
 
             <div class='form-group row'>
-              <label class='col-sm-3 col-form-label'>Dosage Form<span class='text-danger'>*</span></label>
+              <label class='col-sm-3 col-form-label'>Therapeutic Name<span class='text-danger'>*</span></label>
               <div class='col-sm-9'>
                 <input type='text' name='name' class='form-control' required>
               </div>
@@ -710,7 +710,7 @@ function editCategoryModal($category)
           <div class='modal-body'>
 
             <div class='form-group row'>
-              <label class='col-sm-3 col-form-label'>Dosage Form<span class='text-danger'>*</span></label>
+              <label class='col-sm-3 col-form-label'>Therapeutic Name<span class='text-danger'>*</span></label>
               <div class='col-sm-9'>
                 <input type='text' name='name' class='form-control' value='$category->category_name' required>
               </div>

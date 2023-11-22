@@ -47,7 +47,7 @@ if (!$isLogin) {
                             <th>Therapeutic Name</th>
                             <th>Generic name</th>
                             <th>Brand name</th>
-                            <th>Dosage Form</th>
+                            <th>Therapeutic Name</th>
                             <th>Dose</th>
                             <th>Action</th>
                           </tr>
