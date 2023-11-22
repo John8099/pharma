@@ -39,6 +39,7 @@ if (!$isLogin) {
                             <th>Items Sold</th>
                             <th>Type</th>
                             <th>Profit</th>
+                            <th>Discount</th>
                             <th>Date</th>
                           </tr>
                         </thead>
@@ -52,7 +53,7 @@ if (!$isLogin) {
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
-                              <td><?= $order->user_id ? getFullName($order->user_id) : "-----" ?></td>
+                              <td><?= $order->user_id ? getFullName($order->user_id) : "<em class='text-muted'>N/A</em>" ?></td>
                               <td><?= getFullName($invoice->user_id) ?></td>
                               <td>
                                 <button type="button" onclick="return window.location.href='order-details?id=<?= $order->id ?>'" class="btn btn-link btn-sm">
@@ -61,6 +62,7 @@ if (!$isLogin) {
                               </td>
                               <td><?= $order->type == "walk_in" ? "Over the counter" : "Online" ?></td>
                               <td><?= number_format($order->overall_total, 2, '.', ',') ?></td>
+                              <td><?= number_format($order->discount, 2, '.', ',') ?></td>
                               <td><?= date("Y-m-d", strtotime($sale->sales_date)) ?></td>
                             </tr>
                           <?php endforeach; ?>
@@ -98,7 +100,7 @@ if (!$isLogin) {
         buttons: [{
             extend: 'searchBuilder',
             config: {
-              columns: [0, 1, 2, 3, 4, 6]
+              columns: [0, 1, 2, 3, 4, 6, 7]
             }
           },
           "print"

@@ -64,12 +64,12 @@ if (!$isLogin) {
                           <?php
                           $orders = getTableWithWhere("order_tbl", "user_id IS NOT NULL and type='online' and status='pending'");
                           foreach ($orders as $order) :
-                            $orderDetails = getTableData("order_details", "order_id", $order->id);
+                            $orderDetails = mysqli_fetch_object(mysqli_query($conn, "SELECT SUM(quantity) AS 'count' FROM order_details WHERE order_id='$order->id'"));
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
                               <td><?= getFullName($order->user_id) ?></td>
-                              <td><?= count($orderDetails) ?></td>
+                              <td><?= $orderDetails->count ?></td>
                               <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                               <td>
                                 <?php
@@ -131,12 +131,12 @@ if (!$isLogin) {
                           <?php
                           $orders = getTableWithWhere("order_tbl", "user_id IS NOT NULL and type='online' and status='preparing'");
                           foreach ($orders as $order) :
-                            $orderDetails = getTableData("order_details", "order_id", $order->id);
+                            $orderDetails = mysqli_fetch_object(mysqli_query($conn, "SELECT SUM(quantity) AS 'count' FROM order_details WHERE order_id='$order->id'"));
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
                               <td><?= getFullName($order->user_id) ?></td>
-                              <td><?= count($orderDetails) ?></td>
+                              <td><?= $orderDetails->count ?></td>
                               <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                               <td>
                                 <?php
@@ -198,12 +198,12 @@ if (!$isLogin) {
                           <?php
                           $orders = getTableWithWhere("order_tbl", "user_id IS NOT NULL and type='online' and status='to claim'");
                           foreach ($orders as $order) :
-                            $orderDetails = getTableData("order_details", "order_id", $order->id);
+                            $orderDetails = mysqli_fetch_object(mysqli_query($conn, "SELECT SUM(quantity) AS 'count' FROM order_details WHERE order_id='$order->id'"));
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
                               <td><?= getFullName($order->user_id) ?></td>
-                              <td><?= count($orderDetails) ?></td>
+                              <td><?= $orderDetails->count ?></td>
                               <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                               <td>
                                 <?php
@@ -265,12 +265,12 @@ if (!$isLogin) {
                           <?php
                           $orders = getTableWithWhere("order_tbl", "user_id IS NOT NULL and type='online' and status='claimed'");
                           foreach ($orders as $order) :
-                            $orderDetails = getTableData("order_details", "order_id", $order->id);
+                            $orderDetails = mysqli_fetch_object(mysqli_query($conn, "SELECT SUM(quantity) AS 'count' FROM order_details WHERE order_id='$order->id'"));
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
                               <td><?= getFullName($order->user_id) ?></td>
-                              <td><?= count($orderDetails) ?></td>
+                              <td><?= $orderDetails->count ?></td>
                               <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                               <td>
                                 <?php
@@ -332,12 +332,12 @@ if (!$isLogin) {
                           <?php
                           $orders = getTableWithWhere("order_tbl", "user_id IS NOT NULL and type='online' and status='declined'");
                           foreach ($orders as $order) :
-                            $orderDetails = getTableData("order_details", "order_id", $order->id);
+                            $orderDetails = mysqli_fetch_object(mysqli_query($conn, "SELECT SUM(quantity) AS 'count' FROM order_details WHERE order_id='$order->id'"));
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
                               <td><?= getFullName($order->user_id) ?></td>
-                              <td><?= count($orderDetails) ?></td>
+                              <td><?= $orderDetails->count ?></td>
                               <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                               <td>
                                 <?php
@@ -399,12 +399,12 @@ if (!$isLogin) {
                           <?php
                           $orders = getTableWithWhere("order_tbl", "user_id IS NOT NULL and type='online' and status='canceled'");
                           foreach ($orders as $order) :
-                            $orderDetails = getTableData("order_details", "order_id", $order->id);
+                            $orderDetails = mysqli_fetch_object(mysqli_query($conn, "SELECT SUM(quantity) AS 'count' FROM order_details WHERE order_id='$order->id'"));
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
                               <td><?= getFullName($order->user_id) ?></td>
-                              <td><?= count($orderDetails) ?></td>
+                              <td><?= $orderDetails->count ?></td>
                               <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
                               <td>
                                 <?php

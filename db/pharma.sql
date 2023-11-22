@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 15, 2023 at 09:16 AM
--- Server version: 10.4.27-MariaDB
--- PHP Version: 8.0.25
+-- Generation Time: Nov 22, 2023 at 07:45 AM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -66,9 +66,10 @@ CREATE TABLE `cart` (
 --
 
 INSERT INTO `cart` (`id`, `inventory_id`, `user_id`, `order_id`, `quantity`, `status`, `date_created`, `checkout_date`) VALUES
-(1, 1, 2, 1, 1, 'pending', '2023-09-15', '2023-09-15'),
-(2, 5, 2, 1, 2, 'pending', '2023-09-15', '2023-09-15'),
-(3, 2, 2, 1, 2, 'pending', '2023-09-15', '2023-09-15');
+(1, 6, 2, 1, 2, 'pending', '2023-11-21', '2023-11-21'),
+(2, 6, 2, 2, 2, 'pending', '2023-11-21', '2023-11-21'),
+(3, 6, 2, 3, 2, 'pending', '2023-11-21', '2023-11-21'),
+(4, 6, 2, 4, 2, 'pending', '2023-11-21', '2023-11-21');
 
 -- --------------------------------------------------------
 
@@ -80,6 +81,7 @@ CREATE TABLE `category` (
   `id` int(11) NOT NULL,
   `category_name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
+  `prescription_required` tinyint(1) DEFAULT 0,
   `status` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -87,12 +89,19 @@ CREATE TABLE `category` (
 -- Dumping data for table `category`
 --
 
-INSERT INTO `category` (`id`, `category_name`, `description`, `status`) VALUES
-(1, 'Capsule', 'Description', 0),
-(4, 'Nebule', 'Nebule description', 1),
-(5, 'Tablet', 'Test', 1),
-(6, 'Syrup', 'Test', 1),
-(7, 'Sample', 'Description', 0);
+INSERT INTO `category` (`id`, `category_name`, `description`, `prescription_required`, `status`) VALUES
+(1, 'Antihypertensive – ACE Inhibitor', 'Antihypertensive – ACE Inhibitor', 0, 1),
+(4, 'Antihypertensive – ARBs', 'Antihypertensive – ARBs', 0, 1),
+(5, 'Antihyperlipidemia', 'Antihyperlipidemia', 0, 1),
+(6, 'Antibiotic', 'Antibiotic', 0, 1),
+(7, 'Antihypertensive – CCBs', 'Antihypertensive – CCBs', 0, 1),
+(8, 'Antihistamine', 'Antihistamine', 0, 1),
+(9, 'Antidiabetic', 'Antidiabetic', 0, 1),
+(10, 'Nalagesic (NSAID)', 'Nalagesic (NSAID)', 0, 1),
+(11, 'Anti-asthma - Bronchodilator', 'Anti-asthma - Bronchodilator', 0, 1),
+(12, 'Vitamins', 'Vitamins', 0, 1),
+(13, 'Antipyretic', 'Antipyretic', 0, 1),
+(14, 'Anti-ulcer (PPI)', 'Anti-ulcer (PPI)', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -109,19 +118,22 @@ CREATE TABLE `inventory_general` (
   `date_received` date NOT NULL,
   `expiration_date` date NOT NULL,
   `serial_number` text NOT NULL,
-  `product_number` text NOT NULL
+  `product_number` text NOT NULL,
+  `is_vatable` tinyint(1) DEFAULT NULL,
+  `is_discountable` tinyint(1) DEFAULT NULL,
+  `is_returned` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `inventory_general`
 --
 
-INSERT INTO `inventory_general` (`id`, `medicine_id`, `price_id`, `supplier_id`, `quantity`, `date_received`, `expiration_date`, `serial_number`, `product_number`) VALUES
-(1, 1, 1, 3, 99, '2023-09-15', '2023-09-30', 'SRL0001', 'PROD23A0001'),
-(2, 2, 2, 4, 102, '2023-09-15', '2023-09-26', 'SRL0002', 'PROD23A0002'),
-(3, 3, 3, 5, 198, '2023-09-15', '2023-10-06', 'SRL0003', 'PROD23A0003'),
-(4, 4, 4, 5, 100, '2023-09-15', '2023-10-03', 'SRL0004', 'PROD23A0004'),
-(5, 1, 5, 3, 250, '2023-09-15', '2023-09-27', 'SRL0005', 'PROD23A0005');
+INSERT INTO `inventory_general` (`id`, `medicine_id`, `price_id`, `supplier_id`, `quantity`, `date_received`, `expiration_date`, `serial_number`, `product_number`, `is_vatable`, `is_discountable`, `is_returned`) VALUES
+(1, 1, 3, 4, 20, '2023-11-15', '2023-12-09', 'SRL0003', 'PROD23A0001', 0, 1, 1),
+(4, 1, 6, 4, 8, '2023-11-17', '2026-10-17', 'SRL0002', 'PROD23A0004', 0, 1, 0),
+(5, 3, 7, 4, 500, '2023-11-21', '2023-12-09', 'SRL0003', 'PROD23A0005', 1, 1, 1),
+(6, 1, 8, 5, 1, '2023-11-21', '2023-11-29', 'SRL0002', 'PROD23A0006', 1, 1, 0),
+(7, 4, 9, 5, 4, '2023-11-21', '2026-06-23', 'SRL0001', 'PROD23A0007', 1, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -142,7 +154,7 @@ CREATE TABLE `invoice` (
 --
 
 INSERT INTO `invoice` (`id`, `payment_id`, `order_id`, `user_id`, `date_created`) VALUES
-(1, 1, 1, 1, '2023-09-15 07:13:22');
+(1, 1, 1, 1, '2023-11-21 06:46:29');
 
 -- --------------------------------------------------------
 
@@ -167,9 +179,9 @@ CREATE TABLE `medicine_profile` (
 --
 
 INSERT INTO `medicine_profile` (`id`, `medicine_name`, `category_id`, `image`, `brand_id`, `generic_name`, `description`, `dosage`, `deleted`) VALUES
-(1, 'Biogesic', 7, '09152023-024453_Biogesic.png', 1, 'Paracetamol', 'Test', '250', 0),
+(1, 'Biogesic', 6, '09152023-024453_Biogesic.png', 1, 'Paracetamol', 'Test', '250', 0),
 (2, 'Formet', 5, '09152023-025516_Formet.jpg', 2, 'Metformin', 'Formet', '21', 0),
-(3, 'Ascorbic Acid', 5, '09152023-025606_Poten-Cee.jpg', 3, 'Ascorbic Acid', 'Ascorbic Acid', '1000', 0),
+(3, 'Ascorbic Acid', 12, '09152023-025606_Poten-Cee.jpg', 3, 'Vitamin C', 'Ascorbic Acid', '500mg tab', 0),
 (4, 'Neurobion', 5, '09152023-025706_Neurobion.png', 4, 'Neurobion', 'Neurobion', '100', 0);
 
 -- --------------------------------------------------------
@@ -191,9 +203,10 @@ CREATE TABLE `order_details` (
 --
 
 INSERT INTO `order_details` (`id`, `order_id`, `order_subtotal`, `quantity`, `inventory_general_id`) VALUES
-(1, 1, '45.00', 1, 1),
-(2, 1, '66.00', 2, 2),
-(3, 1, '200.00', 2, 3);
+(1, 1, 38.00, 2, 6),
+(2, 2, 38.00, 2, 6),
+(3, 3, 38.00, 2, 6),
+(4, 4, 39.00, 2, 6);
 
 -- --------------------------------------------------------
 
@@ -208,19 +221,23 @@ CREATE TABLE `order_tbl` (
   `subtotal` decimal(11,2) DEFAULT NULL,
   `discount` decimal(11,2) DEFAULT NULL,
   `overall_total` decimal(11,2) DEFAULT NULL,
+  `discount_type` enum('pwd','senior citizen') DEFAULT NULL,
   `type` enum('walk_in','online') NOT NULL,
   `date_ordered` date NOT NULL DEFAULT current_timestamp(),
   `status` enum('pending','preparing','to claim','claimed','declined','canceled') DEFAULT NULL COMMENT 'pending, preparing, to claim, claimed, declined, canceled',
   `note` text DEFAULT NULL,
-  `prescription` varchar(250) NOT NULL
+  `prescription` varchar(250) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `order_tbl`
 --
 
-INSERT INTO `order_tbl` (`id`, `order_number`, `user_id`, `subtotal`, `discount`, `overall_total`, `type`, `date_ordered`, `status`, `note`, `prescription`) VALUES
-(1, 'ORD23A0001', 2, '311.00', '62.20', '248.80', 'online', '2023-09-15', 'claimed', NULL, '09152023-030847_received_1366990700832575.jpeg');
+INSERT INTO `order_tbl` (`id`, `order_number`, `user_id`, `subtotal`, `discount`, `overall_total`, `discount_type`, `type`, `date_ordered`, `status`, `note`, `prescription`) VALUES
+(1, 'ORD23A0001', 2, 38.00, 6.60, 31.40, NULL, 'walk_in', '2023-11-21', 'to claim', NULL, NULL),
+(2, 'ORD23A0002', 2, 38.00, 0.00, 38.00, NULL, 'online', '2023-11-21', 'pending', NULL, NULL),
+(3, 'ORD23A0003', 2, 38.00, 0.00, 38.00, NULL, 'online', '2023-11-21', 'pending', NULL, NULL),
+(4, 'ORD23A0004', 2, 39.00, 0.00, 39.00, NULL, 'online', '2023-11-21', 'to claim', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -241,7 +258,7 @@ CREATE TABLE `payment` (
 --
 
 INSERT INTO `payment` (`id`, `order_id`, `paid_amount`, `customer_change`, `date_paid`) VALUES
-(1, 1, '500.00', '251.20', '2023-09-15');
+(1, 1, 50.00, 18.60, '2023-11-21');
 
 -- --------------------------------------------------------
 
@@ -251,6 +268,8 @@ INSERT INTO `payment` (`id`, `order_id`, `paid_amount`, `customer_change`, `date
 
 CREATE TABLE `price` (
   `id` int(11) NOT NULL,
+  `purchased_price` decimal(11,2) NOT NULL,
+  `markup` int(11) NOT NULL,
   `price` decimal(11,2) NOT NULL,
   `status` enum('active','inactive') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -259,12 +278,16 @@ CREATE TABLE `price` (
 -- Dumping data for table `price`
 --
 
-INSERT INTO `price` (`id`, `price`, `status`) VALUES
-(1, '45.00', 'active'),
-(2, '33.00', 'active'),
-(3, '100.00', 'active'),
-(4, '90.00', 'active'),
-(5, '100.00', 'active');
+INSERT INTO `price` (`id`, `purchased_price`, `markup`, `price`, `status`) VALUES
+(1, 2.50, 30, 3.25, 'active'),
+(2, 20.63, 30, 26.81, 'active'),
+(3, 10.00, 30, 13.00, 'active'),
+(4, 10.00, 30, 13.00, 'active'),
+(5, 10.00, 30, 13.00, 'active'),
+(6, 10.00, 30, 13.00, 'active'),
+(7, 12.00, 30, 15.60, 'active'),
+(8, 15.00, 30, 19.50, 'active'),
+(9, 200.00, 30, 260.00, 'active');
 
 -- --------------------------------------------------------
 
@@ -288,7 +311,32 @@ CREATE TABLE `purchase_order` (
 --
 
 INSERT INTO `purchase_order` (`id`, `supplier_id`, `created_by`, `medicine_id`, `creation_date`, `payment_amount`, `payment_date`, `quantity`) VALUES
-(3, NULL, 1, 1, '2023-08-09', '5012.00', '2023-08-09', 5);
+(1, 4, 1, 1, '2023-11-15', 200.00, '2023-11-15', 20),
+(2, 4, 1, 3, '2023-11-21', 6000.00, '2023-11-21', 500),
+(3, 5, 1, 1, '2023-11-21', 15.00, '2023-11-21', 1),
+(4, 5, 1, 4, '2023-11-21', 600.00, '2023-11-21', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `returned`
+--
+
+CREATE TABLE `returned` (
+  `id` int(11) NOT NULL,
+  `inventory_id` int(11) NOT NULL,
+  `date_returned` timestamp NOT NULL DEFAULT current_timestamp(),
+  `product_number` text DEFAULT NULL,
+  `date_replaced` date DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `returned`
+--
+
+INSERT INTO `returned` (`id`, `inventory_id`, `date_returned`, `product_number`, `date_replaced`) VALUES
+(1, 1, '2023-11-16 00:19:46', 'PROD23A0004', '2023-11-17'),
+(2, 5, '2023-11-21 00:08:28', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -308,7 +356,7 @@ CREATE TABLE `sales` (
 --
 
 INSERT INTO `sales` (`id`, `invoice_id`, `total_quantity_sold`, `sales_date`) VALUES
-(1, 1, 3, '2023-09-15');
+(1, 1, 2, '2023-11-21');
 
 -- --------------------------------------------------------
 
@@ -329,7 +377,7 @@ CREATE TABLE `supplier` (
 --
 
 INSERT INTO `supplier` (`id`, `supplier_name`, `address`, `contact`, `status`) VALUES
-(3, 'Supplier1', 'Test', '098765', 1),
+(3, 'Supplier1', 'Test', '098765', 0),
 (4, 'Supplier2', 'Test', 'Test', 1),
 (5, 'Supplier3', 'Test', 'Test', 1);
 
@@ -453,6 +501,12 @@ ALTER TABLE `purchase_order`
   ADD KEY `supplier_id` (`supplier_id`);
 
 --
+-- Indexes for table `returned`
+--
+ALTER TABLE `returned`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `sales`
 --
 ALTER TABLE `sales`
@@ -485,19 +539,19 @@ ALTER TABLE `brands`
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `category`
 --
 ALTER TABLE `category`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `inventory_general`
 --
 ALTER TABLE `inventory_general`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `invoice`
@@ -515,13 +569,13 @@ ALTER TABLE `medicine_profile`
 -- AUTO_INCREMENT for table `order_details`
 --
 ALTER TABLE `order_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `order_tbl`
 --
 ALTER TABLE `order_tbl`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `payment`
@@ -533,13 +587,19 @@ ALTER TABLE `payment`
 -- AUTO_INCREMENT for table `price`
 --
 ALTER TABLE `price`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `purchase_order`
 --
 ALTER TABLE `purchase_order`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `returned`
+--
+ALTER TABLE `returned`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `sales`

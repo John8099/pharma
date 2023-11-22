@@ -121,11 +121,14 @@ if (isset($_GET['action'])) {
       case "return_to_supplier":
         return_to_supplier();
         break;
-      case "return_to_stocks":
-        return_to_stocks();
-        break;
       case "get_stocks":
         get_stocks();
+        break;
+      case "add_walk_in_order":
+        add_walk_in_order();
+        break;
+      case "remove_walk_in_order":
+        remove_walk_in_order();
         break;
       default:
         null;
@@ -135,6 +138,150 @@ if (isset($_GET['action'])) {
     $response["success"] = false;
     $response["message"] = $e->getMessage();
   }
+}
+
+function get_near_expiration($medicine_id)
+{
+  global $conn;
+
+  $query = mysqli_query(
+    $conn,
+    "SELECT * FROM inventory_general WHERE medicine_id='$medicine_id' ORDER BY expiration_date ASC LIMIT 1"
+  );
+
+  $medData = mysqli_fetch_object($query);
+
+  return $medData->id;
+}
+
+function remove_walk_in_order()
+{
+  global $conn, $_POST;
+
+  $inventory_id = $_POST["inventory_id"];
+  $order_details_id = $_POST["order_details_id"];
+  $order_id = $_POST["order_id"];
+  $quantity = $_POST["quantity"];
+
+  $delOrderDetails = delete("order_details", "id", $order_details_id);
+
+  if ($delOrderDetails) {
+    $getOrderDetailsData = getTableData("order_details", "order_id", $order_id);
+
+    if (count($getOrderDetailsData) == 0) {
+      delete("order_tbl", "id", $order_id);
+
+      $response["success"] = true;
+    } else {
+      $response["success"] = true;
+    }
+
+    orderSubtotal($order_id);
+    updateInventoryItems($inventory_id, $quantity);
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
+}
+
+function add_walk_in_order()
+{
+  global $conn, $_SESSION, $_POST;
+
+  $user_id = $_SESSION["userId"];
+  $orderNumber = generateSystemId("order_tbl", "ORD");
+
+  $inventory_id = $_POST["inventory_id"];
+  $quantity = $_POST["quantity"];
+  $price = $_POST["price"];
+
+  $orderTableData = getSingleDataWithWhere("order_tbl", "user_id='$_SESSION[userId]' and overall_total IS NULL");
+
+  $inOrder = 0;
+
+  if ($orderTableData) {
+    $inOrder = $orderTableData->id;
+  } else {
+    $orderData = array(
+      "order_number" => $orderNumber,
+      "user_id" => $user_id,
+      "type" => "walk_in"
+    );
+
+    $inOrder = insert("order_tbl", $orderData);
+  }
+
+  if ($inOrder) {
+
+    $orderDetails = getSingleDataWithWhere("order_details", "order_id='$inOrder' and inventory_general_id='$inventory_id'");
+
+    if (!$orderDetails) {
+      $orderDetailsData = array(
+        "order_id" => $inOrder,
+        "order_subtotal" => doubleval($price) * intval($quantity),
+        "quantity" => $quantity,
+        "inventory_general_id" => $inventory_id
+      );
+
+      $inOrderDetails = insert("order_details", $orderDetailsData);
+
+      if ($inOrderDetails) {
+        $response["success"] = true;
+        orderSubtotal($inOrder);
+
+        updateInventoryItems($inventory_id, $quantity, "minus");
+      } else {
+        delete("order_tbl", "id", $inOrder);
+      }
+    } else {
+      $order_subtotal = doubleval((doubleval($price) * intval($quantity)) + doubleval($orderDetails->order_subtotal));
+      $order_details_quantity  = intval($quantity) + $orderDetails->quantity;
+      $updateOrderSub = update("order_details", array("order_subtotal" => $order_subtotal, "quantity" => $order_details_quantity), "id", $orderDetails->id);
+
+      if ($updateOrderSub) {
+        $response["success"] = true;
+        orderSubtotal($inOrder);
+        updateInventoryItems($inventory_id, $quantity, "minus");
+      }
+    }
+  } else {
+    $response["success"] = false;
+    $response["message"] = mysqli_error($conn);
+  }
+
+  returnResponse($response);
+}
+
+function orderSubtotal($orderId)
+{
+  $orderDetailsData = getTableData("order_details", "order_id", "$orderId");
+
+  $orderSubtotal = 0.00;
+
+  foreach ($orderDetailsData as $orderDetail) {
+    $orderSubtotal += doubleval($orderDetail->order_subtotal);
+  }
+
+  update("order_tbl", array("subtotal" => $orderSubtotal), "id", $orderId);
+}
+
+function updateInventoryItems($inventory_id, $quantity, $action = "add")
+{
+  $inventoryData = getSingleDataWithWhere("inventory_general", "id='$inventory_id'");
+  $newQuantity = 0;
+
+  if ($action == "add") {
+    $newQuantity = (intval($inventoryData->quantity) + intval($quantity));
+  } else {
+    $newQuantity = (intval($inventoryData->quantity) - intval($quantity));
+  }
+
+  if ($newQuantity == 0) {
+    $newQuantity = "set_zero";
+  }
+  update("inventory_general", array("quantity" => $newQuantity), "id", $inventory_id);
 }
 
 function getDiscounted($inventoryId, $price)
@@ -194,18 +341,6 @@ function get_stocks()
   returnResponse($response);
 }
 
-function return_to_stocks()
-{
-  global $conn, $_POST;
-
-  $returned_id = $_POST["returned_id"];
-  $quantity = $_POST["quantity"];
-
-  $returnedData = getSingleDataWithWhere("returned", "id = '$returned_id'");
-
-  $inventoryData = getTableData("inventory_general", "id", $returnedData->id);
-}
-
 function return_to_supplier()
 {
   global $conn, $_POST;
@@ -262,15 +397,16 @@ function claim_online_order()
 
   $order_id = $_POST["order_id"];
 
-  $orderDetailsData = getTableWithWhere("order_details", "order_id='$order_id'");
+  $orderTblData = getSingleDataWithWhere("order_tbl", "id='$order_id'");
+  $orderDetailsData = mysqli_fetch_object(mysqli_query($conn, "SELECT SUM(quantity) AS 'count' FROM order_details WHERE order_id='$order_id'"));
 
-  $subTotal = $_POST["subTotal"];
-  $discount = $_POST["discount"];
   $total = $_POST["total"];
   $amount = $_POST["amount"];
   $change = $_POST["change"];
 
-  $totalQuantitySold = count($orderDetailsData);
+  $totalQuantitySold = $orderDetailsData->count;
+
+  $discount = (doubleval($orderTblData->subtotal) - doubleval($total));
 
   $paymentData = array(
     "order_id" => $order_id,
@@ -296,8 +432,7 @@ function claim_online_order()
   $salesIn = insert("sales", $salesData);
 
   $orderData = array(
-    "subtotal" => $subTotal,
-    "discount" => $discount,
+    "discount" => $discount ? $discount : "set_null",
     "overall_total" => $total,
     "status" => "claimed"
   );
@@ -383,7 +518,6 @@ function checkout()
   $orderNumber = generateSystemId("order_tbl", "ORD");
   $prescription = isset($_FILES["prescription_img"]) ? $_FILES["prescription_img"] : null;
 
-
   $orderData = array(
     "order_number" => $orderNumber,
     "user_id" => $user_id,
@@ -424,8 +558,8 @@ function checkout()
     $inventory = mysqli_fetch_object($inventoryQStr);
 
     if (mysqli_num_rows($inventoryQStr) > 0) {
-      $orderSubtotal += (intval($inventory->price) * intval($cart->quantity));
-      $overallTotal += (intval($inventory->price) * intval($cart->quantity));
+      $orderSubtotal += (doubleval($inventory->price) * intval($cart->quantity));
+      $overallTotal += (doubleval($inventory->price) * intval($cart->quantity));
     }
   }
 
@@ -454,7 +588,7 @@ function checkout()
       if (mysqli_num_rows($inventoryQStr) > 0) {
         $inventory = mysqli_fetch_object($inventoryQStr);
 
-        $subTotal = (intval($inventory->price) * intval($cart->quantity));
+        $subTotal = (doubleval($inventory->price) * intval($cart->quantity));
 
         $orderDetailsData = array(
           "order_id" => $orderIn,
@@ -533,80 +667,75 @@ function lock_screen()
 
 function save_checkout()
 {
-  global $conn, $_POST, $_SESSION;
+  global $conn, $_SESSION, $_POST;
 
-  $productData = json_decode($_POST["productData"]);
-  $subTotal = $_POST["subTotal"];
-  $discount = $_POST["discount"];
+  $user_id = $_SESSION["userId"];
+
+  $discountType = $_POST["discountType"];
+
   $total = $_POST["total"];
   $amount = $_POST["amount"];
   $change = $_POST["change"];
 
-  if (intval($amount) >= intval($total)) {
-    $totalQuantitySold = 0;
 
-    $orderTableData = array(
-      "order_number" => generateSystemId("order_tbl", "ORD"),
-      "user_id" => NULL,
-      "subtotal" => $subTotal,
-      "discount" => $discount,
-      "overall_total" => $total,
-      "type" => "walk_in",
-      "status" => "claimed"
+  if (intval($amount) >= intval($total)) {
+    $orderQuery = mysqli_query(
+      $conn,
+      "SELECT * FROM order_tbl WHERE user_id='$user_id' and `type`='walk_in' and overall_total IS NULL"
     );
 
-    $orderIn = insert("order_tbl", $orderTableData);
+    if (mysqli_num_rows($orderQuery) > 0) {
+      $orderData = mysqli_fetch_object($orderQuery);
 
-    foreach ($productData->data as $product) {
-      $inventory = getSingleDataWithWhere("inventory_general", "product_number = '$product->product_number'");
+      $discount = (doubleval($orderData->subtotal) - doubleval($total));
 
-      $orderDetailsData = array(
-        "order_id" => $orderIn,
-        "order_subtotal" => "$product->orderTotal",
-        "quantity" => "$product->quantity",
-        "inventory_general_id" => $inventory->id
+      $upOrderData = array(
+        "discount_type" => $discountType,
+        "discount" => $discount ? $discount : "set_null",
+        "overall_total" => $total
       );
 
-      $orderDetailsIn = insert("order_details", $orderDetailsData);
+      update("order_tbl", $upOrderData, "id", $orderData->id);
 
-      if ($orderDetailsIn) {
-        $totalQuantitySold += intval($product->quantity);
-        $newQuantity = intval($inventory->quantity) - intval($product->quantity);
+      $orderDetails = getTableData("order_details", "order_id", $orderData->id);
 
-        $updateInData = array(
-          "quantity" => "$newQuantity"
-        );
+      $totalQuantitySold = 0;
+      $inventory_id = 0;
 
-        $updateIn = update("inventory_general", $updateInData, "id", $inventory->id);
+      foreach ($orderDetails as $orderDetail) {
+        if (!$inventory_id) {
+          $inventory_id = $orderDetail->inventory_general_id;
+        }
+        $totalQuantitySold += intval($orderDetail->quantity);
       }
+
+      $paymentData = array(
+        "order_id" => $orderData->id,
+        "paid_amount" => "$amount",
+        "customer_change" => "$change"
+      );
+
+      $paymentIn = insert("payment", $paymentData);
+
+      $invoiceData = array(
+        "payment_id" => $paymentIn,
+        "order_id" => $orderData->id,
+        "user_id" => $_SESSION["userId"]
+      );
+
+      $invoiceIn = insert("invoice", $invoiceData);
+
+      $salesData = array(
+        "invoice_id" => $invoiceIn,
+        "total_quantity_sold" => $totalQuantitySold
+      );
+
+      $salesIn = insert("sales", $salesData);
+
+      $response["success"] = true;
+      $response["message"] = "Item(s) successfully added to invoice";
+      $response["invoice_id"] = $invoiceIn;
     }
-
-    $paymentData = array(
-      "order_id" => $orderIn,
-      "paid_amount" => "$amount",
-      "customer_change" => "$change"
-    );
-
-    $paymentIn = insert("payment", $paymentData);
-
-    $invoiceData = array(
-      "payment_id" => $paymentIn,
-      "order_id" => $orderIn,
-      "user_id" => $_SESSION["userId"]
-    );
-
-    $invoiceIn = insert("invoice", $invoiceData);
-
-    $salesData = array(
-      "invoice_id" => $invoiceIn,
-      "total_quantity_sold" => $totalQuantitySold
-    );
-
-    $salesIn = insert("sales", $salesData);
-
-    $response["success"] = true;
-    $response["message"] = "Item(s) successfully added to invoice";
-    $response["invoice_id"] = $invoiceIn;
   } else {
     $response["success"] = false;
     $response["message"] = "Amount should not be less than to total.";
@@ -614,6 +743,90 @@ function save_checkout()
 
   returnResponse($response);
 }
+
+// function save_checkout()
+// {
+//   global $conn, $_POST, $_SESSION;
+
+//   $productData = json_decode($_POST["productData"]);
+//   $subTotal = $_POST["subTotal"];
+//   $discount = $_POST["discount"];
+//   $total = $_POST["total"];
+//   $amount = $_POST["amount"];
+//   $change = $_POST["change"];
+
+//   if (intval($amount) >= intval($total)) {
+//     $totalQuantitySold = 0;
+
+//     $orderTableData = array(
+//       "order_number" => generateSystemId("order_tbl", "ORD"),
+//       "user_id" => NULL,
+//       "subtotal" => $subTotal,
+//       "discount" => $discount,
+//       "overall_total" => $total,
+//       "type" => "walk_in",
+//       "status" => "claimed"
+//     );
+
+//     $orderIn = insert("order_tbl", $orderTableData);
+
+//     foreach ($productData->data as $product) {
+//       $inventory = getSingleDataWithWhere("inventory_general", "product_number = '$product->product_number'");
+
+//       $orderDetailsData = array(
+//         "order_id" => $orderIn,
+//         "order_subtotal" => "$product->orderTotal",
+//         "quantity" => "$product->quantity",
+//         "inventory_general_id" => $inventory->id
+//       );
+
+//       $orderDetailsIn = insert("order_details", $orderDetailsData);
+
+//       if ($orderDetailsIn) {
+//         $totalQuantitySold += intval($product->quantity);
+//         $newQuantity = intval($inventory->quantity) - intval($product->quantity);
+
+//         $updateInData = array(
+//           "quantity" => "$newQuantity"
+//         );
+
+//         $updateIn = update("inventory_general", $updateInData, "id", $inventory->id);
+//       }
+//     }
+
+//     $paymentData = array(
+//       "order_id" => $orderIn,
+//       "paid_amount" => "$amount",
+//       "customer_change" => "$change"
+//     );
+
+//     $paymentIn = insert("payment", $paymentData);
+
+//     $invoiceData = array(
+//       "payment_id" => $paymentIn,
+//       "order_id" => $orderIn,
+//       "user_id" => $_SESSION["userId"]
+//     );
+
+//     $invoiceIn = insert("invoice", $invoiceData);
+
+//     $salesData = array(
+//       "invoice_id" => $invoiceIn,
+//       "total_quantity_sold" => $totalQuantitySold
+//     );
+
+//     $salesIn = insert("sales", $salesData);
+
+//     $response["success"] = true;
+//     $response["message"] = "Item(s) successfully added to invoice";
+//     $response["invoice_id"] = $invoiceIn;
+//   } else {
+//     $response["success"] = false;
+//     $response["message"] = "Amount should not be less than to total.";
+//   }
+
+//   returnResponse($response);
+// }
 
 function save_stock()
 {

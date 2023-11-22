@@ -40,10 +40,10 @@
               WHERE 
               (mp.medicine_name LIKE '%$_GET[medicine]%' OR mp.generic_name LIKE '%$_GET[medicine]%') and 
               ig.is_returned <> '1'
+              GROUP BY mp.id
               ORDER BY mp.medicine_name ASC
               LIMIT $limit
               OFFSET $offset
-              
               ";
           } else {
             $inventoryQStr = "SELECT 
@@ -55,9 +55,10 @@
               (SELECT brand_name FROM brands b WHERE b.id = mp.brand_id) AS 'brand_name',
               (SELECT price FROM price p WHERE p.id = ig.price_id) AS 'price'
               FROM inventory_general ig
-              LEFT JOIN medicine_profile mp
+              LEFT JOIN medicine_profile mp 
               ON mp.id = ig.medicine_id
               WHERE ig.is_returned <> '1'
+              GROUP BY mp.id
               ORDER BY mp.medicine_name ASC
               LIMIT $limit
               OFFSET $offset

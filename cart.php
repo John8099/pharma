@@ -78,8 +78,9 @@ if (!$isLogin) {
                           WHERE ig.id = '$cart->inventory_id'
                           "
                         );
+
                         $inventory = mysqli_fetch_object($inventoryQStr);
-                        $overAllTotal += (intval($inventory->price) * intval($cart->quantity));
+                        $overAllTotal += (doubleval($inventory->price) * intval($cart->quantity));
                         $discountedTotal += getDiscounted($inventory->inventory_id, $inventory->price) * intval($cart->quantity);
 
                         if ($hasPrescriptionRequired == "false") {
@@ -87,6 +88,7 @@ if (!$isLogin) {
                             $hasPrescriptionRequired = "true";
                           }
                         }
+
                   ?>
                         <tr>
                           <td class="product-thumbnail">
@@ -115,7 +117,7 @@ if (!$isLogin) {
                           <td class="text-left prices">
                             Regular:
                             <span class="regular">
-                              <?= "₱ " . number_format((intval($inventory->price) * intval($cart->quantity)), 2, '.', ',') ?>
+                              <?= "₱ " . number_format((doubleval($inventory->price) * intval($cart->quantity)), 2, '.', ',') ?>
                             </span>
                             <br>
                             Discounted:

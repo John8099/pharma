@@ -172,11 +172,21 @@ if (!$isLogin) {
           <td></td>
           <td> <?= $orderData->discount ?></td>
         </tr>
+        <?php
+        $vat = number_format(doubleval($orderData->overall_total * .12), 2, ".", ",");
+        $newTotal = number_format(doubleval($orderData->overall_total - $vat), 2, ".", ",");
+        ?>
+        <tr>
+          <td></td>
+          <td>VAT 12%</td>
+          <td></td>
+          <td> <?= $vat ?></td>
+        </tr>
         <tr>
           <td></td>
           <td>Total</td>
           <td></td>
-          <td> <?= $orderData->overall_total ?></td>
+          <td> <?= $newTotal ?></td>
         </tr>
 
         <?php

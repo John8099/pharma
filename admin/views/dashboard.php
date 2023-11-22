@@ -44,7 +44,7 @@ if (!$isLogin) {
                       <div class="row align-items-center m-b-25">
                         <div class="col">
                           <h6 class="m-b-5 text-white">Total Sales</h6>
-                          <h3 class="m-b-0 text-white"><?=  number_format($tProfit->profit, 2, '.', ',') ?></h3>
+                          <h3 class="m-b-0 text-white"><?= number_format($tProfit->profit, 2, '.', ',') ?></h3>
                         </div>
                         <div class="col-auto">
                           <i class="fas fa-money-bill-alt text-c-red f-18"></i>
@@ -72,7 +72,7 @@ if (!$isLogin) {
                       <div class="row align-items-center m-b-25">
                         <div class="col">
                           <h6 class="m-b-5 text-white">Online Sales</h6>
-                          <h3 class="m-b-0 text-white"><?=  number_format($oProfit->profit, 2, '.', ',') ?></h3>
+                          <h3 class="m-b-0 text-white"><?= number_format($oProfit->profit, 2, '.', ',') ?></h3>
                         </div>
                         <div class="col-auto">
                           <i class="fas fa-database text-c-blue f-18"></i>
@@ -129,8 +129,156 @@ if (!$isLogin) {
                 </div>
                 <!-- product profit end -->
               </div>
-
+              <?php $monthsComplete = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; ?>
               <div class="row">
+                <div class="col-md-12">
+                  <div class="card">
+                    <div class="card-header">
+
+                      <div class="row">
+                        <div class="col-md-8">
+                          <h5>Weekly Sales</h5>
+                        </div>
+                        <div class="col-md-4">
+                          <select id="selectMonths" class="form-control">
+                            <?php
+                            foreach ($monthsComplete as $month) {
+                              if ($month != "") {
+                                $monthSelectedIndex = isset($_GET["month"]) ? $_GET["month"] : 1;
+
+                                $selected = $month == $monthsComplete[$monthSelectedIndex] ? "selected" : "";
+
+                                echo "<option value='" . (array_search("$month", $monthsComplete)) . "' $selected>$month</option>";
+                              }
+                            }
+                            ?>
+                          </select>
+                        </div>
+                        <?php
+                        $weekData = array(
+                          array(
+                            "y" => "1st Week",
+                            "a" => 0,
+                            "b" => 0,
+                          ),
+                          array(
+                            "y" => "2nd Week",
+                            "a" => 0,
+                            "b" => 0,
+                          ),
+                          array(
+                            "y" => "3rd Week",
+                            "a" => 0,
+                            "b" => 0,
+                          ),
+                          array(
+                            "y" => "4th Week",
+                            "a" => 0,
+                            "b" => 0,
+                          ),
+                        );
+
+                        $onlineQuery = null;
+                        $walkInQuery = null;
+
+                        if (isset($_GET["month"])) {
+                          $month = $_GET["month"];
+                          $startDate = (date("Y") . "-" . ($month > 10 ? $month :  "0$month") . "-01");
+
+                          $onlineQuery = mysqli_query(
+                            $conn,
+                            "SELECT 
+                            CEIL(DAYOFMONTH(p.date_paid) / 7) AS week_number,
+                            COALESCE(SUM(ord.overall_total), 0) AS profit
+                            FROM order_tbl ord 
+                            INNER JOIN payment p 
+                            ON p.order_id = ord.id 
+                            WHERE ord.type='online' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')"
+                          );
+
+                          $walkInQuery = mysqli_query(
+                            $conn,
+                            "SELECT 
+                            CEIL(DAYOFMONTH(p.date_paid) / 7) AS week_number,
+                            COALESCE(SUM(ord.overall_total), 0) AS profit
+                            FROM order_tbl ord 
+                            INNER JOIN payment p 
+                            ON p.order_id = ord.id 
+                            WHERE ord.type='walk_in' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')"
+                          );
+                        } else {
+                          $startDate = (date("Y") . "-01" . "-01");
+                          
+                          $onlineQuery = mysqli_query(
+                            $conn,
+                            "SELECT 
+                            CEIL(DAYOFMONTH(p.date_paid) / 7) AS week_number,
+                            COALESCE(SUM(ord.overall_total), 0) AS profit
+                            FROM order_tbl ord 
+                            INNER JOIN payment p 
+                            ON p.order_id = ord.id 
+                            WHERE ord.type='online' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')"
+                          );
+
+                          $walkInQuery = mysqli_query(
+                            $conn,
+                            "SELECT 
+                            CEIL(DAYOFMONTH(p.date_paid) / 7) AS week_number,
+                            COALESCE(SUM(ord.overall_total), 0) AS profit
+                            FROM order_tbl ord 
+                            INNER JOIN payment p 
+                            ON p.order_id = ord.id 
+                            WHERE ord.type='walk_in' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')"
+                          );
+                        }
+
+                        while ($onlineData = mysqli_fetch_object($onlineQuery)) {
+                          switch ($onlineData->week_number) {
+                            case "1":
+                              $weekData[0]["a"] = $onlineData->profit;
+                              break;
+                            case "2":
+                              $weekData[1]["a"] = $onlineData->profit;
+                              break;
+                            case "3":
+                              $weekData[2]["a"] = $onlineData->profit;
+                              break;
+                            case "4":
+                              $weekData[3]["a"] = $onlineData->profit;
+                              break;
+                            default:
+                              null;
+                              break;
+                          }
+                        }
+
+                        while ($walkInData = mysqli_fetch_object($walkInQuery)) {
+                          switch ($walkInData->week_number) {
+                            case "1":
+                              $weekData[0]["b"] = $walkInData->profit;
+                              break;
+                            case "2":
+                              $weekData[1]["b"] = $walkInData->profit;
+                              break;
+                            case "3":
+                              $weekData[2]["b"] = $walkInData->profit;
+                              break;
+                            case "4":
+                              $weekData[3]["b"] = $walkInData->profit;
+                              break;
+                            default:
+                              null;
+                              break;
+                          }
+                        }
+                        ?>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div id="weeklySales" style="height:300px"></div>
+                    </div>
+                  </div>
+                </div>
                 <div class="col-md-12">
                   <div class="card">
                     <div class="card-header">
@@ -141,67 +289,70 @@ if (!$isLogin) {
                     </div>
                   </div>
                 </div>
+                <?php
+                /**
+                 *  a = Online
+                 *  b = Over the counter
+                 * 
+                 */
+
+                $months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
+
+                $barData = array();
+
+                for ($i = 0; $i < 12; $i++) {
+                  // date form Y-m-d
+                  $day = ($i + 1);
+                  $startDate = (date("Y") . "-" . ($day > 10 ? $day :  "0$day") . "-01");
+
+                  $onlineQuery = mysqli_query(
+                    $conn,
+                    "SELECT 
+                    COALESCE(SUM(ord.overall_total), 0) as profit 
+                    FROM order_tbl ord 
+                    INNER JOIN payment p 
+                    ON p.order_id = ord.id 
+                    WHERE ord.type='online' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')
+                  "
+                  );
+
+                  $sumOnline = 0;
+                  if (mysqli_num_rows($onlineQuery) > 0) {
+                    $res = mysqli_fetch_object($onlineQuery);
+                    $sumOnline = $res->profit;
+                  }
+
+                  $otcQ = mysqli_query(
+                    $conn,
+                    "SELECT 
+                    COALESCE(SUM(ord.overall_total), 0) as profit 
+                    FROM order_tbl ord 
+                    INNER JOIN payment p 
+                    ON p.order_id = ord.id 
+                    WHERE ord.type='walk_in' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')
+                  "
+                  );
+
+                  $sumOtc = 0;
+                  if (mysqli_num_rows($otcQ) > 0) {
+                    $res = mysqli_fetch_object($otcQ);
+                    $sumOtc = $res->profit;
+                  }
+
+                  $format = array(
+                    "y" => $months[$i],
+                    "a" => intval($sumOnline),
+                    "b" => intval($sumOtc),
+                  );
+
+                  array_push($barData, $format);
+                }
+
+                ?>
+
               </div>
 
-              <?php
-              /**
-               *  a = Online
-               *  b = Over the counter
-               * 
-               */
 
-              $months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"];
-
-              $barData = array();
-
-              for ($i = 0; $i < 12; $i++) {
-                // date form Y-m-d
-                $day = ($i + 1);
-                $startDate = (date("Y") . "-" . ($day > 10 ? $day :  "0$day") . "-01");
-
-                $onlineQuery = mysqli_query(
-                  $conn,
-                  "SELECT 
-                  COALESCE(SUM(ord.overall_total), 0) as profit 
-                  FROM order_tbl ord 
-                  INNER JOIN payment p 
-                  ON p.order_id = ord.id 
-                  WHERE ord.type='online' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')
-                  "
-                );
-
-                $sumOnline = 0;
-                if (mysqli_num_rows($onlineQuery) > 0) {
-                  $res = mysqli_fetch_object($onlineQuery);
-                  $sumOnline = $res->profit;
-                }
-
-                $otcQ = mysqli_query(
-                  $conn,
-                  "SELECT 
-                  COALESCE(SUM(ord.overall_total), 0) as profit 
-                  FROM order_tbl ord 
-                  INNER JOIN payment p 
-                  ON p.order_id = ord.id 
-                  WHERE ord.type='walk_in' and p.date_paid BETWEEN '$startDate' and LAST_DAY('$startDate')
-                  "
-                );
-
-                $sumOtc = 0;
-                if (mysqli_num_rows($otcQ) > 0) {
-                  $res = mysqli_fetch_object($otcQ);
-                  $sumOtc = $res->profit;
-                }
-
-                $format = array(
-                  "y" => $months[$i],
-                  "a" => intval($sumOnline),
-                  "b" => intval($sumOtc),
-                );
-                array_push($barData, $format);
-              }
-
-              ?>
               <!-- [ Main Content ] end -->
             </div>
           </div>
@@ -222,10 +373,12 @@ if (!$isLogin) {
 
 </body>
 <script>
+  $("#selectMonths").on("change", function(e) {
+    window.location.href = `<?= $SERVER_NAME ?>/admin/views/dashboard?month=${e.target.value}`
+  })
   $(document).ready(function() {
     setTimeout(function() {
       // [ bar-simple ] chart start
-      console.log(JSON.parse('<?= json_encode($barData) ?>'))
       Morris.Bar({
         element: "morris-bar-chart",
         data: JSON.parse('<?= json_encode($barData) ?>'),
@@ -239,6 +392,19 @@ if (!$isLogin) {
         barColors: ["#3949AB", "#2ca961"],
       });
     }, 700);
+
+    Morris.Bar({
+      element: "weeklySales",
+      data: JSON.parse('<?= json_encode($weekData) ?>'),
+      xkey: 'y',
+      barSizeRatio: 0.70,
+      barGap: 3,
+      resize: true,
+      responsive: true,
+      ykeys: ["a", "b"],
+      labels: ["Online", "Over the counter"],
+      barColors: ["#3949AB", "#2ca961"],
+    });
   });
 </script>
 

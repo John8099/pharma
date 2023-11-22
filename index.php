@@ -12,7 +12,7 @@ include("./backend/nodes.php");
 
     <?php include("./components/header-nav.php") ?>
 
-    <div class="site-blocks-cover" style="background-image: url('./assets/images/hero_1.jpg');">
+    <div class="site-blocks-cover" style="background-image: url('./public/logo.jpeg');filter: brightness(0.5);">
       <div class="container">
         <div class="row">
           <div class="col-lg-7 mx-auto order-lg-2 align-self-center">

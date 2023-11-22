@@ -11,7 +11,7 @@ include("./backend/nodes.php");
     <?php include("./components/header-nav.php") ?>
 
     <div style="position: relative;">
-      <img src="./assets/images/hero_1.jpg" class="img-fluid" style="object-fit: cover;height: 85vh; width: 100%;filter: brightness(0.5);">
+      <img src="./public/logo.jpeg" class="img-fluid" style="object-fit: cover;height: 85vh; width: 100%;filter: brightness(0.5);">
       <div style="position: absolute; top:0; width: 98%">
         <div class="row justify-content-center align-items-center" style="height: 85vh;">
           <div class="col-lg-7 mx-auto align-self-center">
@@ -69,6 +69,24 @@ include("./backend/nodes.php");
         </div>
       </div>
     </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row d-flex justify-content-center">
+          <div class="col-md-6">
+            <div class="block-5 mb-5">
+              <h3 class="footer-heading mb-4">Contact Info</h3>
+              <ul class="list-unstyled">
+                <li>Store Hours: Monday-Sunday 7:00 AM-7:00 PM </li>
+                <li class="address">In front of Central Philippine University</li>
+                <li class="phone"><a href="tel://0822950862">082-295-0862</a></li>
+                <li class="email"><a href="https://www.facebook.com/profile.php?id=100063859718852&mibextid=ZbWKwL" target="_blank"> Farmacia De Central</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
 
   </div>
 

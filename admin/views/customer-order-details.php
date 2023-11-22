@@ -84,7 +84,8 @@ if (!$isLogin) {
                                 <th>Prescription</th>
                                 <th>Medicine <small>(Name/ Brand/ Generic)</small></th>
                                 <th>Dosage</th>
-                                <th>Price</th>
+                                <th>Regular</th>
+                                <th>Discounted</th>
                                 <th>Quantity</th>
                                 <th>Subtotal</th>
                                 <th>Date Ordered</th>
@@ -94,6 +95,7 @@ if (!$isLogin) {
                               <?php
                               $orderDetails = getTableWithWhere("order_details", "order_id='$_GET[id]'");
                               $orderTotal = 0;
+                              $discountedTotal = 0.00;
                               foreach ($orderDetails as $detail) :
                                 $orderTotal += $detail->order_subtotal;
                                 $order = getSingleDataWithWhere("order_tbl", "id='$detail->order_id'");
@@ -124,11 +126,16 @@ if (!$isLogin) {
                                 $prescriptionSrc = getPrescriptionImg($order->id);
                                 $explodedPres =  explode("/", $prescriptionSrc);
                                 $altPres = $explodedPres[count($explodedPres) - 1];
+
+                                $discounted = getDiscounted($inventory->inventory_id, $inventory->price);
+                                $discountedTotal += doubleval($discounted) * intval($detail->quantity);
                               ?>
                                 <tr>
                                   <td class="align-middle">
                                     <?php if ($prescriptionSrc) : ?>
                                       <img onclick="handleOpenModalImg('divModalPrescription<?= $inventory->inventory_id ?>')" src="<?= $prescriptionSrc ?>" class="rounded modalImg" width="60px">
+                                    <?php else : ?>
+                                      <em class="text-muted">N/A</em>
                                     <?php endif; ?>
                                   </td>
                                   <td>
@@ -138,6 +145,7 @@ if (!$isLogin) {
                                   </td>
                                   <td><?= $inventory->dosage ?></td>
                                   <td><?= number_format($inventory->price, 2, '.', ',') ?></td>
+                                  <td><?= number_format($discounted, 2, '.', ',') ?></td>
                                   <td><?= $detail->quantity ?></td>
                                   <td><?= number_format($detail->order_subtotal, 2, '.', ',') ?></td>
                                   <td><?= date("Y-m-d", strtotime($order->date_ordered)) ?></td>
@@ -170,12 +178,24 @@ if (!$isLogin) {
                           <div class="row">
                             <div class="col-6">
                               <h4>
-                                Total
+                                Regular Total
                               </h4>
                             </div>
                             <div class="col-6">
-                              <h4>
+                              <h4 id="subTotal">
                                 <?= number_format($orderTotal, 2, '.', ',') ?>
+                              </h4>
+                            </div>
+                          </div>
+                          <div class="row">
+                            <div class="col-6">
+                              <h4>
+                                Discounted Total
+                              </h4>
+                            </div>
+                            <div class="col-6">
+                              <h4 id="discount">
+                                <?= number_format($discountedTotal, 2, '.', ',') ?>
                               </h4>
                             </div>
                           </div>
@@ -229,40 +249,39 @@ if (!$isLogin) {
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
+
           <form id="checkoutForm" method="POST">
             <input type="text" value="<?= $_GET["id"] ?>" name="order_id" readonly hidden>
             <div class="modal-body">
+
               <div class="form-group row">
-                <label class="col-sm-2 col-form-label">Subtotal</label>
-                <div class="col-sm-10">
-                  <input type="number" name="subTotal" id="inputSubTotal" value="<?= number_format($orderTotal, 2, '.', ',') ?>" step=".01" class="form-control" readonly required>
+                <label class="col-sm-3 col-form-label">Discount Type</label>
+                <div class="col-sm-9">
+                  <select name="discountType" id="inputDiscountType" class="form-control" required>
+                    <option value="regular">Regular</option>
+                    <option value="pwd">PWD</option>
+                    <option value="senior citizen">Senior Citizen</option>
+                  </select>
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-sm-2 col-form-label">Discount</label>
-                <div class="col-sm-10">
-                  <input type="number" name="discount" id="inputDiscount" value="0.00" step=".01" class="form-control" readonly required>
-                </div>
-              </div>
-
-              <div class="form-group row">
-                <label class="col-sm-2 col-form-label">Total</label>
-                <div class="col-sm-10">
+                <label class="col-sm-3 col-form-label">Total</label>
+                <div class="col-sm-9">
                   <input type="number" name="total" id="inputTotal" value="<?= number_format($orderTotal, 2, '.', ',') ?>" step=".01" class="form-control" readonly required>
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-sm-2 col-form-label">Amount </label>
-                <div class="col-sm-10">
+                <label class="col-sm-3 col-form-label">Amount </label>
+                <div class="col-sm-9">
                   <input type="number" name="amount" id="inputAmount" step=".01" class="form-control" required>
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-sm-2 col-form-label">Change</label>
-                <div class="col-sm-10">
+                <label class="col-sm-3 col-form-label">Change</label>
+                <div class="col-sm-9">
                   <input type="number" name="change" id="inputChange" value="0.00" step=".01" class="form-control" readonly required>
                 </div>
               </div>
@@ -273,9 +292,9 @@ if (!$isLogin) {
                 Clear Discount
               </button>
 
-              <button type="button" id="btnDiscount" class="btn btn-warning btn-sm m-2">
+              <!-- <button type="button" id="btnDiscount" class="btn btn-warning btn-sm m-2">
                 Add Discount
-              </button>
+              </button> -->
 
               <button type="submit" id="btnProceed" class="btn btn-primary btn-sm m2 disabled" disabled>Proceed</button>
             </div>
@@ -375,72 +394,45 @@ if (!$isLogin) {
       $("#btnProceed").prop("disabled", true)
     })
 
-    function updateData() {
-      const subtotal = $("#inputSubTotal").val();
-      const discount = $("#inputDiscount").val();
-      const total = $("#inputTotal").val();
-      const amount = $("#inputAmount").val();
-      const change = $("#inputChange").val();
+    $("#inputDiscountType").on("change", function(e) {
+      const discountType = e.target.value;
 
-      const newDiscount = (Number(subtotal) * .20).toFixed(2);
+      if (discountType !== "regular") {
+        const discount = $("#discount").text().replace("₱ ", "").trim();
+        $("#inputTotal").val(discount)
+      } else {
+        const subTotal = $("#subTotal").text().replace("₱ ", "").trim();
+        $("#inputTotal").val(subTotal)
+      }
 
-      $("#inputDiscount").val(newDiscount)
-      $("#inputTotal").val(subtotal - newDiscount)
-
-      $("#inputChange").change()
-    }
-
-    function handleClaimOrder() {
-      $("#modalCheckOut").modal("show")
-    }
-
-    $("#btnDiscount").on("click", function() {
-      $(this).addClass("d-none")
-      $("#btnClear").removeClass("d-none")
-
-      const subtotal = Number($("#inputSubTotal").val())
-      const discount = (Number($("#inputSubTotal").val()) * .20).toFixed(2);
-
-      $("#inputDiscount").val(discount)
-      $("#inputTotal").val((subtotal - discount).toFixed(2))
-
-      updateData()
-    })
-
-    $("#btnClear").on("click", function() {
-      $(this).addClass("d-none")
-      $("#btnDiscount").removeClass("d-none")
-
-      $("#inputDiscount").val("0.00")
-      $("#inputTotal").val($("#inputSubTotal").val())
-
-      $("#inputChange").change()
-    })
-
-    $("#inputAmount").on("input", function() {
-      $("#inputChange").change()
+      handleTriggerChange()
     })
 
     $("#inputChange").on("change", function() {
       const amount = Number($("#inputAmount").val())
       const total = Number($("#inputTotal").val())
 
-      if (amount >= total) {
-        $("#btnProceed").removeClass("disabled")
-        $("#btnProceed").prop("disabled", false)
-
-        const change = (amount - total)
-        if (change <= 0) {
-          $(this).val("0.00")
-        } else {
-          $(this).val(change.toFixed(2))
-        }
+      const change = (amount - total)
+      if (change <= 0) {
+        $(this).val("0.00")
       } else {
-        $("#btnProceed").addClass("disabled")
-        $("#btnProceed").prop("disabled", true)
+        $(this).val(change.toFixed(2))
+        $("#btnProceed").prop("disabled", false);
+        $("#btnProceed").removeClass("disabled");
       }
-
     })
+
+    function handleTriggerChange() {
+      $("#inputChange").change()
+    }
+
+    $("#inputAmount").on("input", function() {
+      handleTriggerChange()
+    })
+
+    function handleClaimOrder() {
+      $("#modalCheckOut").modal("show")
+    }
 
     function handleChangeOrderStatus(orderId, status) {
       swal.showLoading()

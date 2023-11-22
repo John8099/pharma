@@ -55,13 +55,14 @@ if (!$isLogin) {
                           <?php
                           $invoice = getTableData("invoice");
                           foreach ($invoice as $in) :
+                            if (!$in->order_id ) continue;
                             $order = getSingleDataWithWhere("order_tbl", "id='$in->order_id'");
                             $payment = getSingleDataWithWhere("payment", "order_id='$in->order_id'");
                             $sales = getSingleDataWithWhere("sales", "invoice_id='$in->id'");
                           ?>
                             <tr>
                               <td><?= $order->order_number ?></td>
-                              <td><?= $order->user_id ? getFullName($order->user_id) : "-----" ?></td>
+                              <td><?= $order->type == "online" ? getFullName($order->user_id) : "<em class='text-muted'>N/A</em>" ?></td>
                               <td><?= getFullName($in->user_id) ?></td>
                               <td><?= $order->type == "walk_in" ? "Over the counter" : "Online" ?></td>
                               <td>
