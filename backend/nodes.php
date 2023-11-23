@@ -383,6 +383,12 @@ function decline_order()
   if ($update) {
     $response["success"] = true;
     $response["message"] = "Successfully declined order.";
+
+    $orderDetailsData = getTableData("order_details", "order_id", $order_id);
+
+    foreach ($orderDetailsData as $orderDetail) {
+      updateInventoryItems($orderDetail->inventory_id, $orderDetail->quantity);
+    }
   } else {
     $response["success"] = false;
     $response["message"] = mysqli_error($conn);
