@@ -40,7 +40,6 @@
               WHERE 
               (mp.medicine_name LIKE '%$_GET[medicine]%' OR mp.generic_name LIKE '%$_GET[medicine]%') and 
               ig.is_returned <> '1'
-              GROUP BY mp.id
               ORDER BY mp.medicine_name ASC
               LIMIT $limit
               OFFSET $offset
@@ -58,7 +57,6 @@
               LEFT JOIN medicine_profile mp 
               ON mp.id = ig.medicine_id
               WHERE ig.is_returned <> '1'
-              GROUP BY mp.id
               ORDER BY mp.medicine_name ASC
               LIMIT $limit
               OFFSET $offset
@@ -67,6 +65,7 @@
           $inventoryQ = mysqli_query($conn, $inventoryQStr);
           if (mysqli_num_rows($inventoryQ) > 0) :
             while ($inventory = mysqli_fetch_object($inventoryQ)) :
+              if (get_near_expiration($inventory->medicine_id) != $inventory->inventory_id) continue;
           ?>
               <div class="col-sm-4 col-lg-3 text-center item mb-4">
                 <a href="./shop-single?id=<?= $inventory->inventory_id ?>">
