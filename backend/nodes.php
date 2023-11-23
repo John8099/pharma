@@ -387,7 +387,7 @@ function decline_order()
     $orderDetailsData = getTableData("order_details", "order_id", $order_id);
 
     foreach ($orderDetailsData as $orderDetail) {
-      updateInventoryItems($orderDetail->inventory_id, $orderDetail->quantity);
+      updateInventoryItems($orderDetail->inventory_general_id, $orderDetail->quantity);
     }
   } else {
     $response["success"] = false;
