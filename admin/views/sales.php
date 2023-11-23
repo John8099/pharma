@@ -102,7 +102,7 @@ if (!$isLogin) {
         buttons: [{
             extend: 'searchBuilder',
             config: {
-              columns: [0, 1, 2, 3, 4, 6, 7]
+              columns: [0, 1, 2, 3, 4, 6, 7, 8]
             }
           },
           "print"

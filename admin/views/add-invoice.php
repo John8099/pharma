@@ -281,7 +281,7 @@ if (!$isLogin) {
             <div class="form-group row d-none" id="discountPercent">
               <label class="col-sm-3 col-form-label">Discount %</label>
               <div class="col-sm-9">
-                <input type="number" id="inputDiscount" class="form-control" required>
+                <input type="number" id="inputDiscount" class="form-control" >
               </div>
             </div>
 
